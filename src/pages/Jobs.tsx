@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MapPin, Clock, Users, TrendingUp, Briefcase } from "lucide-react";
+import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
+import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 
-const jobs = [
+const initialJobs = [
   {
     id: 1,
     title: "Senior Full-Stack Developer",
@@ -12,8 +15,30 @@ const jobs = [
     type: "Full-time",
     applicants: 24,
     postedDate: "15 มี.ค. 2025",
-    status: "active",
+    status: "open" as const,
     avgScore: 78,
+    salaryRange: "฿50,000 - ฿80,000",
+    description: "เรากำลังมองหา Senior Full-Stack Developer ที่มีประสบการณ์และความเชี่ยวชาญในการพัฒนาเว็บแอปพลิเคชันแบบครบวงจร เพื่อมาร่วมเป็นส่วนหนึ่งของทีมพัฒนาของเรา คุณจะได้ทำงานกับเทคโนโลยีที่ทันสมัยและโปรเจกต์ที่ท้าทายความสามารถ",
+    responsibilities: [
+      "พัฒนาและดูแลระบบเว็บแอปพลิเคชันทั้ง Frontend และ Backend",
+      "ออกแบบและพัฒนา RESTful APIs และ GraphQL",
+      "ทำงานร่วมกับทีม Product และ Design เพื่อสร้างฟีเจอร์ใหม่",
+      "Code Review และให้คำแนะนำแก่ทีมพัฒนา",
+      "ปรับปรุงประสิทธิภาพและความปลอดภัยของระบบ"
+    ],
+    requirements: [
+      "ประสบการณ์ในการพัฒนาเว็บแอปพลิเคชัน 5 ปีขึ้นไป",
+      "มีความเชี่ยวชาญใน React, Node.js, TypeScript",
+      "มีประสบการณ์ในการใช้งาน Database (PostgreSQL, MongoDB)",
+      "เข้าใจหลักการ CI/CD และ Cloud Services (AWS, GCP)",
+      "มีทักษะการสื่อสารและทำงานเป็นทีมที่ดี",
+      "สามารถสื่อสารภาษาอังกฤษได้ในระดับดี"
+    ],
+    interviewStats: {
+      total: 15,
+      passed: 8,
+      failed: 7
+    }
   },
   {
     id: 2,
@@ -23,8 +48,29 @@ const jobs = [
     type: "Full-time",
     applicants: 18,
     postedDate: "12 มี.ค. 2025",
-    status: "active",
+    status: "open" as const,
     avgScore: 82,
+    salaryRange: "฿40,000 - ฿65,000",
+    description: "เรากำลังมองหา UX/UI Designer ที่มีความคิดสร้างสรรค์และความเข้าใจในประสบการณ์ผู้ใช้งานอย่างลึกซึ้ง เพื่อออกแบบและพัฒนาผลิตภัณฑ์ที่ตอบโจทย์ผู้ใช้งานได้อย่างแท้จริง",
+    responsibilities: [
+      "ออกแบบ User Interface และ User Experience สำหรับเว็บและแอปพลิเคชัน",
+      "สร้าง Wireframe, Prototype และ Mockup",
+      "ทำ User Research และวิเคราะห์ผลลัพธ์",
+      "ทำงานร่วมกับทีม Product และ Engineering",
+      "สร้างและดูแล Design System"
+    ],
+    requirements: [
+      "ประสบการณ์ด้าน UX/UI Design อย่างน้อย 3 ปี",
+      "เชี่ยวชาญในการใช้ Figma, Adobe XD หรือเครื่องมือ Design อื่นๆ",
+      "มีความเข้าใจในหลักการ UX และ Design Thinking",
+      "มี Portfolio ที่แสดงผลงานที่เคยทำ",
+      "มีทักษะการสื่อสารและนำเสนอไอเดียได้ดี"
+    ],
+    interviewStats: {
+      total: 10,
+      passed: 6,
+      failed: 4
+    }
   },
   {
     id: 3,
@@ -34,8 +80,30 @@ const jobs = [
     type: "Full-time",
     applicants: 31,
     postedDate: "10 มี.ค. 2025",
-    status: "active",
+    status: "open" as const,
     avgScore: 85,
+    salaryRange: "฿60,000 - ฿100,000",
+    description: "เรามองหา Data Scientist ที่มีทักษะในการวิเคราะห์ข้อมูลและสร้างโมเดล Machine Learning เพื่อช่วยในการตัดสินใจทางธุรกิจ และพัฒนาผลิตภัณฑ์ที่ขับเคลื่อนด้วยข้อมูล",
+    responsibilities: [
+      "วิเคราะห์ข้อมูลขนาดใหญ่เพื่อหา Insights ทางธุรกิจ",
+      "สร้างและปรับปรุงโมเดล Machine Learning",
+      "ทำ Data Visualization และนำเสนอผลการวิเคราะห์",
+      "ทำงานร่วมกับทีม Engineering ในการ Deploy โมเดล",
+      "ติดตามและประเมินผลโมเดลที่ใช้งานจริง"
+    ],
+    requirements: [
+      "ปริญญาโทขึ้นไปในสาขา Data Science, Statistics, Computer Science หรือสาขาที่เกี่ยวข้อง",
+      "ประสบการณ์ทำงานด้าน Data Science อย่างน้อย 3 ปี",
+      "เชี่ยวชาญ Python และ Libraries สำหรับ Data Science (Pandas, NumPy, Scikit-learn)",
+      "มีประสบการณ์ใน Deep Learning และ NLP",
+      "เข้าใจ SQL และการทำงานกับ Big Data",
+      "มีทักษะการสื่อสารเพื่ออธิบาย Technical concepts ได้ดี"
+    ],
+    interviewStats: {
+      total: 18,
+      passed: 12,
+      failed: 6
+    }
   },
   {
     id: 4,
@@ -45,12 +113,83 @@ const jobs = [
     type: "Full-time",
     applicants: 15,
     postedDate: "8 มี.ค. 2025",
-    status: "active",
+    status: "open" as const,
     avgScore: 75,
+    salaryRange: "฿55,000 - ฿90,000",
+    description: "เรากำลังมองหา Product Manager ที่มีวิสัยทัศน์และความสามารถในการนำทีมพัฒนาผลิตภัณฑ์ที่ตอบโจทย์ลูกค้าและธุรกิจ พร้อมขับเคลื่อนกลยุทธ์ผลิตภัณฑ์ให้ประสบความสำเร็จ",
+    responsibilities: [
+      "กำหนด Product Vision, Strategy และ Roadmap",
+      "รวบรวมและวิเคราะห์ความต้องการของลูกค้าและตลาด",
+      "กำหนด Product Requirements และ User Stories",
+      "ทำงานร่วมกับทีม Engineering, Design และ Marketing",
+      "วัดผลและติดตามความสำเร็จของผลิตภัณฑ์",
+      "นำเสนอและสื่อสารกับ Stakeholders"
+    ],
+    requirements: [
+      "ประสบการณ์ด้าน Product Management อย่างน้อย 4 ปี",
+      "มีความเข้าใจในกระบวนการพัฒนาผลิตภัณฑ์และ Agile/Scrum",
+      "มีทักษะการวิเคราะห์และตัดสินใจโดยใช้ข้อมูล",
+      "มีความสามารถในการสื่อสารและนำเสนออย่างมีประสิทธิภาพ",
+      "มี Leadership และสามารถทำงานร่วมกับทีมข้ามสายงานได้ดี",
+      "เข้าใจ Technology และเทรนด์ในอุตสาหกรรม"
+    ],
+    interviewStats: {
+      total: 8,
+      passed: 5,
+      failed: 3
+    }
   },
 ];
 
 export default function Jobs() {
+  const [jobs, setJobs] = useState(initialJobs);
+  const [selectedJob, setSelectedJob] = useState<typeof initialJobs[0] | null>(null);
+  const [editingJob, setEditingJob] = useState<typeof initialJobs[0] | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleViewDetails = (job: typeof initialJobs[0]) => {
+    setSelectedJob(job);
+    setIsDetailOpen(true);
+  };
+
+  const handleEdit = (job?: typeof initialJobs[0]) => {
+    setEditingJob(job || null);
+    setIsFormOpen(true);
+    setIsDetailOpen(false);
+  };
+
+  const handleSave = (data: any) => {
+    if (editingJob) {
+      // Update existing job
+      setJobs(jobs.map(job => 
+        job.id === editingJob.id 
+          ? { ...job, ...data }
+          : job
+      ));
+    } else {
+      // Add new job
+      const newJob = {
+        id: Math.max(...jobs.map(j => j.id)) + 1,
+        ...data,
+        applicants: 0,
+        postedDate: new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }),
+        avgScore: 0,
+        interviewStats: {
+          total: 0,
+          passed: 0,
+          failed: 0
+        }
+      };
+      setJobs([...jobs, newJob]);
+    }
+    setEditingJob(null);
+  };
+
+  const handleAddNew = () => {
+    setEditingJob(null);
+    setIsFormOpen(true);
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -62,7 +201,7 @@ export default function Jobs() {
             จัดการตำแหน่งงานที่เปิดรับสมัครทั้งหมด
           </p>
         </div>
-        <Button className="shadow-primary hover:shadow-lg transition-all">
+        <Button onClick={handleAddNew} className="shadow-primary hover:shadow-lg transition-all">
           <Plus className="h-4 w-4 mr-2" />
           เพิ่มตำแหน่งงาน
         </Button>
@@ -113,7 +252,7 @@ export default function Jobs() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="hover:bg-accent transition-colors">
+                  <Button variant="outline" onClick={() => handleViewDetails(job)} className="hover:bg-accent transition-colors">
                     ดูรายละเอียด
                   </Button>
                   <Button className="shadow-sm hover:shadow-md transition-all">
@@ -135,11 +274,25 @@ export default function Jobs() {
           <p className="text-muted-foreground mb-4 text-center max-w-md">
             เพิ่มตำแหน่งงานใหม่และเริ่มต้นรับสมัครผู้สมัครที่มีคุณสมบัติเหมาะสม
           </p>
-          <Button variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-colors">
+          <Button onClick={handleAddNew} variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-colors">
             เพิ่มตำแหน่งงาน
           </Button>
         </CardContent>
       </Card>
+
+      <JobDetailDialog
+        job={selectedJob}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        onEdit={() => handleEdit(selectedJob!)}
+      />
+
+      <JobFormDialog
+        job={editingJob}
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSave={handleSave}
+      />
     </div>
   );
 }
