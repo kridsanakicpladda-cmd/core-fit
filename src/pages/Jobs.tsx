@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Plus, MapPin, Clock, Users, TrendingUp, Briefcase } from "lucide-react";
 import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const initialJobs = [
   {
@@ -15,9 +17,11 @@ const initialJobs = [
     type: "Full-time",
     applicants: 24,
     postedDate: "15 มี.ค. 2025",
-    status: "open" as const,
+    status: "open" as "open" | "closed",
     avgScore: 78,
     salaryRange: "฿50,000 - ฿80,000",
+    numberOfPositions: "2 อัตรา",
+    jobGrade: "JG6",
     description: "เรากำลังมองหา Senior Full-Stack Developer ที่มีประสบการณ์และความเชี่ยวชาญในการพัฒนาเว็บแอปพลิเคชันแบบครบวงจร เพื่อมาร่วมเป็นส่วนหนึ่งของทีมพัฒนาของเรา คุณจะได้ทำงานกับเทคโนโลยีที่ทันสมัยและโปรเจกต์ที่ท้าทายความสามารถ",
     responsibilities: [
       "พัฒนาและดูแลระบบเว็บแอปพลิเคชันทั้ง Frontend และ Backend",
@@ -51,6 +55,8 @@ const initialJobs = [
     status: "open" as const,
     avgScore: 82,
     salaryRange: "฿40,000 - ฿65,000",
+    numberOfPositions: "1 อัตรา",
+    jobGrade: "JG5",
     description: "เรากำลังมองหา UX/UI Designer ที่มีความคิดสร้างสรรค์และความเข้าใจในประสบการณ์ผู้ใช้งานอย่างลึกซึ้ง เพื่อออกแบบและพัฒนาผลิตภัณฑ์ที่ตอบโจทย์ผู้ใช้งานได้อย่างแท้จริง",
     responsibilities: [
       "ออกแบบ User Interface และ User Experience สำหรับเว็บและแอปพลิเคชัน",
@@ -83,6 +89,8 @@ const initialJobs = [
     status: "open" as const,
     avgScore: 85,
     salaryRange: "฿60,000 - ฿100,000",
+    numberOfPositions: "3 อัตรา",
+    jobGrade: "JG6",
     description: "เรามองหา Data Scientist ที่มีทักษะในการวิเคราะห์ข้อมูลและสร้างโมเดล Machine Learning เพื่อช่วยในการตัดสินใจทางธุรกิจ และพัฒนาผลิตภัณฑ์ที่ขับเคลื่อนด้วยข้อมูล",
     responsibilities: [
       "วิเคราะห์ข้อมูลขนาดใหญ่เพื่อหา Insights ทางธุรกิจ",
@@ -116,6 +124,8 @@ const initialJobs = [
     status: "open" as const,
     avgScore: 75,
     salaryRange: "฿55,000 - ฿90,000",
+    numberOfPositions: "1 อัตรา",
+    jobGrade: "JG7",
     description: "เรากำลังมองหา Product Manager ที่มีวิสัยทัศน์และความสามารถในการนำทีมพัฒนาผลิตภัณฑ์ที่ตอบโจทย์ลูกค้าและธุรกิจ พร้อมขับเคลื่อนกลยุทธ์ผลิตภัณฑ์ให้ประสบความสำเร็จ",
     responsibilities: [
       "กำหนด Product Vision, Strategy และ Roadmap",
@@ -142,6 +152,7 @@ const initialJobs = [
 ];
 
 export default function Jobs() {
+  const { toast } = useToast();
   const [jobs, setJobs] = useState(initialJobs);
   const [selectedJob, setSelectedJob] = useState<typeof initialJobs[0] | null>(null);
   const [editingJob, setEditingJob] = useState<typeof initialJobs[0] | null>(null);
@@ -190,6 +201,20 @@ export default function Jobs() {
     setEditingJob(null);
     setIsFormOpen(true);
   };
+
+  const handleToggleStatus = (jobId: number) => {
+    setJobs(jobs.map(job => {
+      if (job.id === jobId) {
+        const newStatus: "open" | "closed" = job.status === "open" ? "closed" : "open";
+        toast({
+          title: newStatus === "open" ? "เปิดรับสมัครแล้ว" : "ปิดรับสมัครแล้ว",
+          description: `ตำแหน่ง ${job.title} ได้รับการอัปเดตสถานะเป็น${newStatus === "open" ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}`,
+        });
+        return { ...job, status: newStatus };
+      }
+      return job;
+    }));
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -212,10 +237,21 @@ export default function Jobs() {
           <Card key={job.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                    {job.title}
-                  </CardTitle>
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center justify-between gap-4">
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      {job.title}
+                    </CardTitle>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {job.status === "open" ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
+                      </span>
+                      <Switch
+                        checked={job.status === "open"}
+                        onCheckedChange={() => handleToggleStatus(job.id)}
+                      />
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="secondary" className="font-normal">
                       <Briefcase className="h-3 w-3 mr-1" />

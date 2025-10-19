@@ -16,9 +16,12 @@ interface JobDetailDialogProps {
     status: "open" | "closed";
     avgScore: number;
     salaryRange: string;
+    numberOfPositions: string;
+    jobGrade: string;
     description: string;
     requirements: string[];
     responsibilities: string[];
+    additionalInfo?: string;
     interviewStats: {
       total: number;
       passed: number;
@@ -68,13 +71,29 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit }: JobDetailDi
         </DialogHeader>
 
         <div className="space-y-6 mt-6">
-          {/* Salary Range */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-lg">เงินเดือน</h3>
+          {/* Job Info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-lg">เงินเดือน</h3>
+              </div>
+              <p className="text-2xl font-bold text-primary">{job.salaryRange}</p>
             </div>
-            <p className="text-2xl font-bold text-primary">{job.salaryRange}</p>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                <h3 className="font-semibold text-lg">จำนวนอัตรา</h3>
+              </div>
+              <p className="text-2xl font-bold text-blue-600">{job.numberOfPositions}</p>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Briefcase className="h-5 w-5 text-purple-600" />
+                <h3 className="font-semibold text-lg">Job Grade</h3>
+              </div>
+              <p className="text-2xl font-bold text-purple-600">{job.jobGrade}</p>
+            </div>
           </div>
 
           <Separator />

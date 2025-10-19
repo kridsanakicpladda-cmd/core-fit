@@ -16,9 +16,12 @@ const jobFormSchema = z.object({
   location: z.string().min(1, "กรุณาระบุสถานที่"),
   type: z.string().min(1, "กรุณาระบุประเภทงาน"),
   salaryRange: z.string().min(1, "กรุณาระบุช่วงเงินเดือน"),
+  numberOfPositions: z.string().min(1, "กรุณาระบุจำนวนอัตราที่รับสมัคร"),
+  jobGrade: z.string().min(1, "กรุณาระบุ JG"),
   description: z.string().min(1, "กรุณาระบุรายละเอียดงาน"),
   responsibilities: z.string().min(1, "กรุณาระบุหน้าที่ความรับผิดชอบ"),
   requirements: z.string().min(1, "กรุณาระบุคุณสมบัติที่ต้องการ"),
+  additionalInfo: z.string().optional(),
   status: z.enum(["open", "closed"]),
 });
 
@@ -32,9 +35,12 @@ interface JobFormDialogProps {
     location: string;
     type: string;
     salaryRange: string;
+    numberOfPositions: string;
+    jobGrade: string;
     description: string;
     responsibilities: string[];
     requirements: string[];
+    additionalInfo?: string;
     status: "open" | "closed";
   } | null;
   open: boolean;
@@ -53,9 +59,12 @@ export function JobFormDialog({ job, open, onOpenChange, onSave }: JobFormDialog
       location: job?.location || "",
       type: job?.type || "Full-time",
       salaryRange: job?.salaryRange || "",
+      numberOfPositions: job?.numberOfPositions || "",
+      jobGrade: job?.jobGrade || "",
       description: job?.description || "",
       responsibilities: job?.responsibilities.join("\n") || "",
       requirements: job?.requirements.join("\n") || "",
+      additionalInfo: job?.additionalInfo || "",
       status: job?.status || "open",
     },
   });
@@ -170,6 +179,34 @@ export function JobFormDialog({ job, open, onOpenChange, onSave }: JobFormDialog
 
               <FormField
                 control={form.control}
+                name="numberOfPositions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>รับสมัครกี่อัตรา *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="เช่น 2 อัตรา" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="jobGrade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>JG (Job Grade) *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="เช่น JG5, JG6" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
@@ -237,6 +274,24 @@ export function JobFormDialog({ job, open, onOpenChange, onSave }: JobFormDialog
                     <Textarea 
                       placeholder="ประสบการณ์ 3 ปีขึ้นไป&#10;มีทักษะ React, Node.js&#10;สามารถสื่อสารภาษาอังกฤษได้"
                       className="min-h-[120px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="additionalInfo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>อื่นๆ (ข้อมูลเพิ่มเติม)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="ระบุข้อมูลเพิ่มเติมที่ต้องการ..."
+                      className="min-h-[100px]"
                       {...field}
                     />
                   </FormControl>
