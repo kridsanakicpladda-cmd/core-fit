@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,6 +154,7 @@ const initialJobs = [
 
 export default function Jobs() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState(initialJobs);
   const [selectedJob, setSelectedJob] = useState<typeof initialJobs[0] | null>(null);
   const [editingJob, setEditingJob] = useState<typeof initialJobs[0] | null>(null);
@@ -215,6 +217,22 @@ export default function Jobs() {
       return job;
     }));
   };
+
+  const handleDelete = (jobId: number) => {
+    const job = jobs.find(j => j.id === jobId);
+    setJobs(jobs.filter(j => j.id !== jobId));
+    setIsDetailOpen(false);
+    toast({
+      title: "ลบตำแหน่งงานแล้ว",
+      description: `ตำแหน่ง ${job?.title} ถูกลบเรียบร้อยแล้ว`,
+      variant: "destructive"
+    });
+  };
+
+  const handleViewCandidates = (jobId: number) => {
+    navigate("/candidates");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -291,7 +309,7 @@ export default function Jobs() {
                   <Button variant="outline" onClick={() => handleViewDetails(job)} className="hover:bg-accent transition-colors">
                     ดูรายละเอียด
                   </Button>
-                  <Button className="shadow-sm hover:shadow-md transition-all">
+                  <Button onClick={() => handleViewCandidates(job.id)} className="shadow-sm hover:shadow-md transition-all">
                     ดูผู้สมัคร
                   </Button>
                 </div>
@@ -321,6 +339,8 @@ export default function Jobs() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
         onEdit={() => handleEdit(selectedJob!)}
+        onDelete={() => selectedJob && handleDelete(selectedJob.id)}
+        onViewCandidates={() => selectedJob && handleViewCandidates(selectedJob.id)}
       />
 
       <JobFormDialog

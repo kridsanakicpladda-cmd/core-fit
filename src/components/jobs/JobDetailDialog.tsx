@@ -1,8 +1,8 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { MapPin, Briefcase, DollarSign, Users, CheckCircle, XCircle, Clock, Edit } from "lucide-react";
+import { MapPin, Briefcase, DollarSign, Users, CheckCircle, XCircle, Clock, Edit, Trash2, UserSearch } from "lucide-react";
 
 interface JobDetailDialogProps {
   job: {
@@ -31,9 +31,11 @@ interface JobDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
+  onDelete: () => void;
+  onViewCandidates: () => void;
 }
 
-export function JobDetailDialog({ job, open, onOpenChange, onEdit }: JobDetailDialogProps) {
+export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onViewCandidates }: JobDetailDialogProps) {
   if (!job) return null;
 
   return (
@@ -63,10 +65,16 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit }: JobDetailDi
                 </Badge>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={onEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              แก้ไข
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                แก้ไข
+              </Button>
+              <Button variant="destructive" size="sm" onClick={onDelete}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                ลบ
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
@@ -187,6 +195,16 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit }: JobDetailDi
             </div>
           </div>
         </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            ปิด
+          </Button>
+          <Button onClick={onViewCandidates}>
+            <UserSearch className="h-4 w-4 mr-2" />
+            ดูผู้สมัคร
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
