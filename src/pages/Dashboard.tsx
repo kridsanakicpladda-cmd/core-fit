@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -8,17 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-
-const stats = [
-  {
-    title: "ผู้สมัครทั้งหมด",
-    value: "1,234",
-    icon: Users,
-    trend: "+12.5%",
-    trendUp: true,
-    color: "from-blue-500 to-blue-600",
-  },
-];
+import { CompanyProfile } from "@/components/dashboard/CompanyProfile";
+import { ContactMap } from "@/components/dashboard/ContactMap";
 
 const recentCandidates = [
   { name: "สมชาย ใจดี", position: "Senior Developer", score: 89, time: "5 นาทีที่แล้ว" },
@@ -61,30 +52,8 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50">
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-10 rounded-full -mr-16 -mt-16`} />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md`}>
-                <stat.icon className="h-5 w-5 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold mb-1">{stat.value}</div>
-              <div className="flex items-center text-xs">
-                <span className="text-green-500">
-                  {stat.trend}
-                </span>
-                <span className="text-muted-foreground ml-1">จากเดือนที่แล้ว</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Company Profile */}
+      <CompanyProfile />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="hover:shadow-md transition-shadow">
@@ -193,6 +162,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Contact & Map Section */}
+      <ContactMap />
     </div>
   );
 }

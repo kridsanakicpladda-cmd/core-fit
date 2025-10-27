@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Briefcase, TrendingUp, ArrowUp } from "lucide-react";
+import { Download, Briefcase, TrendingUp, ArrowUp, Users } from "lucide-react";
 
 export default function Reports() {
   return (
@@ -16,7 +16,26 @@ export default function Reports() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 opacity-10 rounded-full -mr-16 -mt-16" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              ผู้สมัครทั้งหมด
+            </CardTitle>
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold mb-1">1,234</div>
+            <div className="flex items-center text-xs">
+              <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
+              <span className="text-green-500">+12.5%</span>
+              <span className="text-muted-foreground ml-1">จากเดือนที่แล้ว</span>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-purple-600 opacity-10 rounded-full -mr-16 -mt-16" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
