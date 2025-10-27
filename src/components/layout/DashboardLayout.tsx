@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import logo from "@/assets/logo.png";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +14,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
               <h1 className="ml-4 font-semibold text-lg">Talent X-Ray</h1>
             </div>
-            <NotificationBell />
+            <div className="flex items-center gap-4">
+              <NotificationBell />
+              <img src={logo} alt="ICP Ladda Logo" className="h-10" />
+            </div>
           </header>
           <main className="flex-1 p-6">
             {children}

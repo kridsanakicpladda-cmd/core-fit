@@ -2,13 +2,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Award, CheckCircle2 } from "lucide-react";
 import companyFarmer from "@/assets/company-farmer.jpg";
 import companyRice from "@/assets/company-rice.jpg";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import { useRef } from "react";
 
 export function CompanyProfile() {
+  const plugin = useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
+
   const certifications = [
     "ISO 9001:2015 - ระบบบริหารงานคุณภาพ",
     "ISO 14001:2015 - ระบบจัดการสิ่งแวดล้อม",
     "ISO/IEC 17025:2017 - มาตรฐานห้องปฏิบัติการ",
     "GMP - สำนักงานคณะกรรมการอาหารและยา"
+  ];
+
+  const carouselImages = [
+    { src: companyFarmer, alt: "ยกระดับคุณภาพชีวิตเกษตรกรไทย", caption: "ยกระดับคุณภาพชีวิตเกษตรกรไทย" },
+    { src: companyRice, alt: "ใส่ใจทุกรายละเอียดในการดูแลพืช", caption: "ใส่ใจทุกรายละเอียดในการดูแลพืช" }
   ];
 
   return (
@@ -18,33 +36,34 @@ export function CompanyProfile() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-success/5 via-primary/5 to-transparent rounded-full blur-3xl -ml-48 -mb-48" />
       
       <CardContent className="p-0 relative">
-        {/* Hero Images Section */}
-        <div className="grid md:grid-cols-2 gap-0 overflow-hidden">
-          <div className="relative h-64 md:h-80 overflow-hidden group">
-            <img 
-              src={companyFarmer} 
-              alt="ยกระดับคุณภาพชีวิตเกษตรกรไทย" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex items-end p-6">
-              <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg">
-                "ยกระดับคุณภาพชีวิตเกษตรกรไทย"
-              </h3>
-            </div>
-          </div>
-          <div className="relative h-64 md:h-80 overflow-hidden group">
-            <img 
-              src={companyRice} 
-              alt="ใส่ใจทุกรายละเอียดในการดูแลพืช" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex items-end p-6">
-              <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg">
-                "ใส่ใจทุกรายละเอียดในการดูแลพืช"
-              </h3>
-            </div>
-          </div>
-        </div>
+        {/* Hero Images Carousel */}
+        <Carousel
+          plugins={[plugin.current]}
+          className="w-full"
+          onMouseEnter={() => plugin.current.stop()}
+          onMouseLeave={() => plugin.current.play()}
+        >
+          <CarouselContent>
+            {carouselImages.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-96 md:h-[500px] overflow-hidden">
+                  <img 
+                    src={image.src} 
+                    alt={image.alt}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex items-end p-8">
+                    <h3 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg">
+                      "{image.caption}"
+                    </h3>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4" />
+          <CarouselNext className="right-4" />
+        </Carousel>
 
         {/* Company Information Section */}
         <div className="p-8 md:p-10">
@@ -55,9 +74,6 @@ export function CompanyProfile() {
                 <Award className="h-8 w-8 text-white" />
               </div>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-success via-primary to-success bg-clip-text text-transparent">
-              บริษัท ไอ ซี พี ลัดดา
-            </h2>
             <div className="flex items-center justify-center gap-2 text-lg text-muted-foreground mb-2">
               <div className="h-1 w-1 rounded-full bg-success animate-pulse" />
               <span>ผู้นำธุรกิจเคมีเกษตรมากว่า 50 ปี</span>
