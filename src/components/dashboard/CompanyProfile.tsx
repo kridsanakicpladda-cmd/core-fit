@@ -22,9 +22,9 @@ export function CompanyProfile() {
   ];
 
   return (
-    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-background to-primary/5 hover:shadow-xl transition-all duration-500 animate-fade-in">
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-background to-primary/5 hover:shadow-xl transition-all duration-500">
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent rounded-full blur-3xl -mr-48 -mt-48" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full blur-3xl -mr-48 -mt-48" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-success/5 via-primary/5 to-transparent rounded-full blur-3xl -ml-48 -mb-48" />
 
       <CardContent className="p-0 relative">
@@ -40,8 +40,15 @@ export function CompanyProfile() {
               <CarouselItem key={index}>
                 <div className="relative h-96 md:h-[500px] overflow-hidden">
                   <img src={image.src} alt={image.alt} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex items-end p-8">
-                    <h3 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg">"{image.caption}"</h3>
+                  {/* แก้ไข overlay ให้ตัวอักษรอ่านชัด: ใช้พื้นหลังโปร่ง/เบลอเล็กน้อย แทน drop-shadow */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent flex items-end p-6 md:p-8">
+                    <div className="max-w-[90%]">
+                      <span className="inline-block rounded-xl bg-black/40 backdrop-blur-sm px-4 py-2">
+                        <h3 className="text-xl md:text-4xl font-bold leading-tight tracking-tight text-white">
+                          “{image.caption}”
+                        </h3>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CarouselItem>
@@ -93,7 +100,7 @@ export function CompanyProfile() {
                 {certifications.map((cert, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-4 rounded-xl bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-md border border-border/30 hover-scale group"
+                    className="flex items-start gap-3 p-4 rounded-xl bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-md border border-border/30 group"
                   >
                     <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                     <span className="text-sm leading-relaxed">{cert}</span>
