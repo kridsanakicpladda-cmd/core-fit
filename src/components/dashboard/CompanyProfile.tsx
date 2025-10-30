@@ -16,19 +16,6 @@ export function CompanyProfile() {
     "GMP - สำนักงานคณะกรรมการอาหารและยา",
   ];
 
-  const carouselImages = [
-    {
-      src: companyFarmer,
-      alt: "ยกระดับคุณภาพชีวิตเกษตรกรไทย",
-      caption: "ยกระดับคุณภาพชีวิตเกษตรกรไทย",
-    },
-    {
-      src: companyRice,
-      alt: "ใส่ใจทุกรายละเอียดในการดูแลพืช",
-      caption: "ใส่ใจทุกรายละเอียดในการดูแลพืช",
-    },
-  ];
-
   return (
     <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-background to-primary/5 hover:shadow-xl transition-all duration-500">
       {/* Decorative Background Elements */}
@@ -48,11 +35,15 @@ export function CompanyProfile() {
               <CarouselItem key={index}>
                 <div className="relative h-96 md:h-[500px] overflow-hidden">
                   <img src={image.src} alt={image.alt} className="w-full h-full object-cover" />
-                  {/* ไม่มีกล่องดำล่างภาพ — ข้อความอยู่กลางภาพ */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent flex items-center justify-center p-6 md:p-8">
-                    <h3 className="text-xl md:text-4xl font-bold leading-tight tracking-tight text-white text-center">
-                      {image.caption}
-                    </h3>
+                  {/* แก้ไข overlay ให้ตัวอักษรอ่านชัด: ใช้พื้นหลังโปร่ง/เบลอเล็กน้อย แทน drop-shadow */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent flex items-end p-6 md:p-8">
+                    <div className="max-w-[90%]">
+                      <span className="inline-block rounded-xl bg-black/40 backdrop-blur-sm px-4 py-2">
+                        <h3 className="text-xl md:text-4xl font-bold leading-tight tracking-tight text-white">
+                          “{image.caption}”
+                        </h3>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CarouselItem>
