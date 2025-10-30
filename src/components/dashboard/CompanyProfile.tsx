@@ -18,6 +18,7 @@ export function CompanyProfile() {
 
   const carouselImages = [
     { src: companyFarmer, alt: "ยกระดับคุณภาพชีวิตเกษตรกรไทย", caption: "ยกระดับคุณภาพชีวิตเกษตรกรไทย" },
+    { src: companyRice, alt: "ใส่ใจทุกรายละเอียดในการดูแลพืช", caption: "ใส่ใจทุกรายละเอียดในการดูแลพืช" },
   ];
 
   return (
