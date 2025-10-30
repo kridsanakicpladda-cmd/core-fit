@@ -13,34 +13,28 @@ import Autoplay from "embla-carousel-autoplay";
 import { useRef } from "react";
 
 export function CompanyProfile() {
-  const plugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
+  const plugin = useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
 
   const certifications = [
     "ISO 9001:2015 - ระบบบริหารงานคุณภาพ",
     "ISO 14001:2015 - ระบบจัดการสิ่งแวดล้อม",
     "ISO/IEC 17025:2017 - มาตรฐานห้องปฏิบัติการ",
-    "GMP - สำนักงานคณะกรรมการอาหารและยา",
+    "GMP - สำนักงานคณะกรรมการอาหารและยา"
   ];
 
   const carouselImages = [
-    {
-      src: companyFarmer,
-      alt: "ยกระดับคุณภาพชีวิตเกษตรกรไทย",
-      caption: "ยกระดับคุณภาพชีวิตเกษตรกรไทย",
-    },
-    {
-      src: companyRice,
-      alt: "ใส่ใจทุกรายละเอียดในการดูแลพืช",
-      caption: "ใส่ใจทุกรายละเอียดในการดูแลพืช",
-    },
+    { src: companyFarmer, alt: "ยกระดับคุณภาพชีวิตเกษตรกรไทย", caption: "ยกระดับคุณภาพชีวิตเกษตรกรไทย" },
+    { src: companyRice, alt: "ใส่ใจทุกรายละเอียดในการดูแลพืช", caption: "ใส่ใจทุกรายละเอียดในการดูแลพืช" }
   ];
 
   return (
-    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-background to-primary/5 hover:shadow-xl transition-all duration-500">
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-background to-primary/5 hover:shadow-xl transition-all duration-500 animate-fade-in">
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full blur-3xl -mr-48 -mt-48" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 via-primary-glow/5 to-transparent rounded-full blur-3xl -mr-48 -mt-48" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-success/5 via-primary/5 to-transparent rounded-full blur-3xl -ml-48 -mb-48" />
-
+      
       <CardContent className="p-0 relative">
         {/* Hero Images Carousel */}
         <Carousel
@@ -53,15 +47,14 @@ export function CompanyProfile() {
             {carouselImages.map((image, index) => (
               <CarouselItem key={index}>
                 <div className="relative h-96 md:h-[500px] overflow-hidden">
-                  <img
-                    src={image.src}
+                  <img 
+                    src={image.src} 
                     alt={image.alt}
                     className="w-full h-full object-cover"
                   />
-                  {/* ✅ เอากล่องดำด้านล่างออก: ไม่มี span พื้นหลัง และไม่ผูกตำแหน่งไว้ที่ด้านล่าง */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent flex items-center justify-center p-6 md:p-8">
-                    <h3 className="text-xl md:text-4xl font-bold leading-tight tracking-tight text-white text-center">
-                      “{image.caption}”
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex items-end p-8">
+                    <h3 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg">
+                      "{image.caption}"
                     </h3>
                   </div>
                 </div>
@@ -92,10 +85,45 @@ export function CompanyProfile() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-gradient-to-br from-accent/50 to-accent/30 p-6 md:p-8 rounded-2xl border border-border/50 mb-8 hover:shadow-md transition-all duration-300">
               <p className="text-base md:text-lg leading-relaxed text-foreground/90">
-                เป็นบริษัทชั้นนำในด้านธุรกิจเคมีเกษตร ดำเนินธุรกิจนาน{" "}
-                <span className="font-bold text-success">50 ปี</span> ดำเนินการผลิต นำเข้า
-                และจัดจำหน่ายสารเคมีป้องกันศัตรูพืช ปุ๋ยเคมี และฮอร์โมนสำหรับพืช ฯลฯ
+                เป็นบริษัทชั้นนำในด้านธุรกิจเคมีเกษตร ดำเนินธุรกิจนาน <span className="font-bold text-success">50 ปี</span> ดำเนินการผลิต นำเข้า 
+                และจัดจำหน่ายสารเคมีป้องกันศัตรูพืช ปุ๋ยเคมี และฮอร์โมนสำหรับพืช ฯลฯ 
               </p>
               <p className="text-base md:text-lg leading-relaxed text-foreground/90 mt-4">
-                ทางบริษัทให้ความสำคัญอย่างยิ่งต่อเนื่องเสมอมาในการควบคุมคุณภาพของผลิตภัณฑ์
-                และใส่ใจในการรักษาสิ่งแวดล้อม พร้อมห้องปฏิบัต
+                ทางบริษัทให้ความสำคัญอย่างยิ่งต่อเนื่องเสมอมาในการควบคุมคุณภาพของผลิตภัณฑ์ และใส่ใจในการรักษาสิ่งแวดล้อม 
+                พร้อมห้องปฏิบัติการที่ทันสมัยเพื่อตรวจสอบคุณภาพอย่างเข้มงวด
+              </p>
+            </div>
+
+            {/* Certifications Grid */}
+            <div className="bg-gradient-to-br from-primary/5 to-success/5 p-6 md:p-8 rounded-2xl border border-border/50">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                  <Award className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold">มาตรฐานและการรับรอง</h3>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {certifications.map((cert, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-start gap-3 p-4 rounded-xl bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-md border border-border/30 hover-scale group"
+                  >
+                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm leading-relaxed">{cert}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <p className="text-sm text-muted-foreground text-center">
+                  รับรองโดย <span className="font-semibold text-primary">Bureau Veritas (BV)</span>, 
+                  <span className="font-semibold text-primary"> สำนักบริหารและรับรองห้องปฏิบัติการ</span> และ
+                  <span className="font-semibold text-primary"> กระทรวงสาธารณสุข</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

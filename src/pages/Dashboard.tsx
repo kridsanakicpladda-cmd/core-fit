@@ -37,15 +37,19 @@ export default function Dashboard() {
   const [openPositions, setOpenPositions] = useState(initialOpenPositions);
 
   const handleStatusChange = (id: number, newStatus: string) => {
-    setOpenPositions(
-      openPositions.map((position) => (position.id === id ? { ...position, status: newStatus } : position)),
-    );
+    setOpenPositions(openPositions.map(position => 
+      position.id === id ? { ...position, status: newStatus } : position
+    ));
   };
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent"></h1>
-        <p className="text-muted-foreground"></p>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Today hiring Overview
+        </h1>
+        <p className="text-muted-foreground">
+          ภาพรวมระบบจัดการผู้สมัครและการสัมภาษณ์
+        </p>
       </div>
 
       {/* Company Profile */}
@@ -54,32 +58,29 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">ตำแหน่งที่เปิดรับ</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              ตำแหน่งที่เปิดรับ
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {openPositions.map((position) => (
-                <div
-                  key={position.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
-                >
+                <div key={position.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
                   <div className="flex-1">
                     <p className="font-medium">{position.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {position.positions} อัตรา • {position.applicants} ผู้สมัคร
-                    </p>
+                    <p className="text-sm text-muted-foreground">{position.positions} อัตรา • {position.applicants} ผู้สมัคร</p>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="outline-none">
-                        <Badge
+                        <Badge 
                           variant="outline"
                           className={
-                            position.status === "Screening"
-                              ? "bg-blue-500/10 text-blue-600 border-blue-500/20 cursor-pointer hover:bg-blue-500/20"
+                            position.status === "Screening" 
+                              ? "bg-blue-500/10 text-blue-600 border-blue-500/20 cursor-pointer hover:bg-blue-500/20" 
                               : position.status === "Interview"
-                                ? "bg-orange-500/10 text-orange-600 border-orange-500/20 cursor-pointer hover:bg-orange-500/20"
-                                : "bg-green-500/10 text-green-600 border-green-500/20 cursor-pointer hover:bg-green-500/20"
+                              ? "bg-orange-500/10 text-orange-600 border-orange-500/20 cursor-pointer hover:bg-orange-500/20"
+                              : "bg-green-500/10 text-green-600 border-green-500/20 cursor-pointer hover:bg-green-500/20"
                           }
                         >
                           {position.status}
@@ -114,10 +115,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-3">
               {recentCandidates.map((candidate, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-                >
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors group">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-sm group-hover:shadow-md transition-shadow">
                       {candidate.score}
@@ -146,16 +144,13 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-3">
               {todayInterviews.map((interview, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
-                >
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
                   <div>
                     <p className="font-medium">{interview.name}</p>
                     <p className="text-sm text-muted-foreground">{interview.position}</p>
                     <p className="text-xs text-muted-foreground mt-1">{interview.time}</p>
                   </div>
-                  <Badge
+                  <Badge 
                     variant={interview.status === "completed" ? "secondary" : "default"}
                     className={interview.status === "upcoming" ? "bg-primary/10 text-primary border-primary/20" : ""}
                   >
