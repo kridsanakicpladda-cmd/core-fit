@@ -24,6 +24,11 @@ const initialCandidates = [
     education: "ปริญญาตรี วิทยาการคอมพิวเตอร์",
     summary: "มีประสบการณ์ในการพัฒนา Web Application ด้วย React และ Node.js มากกว่า 5 ปี เคยทำงานในโปรเจกต์ขนาดใหญ่หลายโปรเจกต์",
     previousCompany: "Tech Solutions Co.",
+    interviews: {
+      hr: { date: "15/03/2024", passed: true, feedback: "Good communication skills" },
+      manager: { date: "18/03/2024", passed: true, feedback: "Strong technical knowledge" },
+      isTeam: { date: "20/03/2024", passed: true, feedback: "Excellent problem solving" },
+    },
   },
   {
     id: 2,
@@ -40,6 +45,10 @@ const initialCandidates = [
     education: "ปริญญาตรี การออกแบบนิเทศศิลป์",
     summary: "UX Designer ที่มีความชำนาญในการออกแบบ User Interface และ User Experience สำหรับแอปพลิเคชันและเว็บไซต์",
     previousCompany: "Design Studio Ltd.",
+    interviews: {
+      hr: { date: "10/03/2024", passed: true, feedback: "Creative and professional" },
+      manager: { date: "12/03/2024", passed: true, feedback: "Great portfolio" },
+    },
   },
   {
     id: 3,

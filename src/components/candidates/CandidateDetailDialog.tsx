@@ -31,6 +31,11 @@ interface CandidateDetailDialogProps {
     education: string;
     summary: string;
     previousCompany: string;
+    interviews?: {
+      hr?: { date: string; passed: boolean; feedback: string };
+      manager?: { date: string; passed: boolean; feedback: string };
+      isTeam?: { date: string; passed: boolean; feedback: string };
+    };
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -210,6 +215,89 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   <span className="text-sm font-medium w-12 text-right">90%</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Test Score - Interview Details */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Test Score</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Interviews By HR</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Interview Date</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Yes/No</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Feedback Interview</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="p-3 text-sm"></td>
+                    <td className="p-3 text-sm">{candidate.interviews?.hr?.date || "-"}</td>
+                    <td className="p-3 text-sm">
+                      {candidate.interviews?.hr?.passed !== undefined ? (
+                        <Badge variant={candidate.interviews.hr.passed ? "default" : "destructive"}>
+                          {candidate.interviews.hr.passed ? "Yes" : "No"}
+                        </Badge>
+                      ) : "-"}
+                    </td>
+                    <td className="p-3 text-sm">{candidate.interviews?.hr?.feedback || "-"}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table className="w-full border-collapse mt-4">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Interviews By Department</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Interview Date</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Yes/No</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Feedback Interview</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="p-3 text-sm"></td>
+                    <td className="p-3 text-sm">{candidate.interviews?.manager?.date || "-"}</td>
+                    <td className="p-3 text-sm">
+                      {candidate.interviews?.manager?.passed !== undefined ? (
+                        <Badge variant={candidate.interviews.manager.passed ? "default" : "destructive"}>
+                          {candidate.interviews.manager.passed ? "Yes" : "No"}
+                        </Badge>
+                      ) : "-"}
+                    </td>
+                    <td className="p-3 text-sm">{candidate.interviews?.manager?.feedback || "-"}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table className="w-full border-collapse mt-4">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Interviews By IS Team</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Interview Date</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Yes/No</th>
+                    <th className="text-left p-3 font-semibold text-sm bg-muted/50">Feedback Interview</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="p-3 text-sm"></td>
+                    <td className="p-3 text-sm">{candidate.interviews?.isTeam?.date || "-"}</td>
+                    <td className="p-3 text-sm">
+                      {candidate.interviews?.isTeam?.passed !== undefined ? (
+                        <Badge variant={candidate.interviews.isTeam.passed ? "default" : "destructive"}>
+                          {candidate.interviews.isTeam.passed ? "Yes" : "No"}
+                        </Badge>
+                      ) : "-"}
+                    </td>
+                    <td className="p-3 text-sm">{candidate.interviews?.isTeam?.feedback || "-"}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
