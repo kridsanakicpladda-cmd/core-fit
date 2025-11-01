@@ -184,6 +184,17 @@ export default function Candidates() {
     });
   };
 
+  const handleTestScoreUpdate = (candidateId: number, testScores: any) => {
+    setCandidates(candidates.map(c => 
+      c.id === candidateId ? { ...c, testScores } : c
+    ));
+    setSelectedCandidate(prev => prev ? { ...prev, testScores } : null);
+    toast({
+      title: "บันทึกข้อมูลแล้ว",
+      description: "แก้ไขคะแนนทดสอบเรียบร้อยแล้ว",
+    });
+  };
+
   const handleSave = (candidateData: any) => {
     if (candidateData.id) {
       // Edit existing candidate
@@ -307,6 +318,7 @@ export default function Candidates() {
         onEdit={() => handleEdit(selectedCandidate!)}
         onDelete={() => selectedCandidate && handleDelete(selectedCandidate.id)}
         onInterviewUpdate={handleInterviewUpdate}
+        onTestScoreUpdate={handleTestScoreUpdate}
       />
 
       <CandidateFormDialog

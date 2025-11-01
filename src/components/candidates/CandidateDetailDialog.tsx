@@ -14,7 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2 } from "lucide-react";
-import { CandidateInterviewDialog } from "./CandidateInterviewDialog";
+import { SingleInterviewDialog } from "./SingleInterviewDialog";
+import { TestScoreDialog } from "./TestScoreDialog";
+import { ResumeDialog } from "./ResumeDialog";
 
 interface CandidateDetailDialogProps {
   candidate: {
@@ -47,6 +49,7 @@ interface CandidateDetailDialogProps {
   onEdit: () => void;
   onDelete: () => void;
   onInterviewUpdate: (candidateId: number, interviews: any) => void;
+  onTestScoreUpdate: (candidateId: number, testScores: any) => void;
 }
 
 const statusColors = {
@@ -65,9 +68,11 @@ const statusLabels = {
   hired: "รับเข้าทำงาน",
 };
 
-export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, onDelete, onInterviewUpdate }: CandidateDetailDialogProps) {
+export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, onDelete, onInterviewUpdate, onTestScoreUpdate }: CandidateDetailDialogProps) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [showInterviewDialog, setShowInterviewDialog] = useState(false);
+  const [showTestScoreDialog, setShowTestScoreDialog] = useState(false);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [activeInterview, setActiveInterview] = useState<'hr' | 'manager' | 'isTeam' | null>(null);
   
   if (!candidate) return null;
 
@@ -80,8 +85,21 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     setShowDeleteAlert(false);
   };
 
-  const handleInterviewSave = (interviews: any) => {
-    onInterviewUpdate(candidate.id, interviews);
+  const handleTestScoreSave = (testScores: any) => {
+    onTestScoreUpdate(candidate.id, testScores);
+  };
+
+  const handleSingleInterviewSave = (interviewData: any) => {
+    const updatedInterviews = {
+      ...candidate.interviews,
+      [activeInterview as string]: interviewData,
+    };
+    onInterviewUpdate(candidate.id, updatedInterviews);
+    setActiveInterview(null);
+  };
+
+  const handleInterviewEdit = (type: 'hr' | 'manager' | 'isTeam') => {
+    setActiveInterview(type);
   };
 
   return (
@@ -233,7 +251,13 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
           {/* Test Scores */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">คะแนนแบบทดสอบ</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">คะแนนแบบทดสอบ</h3>
+              <Button variant="outline" size="sm" onClick={() => setShowTestScoreDialog(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                แก้ไข
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-muted/20">
                 <div className="text-sm text-muted-foreground mb-1">แบบทดสอบส่วนกลาง (HR)</div>
@@ -256,17 +280,17 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
           {/* Interview Details */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">ข้อมูลการสัมภาษณ์</h3>
-              <Button variant="outline" size="sm" onClick={() => setShowInterviewDialog(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                แก้ไข
-              </Button>
-            </div>
+            <h3 className="text-lg font-semibold mb-4">ข้อมูลการสัมภาษณ์</h3>
             <div className="space-y-4">
               {/* HR Interview */}
               <div className="p-4 border rounded-lg">
-                <div className="font-semibold text-sm mb-3">สัมภาษณ์โดย HR</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-sm">สัมภาษณ์โดย HR</div>
+                  <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('hr')}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    แก้ไข
+                  </Button>
+                </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
@@ -291,7 +315,13 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
               {/* Manager Interview */}
               <div className="p-4 border rounded-lg">
-                <div className="font-semibold text-sm mb-3">สัมภาษณ์โดยหัวหน้าแผนก</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-sm">สัมภาษณ์โดยหัวหน้าแผนก</div>
+                  <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('manager')}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    แก้ไข
+                  </Button>
+                </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
@@ -316,7 +346,13 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
               {/* IS Team Interview */}
               <div className="p-4 border rounded-lg">
-                <div className="font-semibold text-sm mb-3">สัมภาษณ์โดยทีม IS</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-sm">สัมภาษณ์โดยทีม IS</div>
+                  <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('isTeam')}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    แก้ไข
+                  </Button>
+                </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
@@ -346,7 +382,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             ปิด
           </Button>
-          <Button>
+          <Button onClick={() => setShowResumeDialog(true)}>
             <FileText className="h-4 w-4 mr-2" />
             ดูเรซูเม่
           </Button>
@@ -371,11 +407,33 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
         </AlertDialogContent>
       </AlertDialog>
 
-      <CandidateInterviewDialog
-        interviews={candidate.interviews}
-        open={showInterviewDialog}
-        onOpenChange={setShowInterviewDialog}
-        onSave={handleInterviewSave}
+      <TestScoreDialog
+        testScores={candidate.testScores}
+        open={showTestScoreDialog}
+        onOpenChange={setShowTestScoreDialog}
+        onSave={handleTestScoreSave}
+      />
+
+      <SingleInterviewDialog
+        title={
+          activeInterview === 'hr' ? 'แก้ไขการสัมภาษณ์โดย HR' :
+          activeInterview === 'manager' ? 'แก้ไขการสัมภาษณ์โดยหัวหน้าแผนก' :
+          'แก้ไขการสัมภาษณ์โดยทีม IS'
+        }
+        interview={
+          activeInterview === 'hr' ? candidate.interviews?.hr :
+          activeInterview === 'manager' ? candidate.interviews?.manager :
+          candidate.interviews?.isTeam
+        }
+        open={activeInterview !== null}
+        onOpenChange={(open) => !open && setActiveInterview(null)}
+        onSave={handleSingleInterviewSave}
+      />
+
+      <ResumeDialog
+        candidate={candidate}
+        open={showResumeDialog}
+        onOpenChange={setShowResumeDialog}
       />
     </Dialog>
   );
