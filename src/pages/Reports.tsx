@@ -1,8 +1,112 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Briefcase, TrendingUp, ArrowUp, Users } from "lucide-react";
+import { Download, Briefcase, TrendingUp, ArrowUp, Users, Clock } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+
+interface Position {
+  id: string;
+  title: string;
+  department: string;
+  startDate: string;
+  endDate?: string;
+  daysToHire: number;
+  status: "open" | "filled" | "closed";
+  applicants: number;
+}
 
 export default function Reports() {
+  const [positions] = useState<Position[]>([
+    {
+      id: "1",
+      title: "Senior Software Engineer",
+      department: "วิศวกรรม",
+      startDate: "2024-01-15",
+      endDate: "2024-02-28",
+      daysToHire: 44,
+      status: "filled",
+      applicants: 124
+    },
+    {
+      id: "2",
+      title: "Product Manager",
+      department: "ผลิตภัณฑ์",
+      startDate: "2024-02-01",
+      endDate: "2024-03-10",
+      daysToHire: 38,
+      status: "filled",
+      applicants: 89
+    },
+    {
+      id: "3",
+      title: "UX Designer",
+      department: "ออกแบบ",
+      startDate: "2024-02-15",
+      endDate: "2024-03-20",
+      daysToHire: 34,
+      status: "filled",
+      applicants: 67
+    },
+    {
+      id: "4",
+      title: "Data Analyst",
+      department: "วิเคราะห์ข้อมูล",
+      startDate: "2024-03-01",
+      daysToHire: 18,
+      status: "open",
+      applicants: 45
+    },
+    {
+      id: "5",
+      title: "Marketing Manager",
+      department: "การตลาด",
+      startDate: "2024-03-10",
+      daysToHire: 12,
+      status: "open",
+      applicants: 32
+    },
+    {
+      id: "6",
+      title: "DevOps Engineer",
+      department: "วิศวกรรม",
+      startDate: "2024-01-20",
+      endDate: "2024-03-05",
+      daysToHire: 45,
+      status: "filled",
+      applicants: 56
+    }
+  ]);
+
+  const handleExport = () => {
+    // Prepare CSV data
+    const csvHeaders = ["ตำแหน่ง", "แผนก", "วันเริ่มต้น", "วันสิ้นสุด", "ระยะเวลา (วัน)", "สถานะ", "ผู้สมัคร"];
+    const csvRows = positions.map(pos => [
+      pos.title,
+      pos.department,
+      pos.startDate,
+      pos.endDate || "-",
+      pos.daysToHire.toString(),
+      pos.status === "filled" ? "เต็มแล้ว" : pos.status === "open" ? "เปิดรับ" : "ปิด",
+      pos.applicants.toString()
+    ]);
+    
+    const csvContent = [
+      csvHeaders.join(","),
+      ...csvRows.map(row => row.join(","))
+    ].join("\n");
+    
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `recruitment-report-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const avgDaysToHire = positions
+    .filter(p => p.status === "filled")
+    .reduce((sum, p) => sum + p.daysToHire, 0) / positions.filter(p => p.status === "filled").length;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -10,7 +114,7 @@ export default function Reports() {
           <h1 className="text-3xl font-bold mb-2">รายงาน</h1>
           <p className="text-muted-foreground">รายงานและข้อมูลเชิงลึก</p>
         </div>
-        <Button>
+        <Button onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           ส่งออกรายงาน
         </Button>
@@ -86,7 +190,7 @@ export default function Reports() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">เวลาเฉลี่ยในการจ้างงาน</span>
-                <span className="font-bold">21 วัน</span>
+                <span className="font-bold">{Math.round(avgDaysToHire)} วัน</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">อัตราการยอมรับ</span>
@@ -122,6 +226,89 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-xl">ระยะเวลาการสรรหาของแต่ละตำแหน่ง</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">รายละเอียดระยะเวลาในการสรรหาบุคลากรแต่ละตำแหน่ง</p>
+          </div>
+          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-md">
+            <Clock className="h-5 w-5 text-white" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ตำแหน่ง</TableHead>
+                  <TableHead>แผนก</TableHead>
+                  <TableHead className="text-center">วันเริ่มต้น</TableHead>
+                  <TableHead className="text-center">วันสิ้นสุด</TableHead>
+                  <TableHead className="text-center">ระยะเวลา</TableHead>
+                  <TableHead className="text-center">ผู้สมัคร</TableHead>
+                  <TableHead className="text-center">สถานะ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {positions.map((position) => (
+                  <TableRow key={position.id}>
+                    <TableCell className="font-medium">{position.title}</TableCell>
+                    <TableCell>{position.department}</TableCell>
+                    <TableCell className="text-center">
+                      {new Date(position.startDate).toLocaleDateString('th-TH', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {position.endDate 
+                        ? new Date(position.endDate).toLocaleDateString('th-TH', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{position.daysToHire} วัน</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-medium">{position.applicants}</span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant={
+                          position.status === "filled" 
+                            ? "default" 
+                            : position.status === "open" 
+                            ? "secondary" 
+                            : "outline"
+                        }
+                      >
+                        {position.status === "filled" 
+                          ? "เต็มแล้ว" 
+                          : position.status === "open" 
+                          ? "เปิดรับ" 
+                          : "ปิด"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>เวลาเฉลี่ยในการสรรหา (ตำแหน่งที่เต็มแล้ว): <span className="font-semibold text-foreground">{Math.round(avgDaysToHire)} วัน</span></span>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
