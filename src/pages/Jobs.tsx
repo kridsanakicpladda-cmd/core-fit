@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, MapPin, Clock, Briefcase } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, MapPin, Clock, Briefcase, Search } from "lucide-react";
 import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -160,6 +162,9 @@ export default function Jobs() {
   const [editingJob, setEditingJob] = useState<typeof initialJobs[0] | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [locationFilter, setLocationFilter] = useState<string>("all");
 
   const handleViewDetails = (job: typeof initialJobs[0]) => {
     setSelectedJob(job);
@@ -233,6 +238,31 @@ export default function Jobs() {
     navigate("/candidates");
   };
 
+  // Get unique departments and locations for filters
+  const departments = useMemo(() => {
+    const depts = new Set(jobs.map(job => job.department));
+    return Array.from(depts).sort();
+  }, [jobs]);
+
+  const locations = useMemo(() => {
+    const locs = new Set(jobs.map(job => job.location));
+    return Array.from(locs).sort();
+  }, [jobs]);
+
+  // Filter jobs based on search and filters
+  const filteredJobs = useMemo(() => {
+    return jobs.filter(job => {
+      const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           job.location.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesDepartment = departmentFilter === "all" || job.department === departmentFilter;
+      const matchesLocation = locationFilter === "all" || job.location === locationFilter;
+      
+      return matchesSearch && matchesDepartment && matchesLocation;
+    });
+  }, [jobs, searchTerm, departmentFilter, locationFilter]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -250,8 +280,71 @@ export default function Jobs() {
         </Button>
       </div>
 
+      {/* Search and Filter Section */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="ค้นหาตำแหน่งงาน แผนก หรือสถานที่..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="แผนกทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">แผนกทั้งหมด</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="สถานที่ทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">สถานที่ทั้งหมด</SelectItem>
+                {locations.map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {(searchTerm || departmentFilter !== "all" || locationFilter !== "all") && (
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <span>พบ {filteredJobs.length} ตำแหน่งงาน</span>
+              {(searchTerm || departmentFilter !== "all" || locationFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setDepartmentFilter("all");
+                    setLocationFilter("all");
+                  }}
+                  className="h-auto p-0 text-primary hover:text-primary/80"
+                >
+                  ล้างตัวกรอง
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4">
-        {jobs.map((job) => (
+        {filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
           <Card key={job.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -303,7 +396,20 @@ export default function Jobs() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ))
+        ) : (
+          <Card className="border-dashed border-2">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Search className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">ไม่พบตำแหน่งงาน</h3>
+              <p className="text-muted-foreground text-center max-w-md">
+                ไม่พบตำแหน่งงานที่ตรงกับเงื่อนไขการค้นหา ลองปรับเปลี่ยนคำค้นหาหรือตัวกรอง
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <JobDetailDialog
