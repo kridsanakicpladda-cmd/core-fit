@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, MapPin, Clock, Users, TrendingUp, Briefcase } from "lucide-react";
+import { Plus, MapPin, Clock, Briefcase } from "lucide-react";
 import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -284,26 +284,13 @@ export default function Jobs() {
                     </Badge>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-white font-bold text-lg shadow-primary">
-                    {job.avgScore}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Avg Score</p>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span className="font-medium text-foreground">{job.applicants}</span>
-                    <span>ผู้สมัคร</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>เปิดรับ: {job.postedDate}</span>
-                  </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>เปิดรับ: {job.postedDate}</span>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => handleViewDetails(job)} className="hover:bg-accent transition-colors">
@@ -318,21 +305,6 @@ export default function Jobs() {
           </Card>
         ))}
       </div>
-
-      <Card className="border-dashed border-2 hover:border-primary/50 transition-colors">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Plus className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">สร้างตำแหน่งงานใหม่</h3>
-          <p className="text-muted-foreground mb-4 text-center max-w-md">
-            เพิ่มตำแหน่งงานใหม่และเริ่มต้นรับสมัครผู้สมัครที่มีคุณสมบัติเหมาะสม
-          </p>
-          <Button onClick={handleAddNew} variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-colors">
-            เพิ่มตำแหน่งงาน
-          </Button>
-        </CardContent>
-      </Card>
 
       <JobDetailDialog
         job={selectedJob}
