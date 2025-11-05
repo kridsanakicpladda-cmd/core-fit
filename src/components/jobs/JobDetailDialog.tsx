@@ -1,4 +1,15 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -36,10 +47,22 @@ interface JobDetailDialogProps {
 }
 
 export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onViewCandidates }: JobDetailDialogProps) {
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  
   if (!job) return null;
 
+  const handleDeleteClick = () => {
+    setShowDeleteAlert(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteAlert(false);
+    onDelete();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
@@ -70,7 +93,7 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onV
                 <Edit className="h-4 w-4 mr-2" />
                 แก้ไข
               </Button>
-              <Button variant="destructive" size="sm" onClick={onDelete}>
+              <Button variant="destructive" size="sm" onClick={handleDeleteClick}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 ลบ
               </Button>
@@ -207,5 +230,25 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onV
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>ยืนยันการลบตำแหน่งงาน</AlertDialogTitle>
+          <AlertDialogDescription>
+            คุณต้องการลบตำแหน่ง <strong>{job.title}</strong> ใช่หรือไม่?
+            <br />
+            การดำเนินการนี้ไม่สามารถย้อนกลับได้
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            ลบ
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }
