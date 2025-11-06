@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Star, UserPlus } from "lucide-react";
 import { CandidateDetailDialog } from "@/components/candidates/CandidateDetailDialog";
 import { CandidateFormDialog } from "@/components/candidates/CandidateFormDialog";
@@ -128,12 +129,16 @@ const statusColors = {
   screening: "bg-blue-100 text-blue-700 border-blue-200",
   interview: "bg-orange-100 text-orange-700 border-orange-200",
   shortlisted: "bg-green-100 text-green-700 border-green-200",
+  interested: "bg-purple-100 text-purple-700 border-purple-200",
+  not_interested: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
 const statusLabels = {
   screening: "กำลังคัดกรอง",
   interview: "รอสัมภาษณ์",
   shortlisted: "รายชื่อสั้น",
+  interested: "สนใจ",
+  not_interested: "ไม่สนใจ",
 };
 
 export default function Candidates() {
@@ -144,12 +149,20 @@ export default function Candidates() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
-  const filteredCandidates = candidates.filter(candidate =>
-    candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    candidate.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    candidate.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredCandidates = candidates.filter(candidate => {
+    const matchesSearch = candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      candidate.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      candidate.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "shortlist") return matchesSearch && candidate.status === "shortlisted";
+    if (activeTab === "interested") return matchesSearch && candidate.status === "interested";
+    if (activeTab === "not_interested") return matchesSearch && candidate.status === "not_interested";
+    
+    return matchesSearch;
+  });
 
   const handleViewDetails = (candidate: typeof initialCandidates[0]) => {
     setSelectedCandidate(candidate);
@@ -255,8 +268,17 @@ export default function Candidates() {
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {filteredCandidates.map((candidate) => (
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="shortlist">Shortlist</TabsTrigger>
+          <TabsTrigger value="interested">Interested</TabsTrigger>
+          <TabsTrigger value="not_interested">Not interested</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-6">
+          <div className="grid gap-4">
+            {filteredCandidates.map((candidate) => (
           <Card key={candidate.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between gap-4">
@@ -309,7 +331,9 @@ export default function Candidates() {
             </CardContent>
           </Card>
         ))}
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <CandidateDetailDialog
         candidate={selectedCandidate}
