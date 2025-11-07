@@ -22,11 +22,15 @@ const JobApplication = () => {
   ]);
   const [formData, setFormData] = useState({
     position: "",
+    salaryRequired: "",
+    yearsOfExperience: "",
     fullName: "",
+    nickname: "",
     email: "",
     phone: "",
     coverLetter: "",
     informationSource: "",
+    referrerName: "",
     privacyConsent: false,
   });
 
@@ -115,11 +119,15 @@ const JobApplication = () => {
     // Reset form
     setFormData({
       position: "",
+      salaryRequired: "",
+      yearsOfExperience: "",
       fullName: "",
+      nickname: "",
       email: "",
       phone: "",
       coverLetter: "",
       informationSource: "",
+      referrerName: "",
       privacyConsent: false,
     });
     setSelectedFile(null);
@@ -146,111 +154,195 @@ const JobApplication = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="position">
-                ตำแหน่งงานที่สนใจ <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.position}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, position: value })
-                }
-              >
-                <SelectTrigger id="position">
-                  <SelectValue placeholder="เลือกตำแหน่งงาน" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availablePositions.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullName">
-                ชื่อ-นามสกุล <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="fullName"
-                value={formData.fullName}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
-                }
-                placeholder="กรอกชื่อ-นามสกุล"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  อีเมล <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="your.email@example.com"
-                />
+            {/* Top Section: Photo + Position/Salary/Experience/CV */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left: Profile Photo */}
+              <div className="lg:col-span-3">
+                <Label>รูป / Photo</Label>
+                <div className="mt-2 space-y-4">
+                  <div className="w-full aspect-square max-w-[200px] rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                    {profilePhotoPreview ? (
+                      <img 
+                        src={profilePhotoPreview} 
+                        alt="Profile preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-20 h-20 text-muted-foreground" />
+                    )}
+                  </div>
+                  <input
+                    id="profile-photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                  <label htmlFor="profile-photo">
+                    <Button type="button" variant="secondary" className="cursor-pointer w-full" asChild>
+                      <span>Browse</span>
+                    </Button>
+                  </label>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">เบอร์โทรศัพท์</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder="081-234-5678"
-                />
+              {/* Right: Position/Salary/Experience/CV */}
+              <div className="lg:col-span-9 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="position" className="bg-muted px-3 py-2 rounded-md block">
+                    ตำแหน่งที่ต้องการสมัคร / Position Required <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.position}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, position: value })
+                    }
+                  >
+                    <SelectTrigger id="position">
+                      <SelectValue placeholder="เลือกตำแหน่งงาน" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePositions.map((position) => (
+                        <SelectItem key={position} value={position}>
+                          {position}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="salaryRequired">
+                      เงินเดือนที่คาดหวัง / Salary Required
+                    </Label>
+                    <Input
+                      id="salaryRequired"
+                      type="text"
+                      value={formData.salaryRequired}
+                      onChange={(e) =>
+                        setFormData({ ...formData, salaryRequired: e.target.value })
+                      }
+                      placeholder="บาท / Baht"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="yearsOfExperience">
+                      ประสบการณ์ทำงานรวม (ปี) / Years of Experience
+                    </Label>
+                    <Input
+                      id="yearsOfExperience"
+                      type="text"
+                      value={formData.yearsOfExperience}
+                      onChange={(e) =>
+                        setFormData({ ...formData, yearsOfExperience: e.target.value })
+                      }
+                      placeholder="ปี / Years"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="resume">
+                    แนบไฟล์ CV / Attached CV <span className="text-destructive">*</span>
+                    <span className="text-destructive text-xs ml-2">
+                      (เฉพาะไฟล์ word, pdf หรือ powerpoint เท่านั้น)
+                    </span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={selectedFile?.name || ""}
+                      readOnly
+                      placeholder="No file chosen"
+                      className="flex-1"
+                    />
+                    <input
+                      id="resume"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label htmlFor="resume">
+                      <Button type="button" variant="secondary" className="cursor-pointer" asChild>
+                        <span>Browse</span>
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Personal Information Section */}
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-lg font-semibold mb-4">ข้อมูลส่วนตัว / Personal Information</h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">
+                    ชื่อ-นามสกุล / Full Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="fullName"
+                    value={formData.fullName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullName: e.target.value })
+                    }
+                    placeholder="กรอกชื่อ-นามสกุล"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nickname">
+                    ชื่อเล่น / Nickname
+                  </Label>
+                  <Input
+                    id="nickname"
+                    value={formData.nickname}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nickname: e.target.value })
+                    }
+                    placeholder="กรอกชื่อเล่น"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">
+                      อีเมล / Email <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">
+                      เบอร์โทรศัพท์ / Phone Number
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      placeholder="081-234-5678"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="resume">
-                อัปโหลดเรซูเม่ <span className="text-destructive">*</span>
-              </Label>
-              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors">
-                <input
-                  id="resume"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label htmlFor="resume" className="cursor-pointer">
-                  {selectedFile ? (
-                    <div className="flex items-center justify-center gap-2 text-primary">
-                      <FileText className="h-6 w-6" />
-                      <span className="font-medium">{selectedFile.name}</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                      <div>
-                        <span className="text-primary font-medium">
-                          คลิกเพื่ออัปโหลด
-                        </span>
-                        <span className="text-muted-foreground"> หรือลากไฟล์มาวางที่นี่</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        รองรับไฟล์ PDF, DOC, DOCX (สูงสุด 5MB)
-                      </p>
-                    </div>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="coverLetter">จดหมายสมัครงาน</Label>
+              <Label htmlFor="coverLetter">จดหมายสมัครงาน / Cover Letter</Label>
               <Textarea
                 id="coverLetter"
                 value={formData.coverLetter}
@@ -260,43 +352,6 @@ const JobApplication = () => {
                 placeholder="แนะนำตัวและเหตุผลที่สนใจสมัครงานตำแหน่งนี้..."
                 rows={5}
               />
-            </div>
-
-            {/* Profile Photo Upload */}
-            <div className="space-y-2">
-              <Label>รูป / Photo</Label>
-              <div className="flex items-start gap-4">
-                <div className="relative">
-                  <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                    {profilePhotoPreview ? (
-                      <img 
-                        src={profilePhotoPreview} 
-                        alt="Profile preview" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User className="w-16 h-16 text-muted-foreground" />
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <input
-                    id="profile-photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                  <label htmlFor="profile-photo">
-                    <Button type="button" variant="secondary" className="cursor-pointer" asChild>
-                      <span>Browse</span>
-                    </Button>
-                  </label>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    รองรับไฟล์ JPG, PNG (สูงสุด 5MB)
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Language Literacy */}
@@ -403,6 +458,23 @@ const JobApplication = () => {
               </Select>
             </div>
 
+            {/* Referrer Name - Show only when referral is selected */}
+            {formData.informationSource === "referral" && (
+              <div className="space-y-2">
+                <Label htmlFor="referrerName">
+                  ชื่อผู้แนะนำ / Referrer Name
+                </Label>
+                <Input
+                  id="referrerName"
+                  value={formData.referrerName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, referrerName: e.target.value })
+                  }
+                  placeholder="กรอกชื่อผู้แนะนำ"
+                />
+              </div>
+            )}
+
             {/* Privacy Consent */}
             <div className="flex items-start space-x-2">
               <Checkbox
@@ -431,11 +503,15 @@ const JobApplication = () => {
                 onClick={() => {
                   setFormData({
                     position: "",
+                    salaryRequired: "",
+                    yearsOfExperience: "",
                     fullName: "",
+                    nickname: "",
                     email: "",
                     phone: "",
                     coverLetter: "",
                     informationSource: "",
+                    referrerName: "",
                     privacyConsent: false,
                   });
                   setSelectedFile(null);
