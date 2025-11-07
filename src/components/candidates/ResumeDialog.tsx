@@ -13,7 +13,7 @@ interface ResumeDialogProps {
     education?: string;
     experience: string;
     previousCompany?: string;
-    summary: string;
+    summary?: string;
     skills: string[];
   } | null;
   open: boolean;
