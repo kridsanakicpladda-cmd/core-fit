@@ -1,15 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { CompanyProfile } from "@/components/dashboard/CompanyProfile";
 import { ContactMap } from "@/components/dashboard/ContactMap";
+import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
 
 const recentCandidates = [
   { name: "สมชาย ใจดี", position: "Senior Developer", score: 89, time: "5 นาทีที่แล้ว" },
@@ -26,20 +21,146 @@ const todayInterviews = [
 ];
 
 const initialOpenPositions = [
-  { id: 1, title: "Senior Developer", positions: 3, status: "Interview", applicants: 45 },
-  { id: 2, title: "UX Designer", positions: 2, status: "Screening", applicants: 32 },
-  { id: 3, title: "Data Scientist", positions: 1, status: "Offer", applicants: 18 },
-  { id: 4, title: "Product Manager", positions: 2, status: "Interview", applicants: 28 },
-  { id: 5, title: "Frontend Developer", positions: 4, status: "Screening", applicants: 52 },
+  { 
+    id: 1, 
+    title: "Senior Developer", 
+    department: "วิศวกรรม",
+    location: "กรุงเทพฯ",
+    type: "Full-time",
+    applicants: 45,
+    postedDate: "15 ม.ค. 2567",
+    status: "open" as const,
+    avgScore: 87,
+    salaryRange: "60,000 - 80,000 บาท",
+    numberOfPositions: "3",
+    jobGrade: "P5",
+    description: "เรากำลังมองหา Senior Developer ที่มีประสบการณ์ในการพัฒนาระบบ เพื่อร่วมงานกับทีมพัฒนาผลิตภัณฑ์",
+    requirements: [
+      "ปริญญาตรี วิทยาการคอมพิวเตอร์ หรือสาขาที่เกี่ยวข้อง",
+      "ประสบการณ์ 5 ปีขึ้นไป",
+      "มีทักษะ React, Node.js, TypeScript"
+    ],
+    responsibilities: [
+      "พัฒนาและดูแลระบบ",
+      "ทำงานร่วมกับทีม",
+      "Code Review"
+    ],
+    interviewStats: { total: 45, passed: 30, failed: 15 }
+  },
+  { 
+    id: 2, 
+    title: "UX Designer", 
+    department: "ออกแบบ",
+    location: "กรุงเทพฯ",
+    type: "Full-time",
+    applicants: 32,
+    postedDate: "18 ม.ค. 2567",
+    status: "open" as const,
+    avgScore: 91,
+    salaryRange: "45,000 - 65,000 บาท",
+    numberOfPositions: "2",
+    jobGrade: "P4",
+    description: "มองหา UX Designer ที่มีความคิดสร้างสรรค์ เพื่อออกแบบประสบการณ์ผู้ใช้ที่ดี",
+    requirements: [
+      "ปริญญาตรี ออกแบบ หรือสาขาที่เกี่ยวข้อง",
+      "ประสบการณ์ 3 ปีขึ้นไป",
+      "มีทักษะ Figma, Adobe XD"
+    ],
+    responsibilities: [
+      "ออกแบบ UI/UX",
+      "ทำ User Research",
+      "สร้าง Prototype"
+    ],
+    interviewStats: { total: 32, passed: 25, failed: 7 }
+  },
+  { 
+    id: 3, 
+    title: "Data Scientist", 
+    department: "ข้อมูล",
+    location: "กรุงเทพฯ",
+    type: "Full-time",
+    applicants: 18,
+    postedDate: "20 ม.ค. 2567",
+    status: "open" as const,
+    avgScore: 89,
+    salaryRange: "70,000 - 90,000 บาท",
+    numberOfPositions: "1",
+    jobGrade: "P6",
+    description: "มองหา Data Scientist เพื่อวิเคราะห์ข้อมูลและสร้างโมเดล AI",
+    requirements: [
+      "ปริญญาโท สถิติ หรือสาขาที่เกี่ยวข้อง",
+      "ประสบการณ์ 4 ปีขึ้นไป",
+      "มีทักษะ Python, Machine Learning"
+    ],
+    responsibilities: [
+      "วิเคราะห์ข้อมูล",
+      "สร้างโมเดล ML",
+      "นำเสนอผลการวิเคราะห์"
+    ],
+    interviewStats: { total: 18, passed: 12, failed: 6 }
+  },
+  { 
+    id: 4, 
+    title: "Product Manager", 
+    department: "ผลิตภัณฑ์",
+    location: "กรุงเทพฯ",
+    type: "Full-time",
+    applicants: 28,
+    postedDate: "22 ม.ค. 2567",
+    status: "open" as const,
+    avgScore: 85,
+    salaryRange: "55,000 - 75,000 บาท",
+    numberOfPositions: "2",
+    jobGrade: "P5",
+    description: "มองหา Product Manager เพื่อบริหารและพัฒนาผลิตภัณฑ์",
+    requirements: [
+      "ปริญญาตรี บริหารธุรกิจ หรือสาขาที่เกี่ยวข้อง",
+      "ประสบการณ์ 4 ปีขึ้นไป",
+      "มีทักษะการวางแผนและบริหาร"
+    ],
+    responsibilities: [
+      "วางแผนพัฒนาผลิตภัณฑ์",
+      "ประสานงานทีม",
+      "วิเคราะห์ตลาด"
+    ],
+    interviewStats: { total: 28, passed: 20, failed: 8 }
+  },
+  { 
+    id: 5, 
+    title: "Frontend Developer", 
+    department: "วิศวกรรม",
+    location: "กรุงเทพฯ",
+    type: "Full-time",
+    applicants: 52,
+    postedDate: "25 ม.ค. 2567",
+    status: "open" as const,
+    avgScore: 83,
+    salaryRange: "40,000 - 60,000 บาท",
+    numberOfPositions: "4",
+    jobGrade: "P3",
+    description: "มองหา Frontend Developer เพื่อพัฒนาส่วน UI ของระบบ",
+    requirements: [
+      "ปริญญาตรี วิทยาการคอมพิวเตอร์ หรือสาขาที่เกี่ยวข้อง",
+      "ประสบการณ์ 2 ปีขึ้นไป",
+      "มีทักษะ React, JavaScript, CSS"
+    ],
+    responsibilities: [
+      "พัฒนา Frontend",
+      "ทำ Responsive Design",
+      "ทำงานร่วมกับทีม Backend"
+    ],
+    interviewStats: { total: 52, passed: 35, failed: 17 }
+  },
 ];
 
 export default function Dashboard() {
-  const [openPositions, setOpenPositions] = useState(initialOpenPositions);
+  const [openPositions] = useState(initialOpenPositions);
+  const [selectedJob, setSelectedJob] = useState<typeof initialOpenPositions[0] | null>(null);
+  const [jobDialogOpen, setJobDialogOpen] = useState(false);
 
-  const handleStatusChange = (id: number, newStatus: string) => {
-    setOpenPositions(
-      openPositions.map((position) => (position.id === id ? { ...position, status: newStatus } : position)),
-    );
+  const handleJobClick = (job: typeof initialOpenPositions[0]) => {
+    setSelectedJob(job);
+    setJobDialogOpen(true);
   };
   return (
     <div className="space-y-6">
@@ -61,43 +182,15 @@ export default function Dashboard() {
               {openPositions.map((position) => (
                 <div
                   key={position.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                  onClick={() => handleJobClick(position)}
                 >
                   <div className="flex-1">
-                    <p className="font-medium">{position.title}</p>
+                    <p className="font-medium hover:text-primary transition-colors">{position.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      {position.positions} อัตรา • {position.applicants} ผู้สมัคร
+                      {position.numberOfPositions} อัตรา • {position.applicants} ผู้สมัคร
                     </p>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="outline-none">
-                        <Badge
-                          variant="outline"
-                          className={
-                            position.status === "Screening"
-                              ? "bg-blue-500/10 text-blue-600 border-blue-500/20 cursor-pointer hover:bg-blue-500/20"
-                              : position.status === "Interview"
-                                ? "bg-orange-500/10 text-orange-600 border-orange-500/20 cursor-pointer hover:bg-orange-500/20"
-                                : "bg-green-500/10 text-green-600 border-green-500/20 cursor-pointer hover:bg-green-500/20"
-                          }
-                        >
-                          {position.status}
-                        </Badge>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleStatusChange(position.id, "Screening")}>
-                        Screening
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleStatusChange(position.id, "Interview")}>
-                        Interview
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleStatusChange(position.id, "Offer")}>
-                        Offer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               ))}
             </div>
@@ -170,6 +263,16 @@ export default function Dashboard() {
 
       {/* Contact & Map Section */}
       <ContactMap />
+
+      {/* Job Detail Dialog */}
+      <JobDetailDialog 
+        job={selectedJob}
+        open={jobDialogOpen}
+        onOpenChange={setJobDialogOpen}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onViewCandidates={() => {}}
+      />
     </div>
   );
 }
