@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload, FileText, Plus, User, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCandidates } from "@/contexts/CandidatesContext";
+import PrivacyPolicyDialog from "@/components/PrivacyPolicyDialog";
 
 const JobApplication = () => {
   const { toast } = useToast();
@@ -22,6 +23,7 @@ const JobApplication = () => {
   const [languages, setLanguages] = useState<Array<{ language: string; level: string }>>([
     { language: "", level: "good" }
   ]);
+  const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     position: "",
     salaryRequired: "",
@@ -500,9 +502,13 @@ const JobApplication = () => {
               />
               <Label htmlFor="privacy" className="font-normal leading-relaxed">
                 ฉันยินยอมให้ข้อมูลและใช้งาน{" "}
-                <a href="#" className="text-primary underline">
+                <button
+                  type="button"
+                  onClick={() => setPrivacyDialogOpen(true)}
+                  className="text-primary underline hover:text-primary/80"
+                >
                   นโยบายความเป็นส่วนตัว
-                </a>{" "}
+                </button>{" "}
                 แล้ว <span className="text-destructive">*</span>
               </Label>
             </div>
@@ -540,6 +546,11 @@ const JobApplication = () => {
           </form>
         </CardContent>
       </Card>
+
+      <PrivacyPolicyDialog 
+        open={privacyDialogOpen} 
+        onOpenChange={setPrivacyDialogOpen}
+      />
     </div>
   );
 };
