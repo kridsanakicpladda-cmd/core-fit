@@ -5,19 +5,149 @@ import { useState } from "react";
 import { CompanyProfile } from "@/components/dashboard/CompanyProfile";
 import { ContactMap } from "@/components/dashboard/ContactMap";
 import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
+import { CandidateDetailDialog } from "@/components/candidates/CandidateDetailDialog";
+import { Candidate } from "@/contexts/CandidatesContext";
 
-const recentCandidates = [
-  { name: "สมชาย ใจดี", position: "Senior Developer", score: 89, time: "5 นาทีที่แล้ว" },
-  { name: "สมหญิง รักดี", position: "UX Designer", score: 92, time: "15 นาทีที่แล้ว" },
-  { name: "ประเสริฐ วงศ์ดี", position: "Data Scientist", score: 87, time: "1 ชั่วโมงที่แล้ว" },
-  { name: "วิชัย สุขใจ", position: "Product Manager", score: 84, time: "2 ชั่วโมงที่แล้ว" },
-  { name: "นภา ใจงาม", position: "Frontend Developer", score: 91, time: "3 ชั่วโมงที่แล้ว" },
+const recentCandidatesData: Candidate[] = [
+  {
+    id: 101,
+    name: "สมชาย ใจดี",
+    email: "somchai.jaidee@example.com",
+    phone: "081-234-5678",
+    position: "Senior Developer",
+    status: "screening",
+    appliedDate: "5 นาทีที่แล้ว",
+    experience: "6 ปี",
+    skills: ["React", "Node.js", "TypeScript"],
+    score: 89,
+    pipelineStatus: "interview_1",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาตรี วิทยาการคอมพิวเตอร์",
+    summary: "มีประสบการณ์ในการพัฒนาระบบ Web Application ขนาดใหญ่",
+    previousCompany: "Tech Corp",
+  },
+  {
+    id: 102,
+    name: "สมหญิง รักดี",
+    email: "somying.rakdee@example.com",
+    phone: "082-345-6789",
+    position: "UX Designer",
+    status: "interview",
+    appliedDate: "15 นาทีที่แล้ว",
+    experience: "4 ปี",
+    skills: ["Figma", "Adobe XD", "User Research"],
+    score: 92,
+    pipelineStatus: "interview_2",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาตรี การออกแบบ",
+    summary: "มีประสบการณ์ออกแบบ UX/UI สำหรับแอปพลิเคชันมือถือ",
+    previousCompany: "Design Studio",
+  },
+  {
+    id: 103,
+    name: "ประเสริฐ วงศ์ดี",
+    email: "prasert.wongdee@example.com",
+    phone: "083-456-7890",
+    position: "Data Scientist",
+    status: "shortlisted",
+    appliedDate: "1 ชั่วโมงที่แล้ว",
+    experience: "5 ปี",
+    skills: ["Python", "Machine Learning", "SQL"],
+    score: 87,
+    pipelineStatus: "offer",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาโท Data Science",
+    summary: "เชี่ยวชาญด้านการวิเคราะห์ข้อมูลและ Machine Learning",
+    previousCompany: "Data Analytics Co.",
+  },
+  {
+    id: 104,
+    name: "วิชัย สุขใจ",
+    email: "wichai.sukjai@example.com",
+    phone: "084-567-8901",
+    position: "Product Manager",
+    status: "interview",
+    appliedDate: "2 ชั่วโมงที่แล้ว",
+    experience: "7 ปี",
+    skills: ["Product Strategy", "Agile", "Stakeholder Management"],
+    score: 84,
+    pipelineStatus: "interview_1",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาโท MBA",
+    summary: "มีประสบการณ์บริหารผลิตภัณฑ์ดิจิทัล",
+    previousCompany: "Product Hub",
+  },
+  {
+    id: 105,
+    name: "นภา ใจงาม",
+    email: "napa.jaingam@example.com",
+    phone: "085-678-9012",
+    position: "Frontend Developer",
+    status: "screening",
+    appliedDate: "3 ชั่วโมงที่แล้ว",
+    experience: "3 ปี",
+    skills: ["React", "Vue.js", "CSS"],
+    score: 91,
+    pipelineStatus: "pre_screening",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาตรี วิศวกรรมคอมพิวเตอร์",
+    summary: "มีความเชี่ยวชาญในการพัฒนา Frontend และ UI/UX",
+    previousCompany: "Web Solutions",
+  },
 ];
 
-const todayInterviews = [
-  { name: "อรุณ สว่างไสว", position: "Senior Developer", time: "10:00 - 11:00", status: "completed" },
-  { name: "ธนพล มั่งคั่ง", position: "UX Designer", time: "14:00 - 15:00", status: "upcoming" },
-  { name: "ศิริพร แสงจันทร์", position: "Data Scientist", time: "15:30 - 16:30", status: "upcoming" },
+const todayInterviewsData: Candidate[] = [
+  {
+    id: 201,
+    name: "อรุณ สว่างไสว",
+    email: "arun.swangsai@example.com",
+    phone: "086-789-0123",
+    position: "Senior Developer",
+    status: "interview",
+    appliedDate: "วันนี้ 10:00 - 11:00",
+    experience: "8 ปี",
+    skills: ["Java", "Spring Boot", "Microservices"],
+    score: 88,
+    pipelineStatus: "interview_2",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาโท Computer Science",
+    summary: "มีประสบการณ์ในการพัฒนา Backend ระบบขนาดใหญ่",
+    previousCompany: "Enterprise Solutions",
+  },
+  {
+    id: 202,
+    name: "ธนพล มั่งคั่ง",
+    email: "tanaphon.mangkhang@example.com",
+    phone: "087-890-1234",
+    position: "UX Designer",
+    status: "interview",
+    appliedDate: "วันนี้ 14:00 - 15:00",
+    experience: "5 ปี",
+    skills: ["Sketch", "Prototyping", "User Testing"],
+    score: 90,
+    pipelineStatus: "interview_1",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาตรี Visual Design",
+    summary: "เชี่ยวชาญในการออกแบบประสบการณ์ผู้ใช้",
+    previousCompany: "Creative Agency",
+  },
+  {
+    id: 203,
+    name: "ศิริพร แสงจันทร์",
+    email: "siriporn.sangjan@example.com",
+    phone: "088-901-2345",
+    position: "Data Scientist",
+    status: "interview",
+    appliedDate: "วันนี้ 15:30 - 16:30",
+    experience: "4 ปี",
+    skills: ["R", "Statistics", "Deep Learning"],
+    score: 86,
+    pipelineStatus: "interview_1",
+    location: "กรุงเทพมหานคร",
+    education: "ปริญญาเอก Statistics",
+    summary: "มีความเชี่ยวชาญในการวิเคราะห์ข้อมูลเชิงสถิติ",
+    previousCompany: "Research Institute",
+  },
 ];
 
 const initialOpenPositions = [
@@ -157,10 +287,17 @@ export default function Dashboard() {
   const [openPositions] = useState(initialOpenPositions);
   const [selectedJob, setSelectedJob] = useState<typeof initialOpenPositions[0] | null>(null);
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [candidateDialogOpen, setCandidateDialogOpen] = useState(false);
 
   const handleJobClick = (job: typeof initialOpenPositions[0]) => {
     setSelectedJob(job);
     setJobDialogOpen(true);
+  };
+
+  const handleCandidateClick = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    setCandidateDialogOpen(true);
   };
   return (
     <div className="space-y-6">
@@ -206,10 +343,11 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentCandidates.map((candidate, i) => (
+              {recentCandidatesData.map((candidate) => (
                 <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                  key={candidate.id}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors group cursor-pointer"
+                  onClick={() => handleCandidateClick(candidate)}
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-sm group-hover:shadow-md transition-shadow">
@@ -221,7 +359,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">{candidate.time}</p>
+                    <p className="text-xs text-muted-foreground">{candidate.appliedDate}</p>
                   </div>
                 </div>
               ))}
@@ -238,21 +376,22 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {todayInterviews.map((interview, i) => (
+              {todayInterviewsData.map((candidate) => (
                 <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
+                  key={candidate.id}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                  onClick={() => handleCandidateClick(candidate)}
                 >
                   <div>
-                    <p className="font-medium">{interview.name}</p>
-                    <p className="text-sm text-muted-foreground">{interview.position}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{interview.time}</p>
+                    <p className="font-medium">{candidate.name}</p>
+                    <p className="text-sm text-muted-foreground">{candidate.position}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{candidate.appliedDate}</p>
                   </div>
                   <Badge
-                    variant={interview.status === "completed" ? "secondary" : "default"}
-                    className={interview.status === "upcoming" ? "bg-primary/10 text-primary border-primary/20" : ""}
+                    variant={candidate.pipelineStatus === "interview_2" ? "secondary" : "default"}
+                    className={candidate.pipelineStatus === "interview_1" ? "bg-primary/10 text-primary border-primary/20" : ""}
                   >
-                    {interview.status === "completed" ? "เสร็จสิ้น" : "กำลังจะถึง"}
+                    {candidate.pipelineStatus === "interview_2" ? "เสร็จสิ้น" : "กำลังจะถึง"}
                   </Badge>
                 </div>
               ))}
@@ -272,6 +411,18 @@ export default function Dashboard() {
         onEdit={() => {}}
         onDelete={() => {}}
         onViewCandidates={() => {}}
+      />
+
+      {/* Candidate Detail Dialog */}
+      <CandidateDetailDialog
+        candidate={selectedCandidate}
+        open={candidateDialogOpen}
+        onOpenChange={setCandidateDialogOpen}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onInterviewUpdate={() => {}}
+        onTestScoreUpdate={() => {}}
+        onStatusChange={() => {}}
       />
     </div>
   );
