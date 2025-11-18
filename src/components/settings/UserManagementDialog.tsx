@@ -20,22 +20,28 @@ type UserFormValues = z.infer<typeof userFormSchema>;
 
 interface UserManagementDialogProps {
   user?: {
-    id: number;
+    id: string;
     name: string;
-    department: string;
+    department: string | null;
     email: string;
-    role: string;
+    roles: string[];
     status: "active" | "inactive";
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (user: UserFormValues & { id?: number }) => void;
+  onSave: (user: UserFormValues & { id?: string }) => void;
 }
 
 export function UserManagementDialog({ user, open, onOpenChange, onSave }: UserManagementDialogProps) {
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
-    defaultValues: user || {
+    defaultValues: user ? {
+      name: user.name,
+      department: user.department || "",
+      email: user.email,
+      role: user.roles[0] || "",
+      status: user.status,
+    } : {
       name: "",
       department: "",
       email: "",
@@ -114,10 +120,11 @@ export function UserManagementDialog({ user, open, onOpenChange, onSave }: UserM
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="hr_manager">HR Manager</SelectItem>
-                      <SelectItem value="recruiter">Recruiter</SelectItem>
-                      <SelectItem value="interviewer">Interviewer</SelectItem>
+                      <SelectItem value="admin">Admin - จัดการทุกอย่าง</SelectItem>
+                      <SelectItem value="hr_manager">HR Manager - จัดการ HR</SelectItem>
+                      <SelectItem value="recruiter">Recruiter - รับสมัครงาน</SelectItem>
+                      <SelectItem value="interviewer">Interviewer - สัมภาษณ์</SelectItem>
+                      <SelectItem value="viewer">Viewer - ดูอย่างเดียว</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -7,65 +7,91 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { UserPlus, Pencil, Trash2 } from "lucide-react";
 import { UserManagementDialog } from "@/components/settings/UserManagementDialog";
-import { useToast } from "@/hooks/use-toast";
+import { useProfiles, Profile } from "@/hooks/useProfiles";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-const initialUsers = [
-  { id: 1, name: "สมชาย ใจดี", department: "HR", email: "somchai@company.com", role: "admin", status: "active" as const },
-  { id: 2, name: "สมหญิง รักงาน", department: "HR", email: "somying@company.com", role: "hr_manager", status: "active" as const },
-  { id: 3, name: "วิชัย คิดดี", department: "IT", email: "wichai@company.com", role: "recruiter", status: "active" as const },
-  { id: 4, name: "มานี พักร้อน", department: "Finance", email: "manee@company.com", role: "interviewer", status: "inactive" as const },
-];
+const roleNames: Record<string, string> = {
+  admin: "Admin - สามารถจัดการทุกอย่างในระบบ",
+  hr_manager: "HR Manager - จัดการข้อมูล HR และรับสมัครงาน",
+  recruiter: "Recruiter - จัดการการรับสมัครและคัดเลือกผู้สมัคร",
+  interviewer: "Interviewer - ดำเนินการสัมภาษณ์และประเมินผู้สมัคร",
+  viewer: "Viewer - ดูข้อมูลได้อย่างเดียว ไม่สามารถแก้ไขได้",
+};
 
-const roleNames = {
-  admin: "Admin",
-  hr_manager: "HR Manager",
-  recruiter: "Recruiter",
-  interviewer: "Interviewer",
+const roleDescriptions: Record<string, string[]> = {
+  admin: [
+    "✓ จัดการผู้ใช้และสิทธิ์ทั้งหมด",
+    "✓ แก้ไขและลบข้อมูลทั้งหมด",
+    "✓ เข้าถึงการตั้งค่าระบบ",
+    "✓ ดูรายงานทั้งหมด"
+  ],
+  hr_manager: [
+    "✓ จัดการตำแหน่งงานและผู้สมัคร",
+    "✓ อนุมัติและปฏิเสธผู้สมัคร",
+    "✓ ดูรายงาน HR",
+    "✗ ไม่สามารถจัดการผู้ใช้"
+  ],
+  recruiter: [
+    "✓ เพิ่มและแก้ไขผู้สมัคร",
+    "✓ กำหนดการสัมภาษณ์",
+    "✗ ไม่สามารถอนุมัติขั้นสุดท้าย"
+  ],
+  interviewer: [
+    "✓ ดูข้อมูลผู้สมัคร",
+    "✓ บันทึกผลการสัมภาษณ์",
+    "✗ ไม่สามารถแก้ไขข้อมูลผู้สมัคร"
+  ],
+  viewer: [
+    "✓ ดูข้อมูลทั้งหมด",
+    "✗ ไม่สามารถแก้ไขหรือเพิ่มข้อมูล"
+  ]
 };
 
 export default function Settings() {
-  const { toast } = useToast();
-  const [users, setUsers] = useState(initialUsers);
-  const [editingUser, setEditingUser] = useState<typeof initialUsers[0] | null>(null);
+  const { profiles, isLoading, deleteProfile, updateProfile } = useProfiles();
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
   const handleAddUser = () => {
     setEditingUser(null);
     setIsDialogOpen(true);
   };
 
-  const handleEditUser = (user: typeof initialUsers[0]) => {
+  const handleEditUser = (user: Profile) => {
     setEditingUser(user);
     setIsDialogOpen(true);
   };
 
   const handleSaveUser = (userData: any) => {
     if (userData.id) {
-      // Edit existing user
-      setUsers(users.map(u => u.id === userData.id ? { ...userData, id: userData.id } : u));
-      toast({
-        title: "บันทึกข้อมูลแล้ว",
-        description: "แก้ไขข้อมูลผู้ใช้เรียบร้อยแล้ว",
-      });
-    } else {
-      // Add new user
-      const newUser = { ...userData, id: Math.max(...users.map(u => u.id)) + 1 };
-      setUsers([...users, newUser]);
-      toast({
-        title: "เพิ่มผู้ใช้แล้ว",
-        description: "เพิ่มผู้ใช้ใหม่เรียบร้อยแล้ว",
+      updateProfile({
+        userId: userData.id,
+        name: userData.name,
+        department: userData.department,
+        roles: [userData.role], // Convert single role to array
       });
     }
   };
 
-  const handleDeleteUser = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    setUsers(users.filter(u => u.id !== userId));
-    toast({
-      title: "ลบผู้ใช้แล้ว",
-      description: `ลบผู้ใช้ ${user?.name} เรียบร้อยแล้ว`,
-      variant: "destructive",
-    });
+  const handleDeleteClick = (userId: string) => {
+    setDeleteUserId(userId);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteUserId) {
+      deleteProfile(deleteUserId);
+      setDeleteUserId(null);
+    }
   };
 
   return (
@@ -143,43 +169,49 @@ export default function Settings() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>ชื่อ</TableHead>
+                  <TableHead>แผนก</TableHead>
+                  <TableHead>อีเมล</TableHead>
+                  <TableHead>บทบาท</TableHead>
+                  <TableHead>สถานะ</TableHead>
+                  <TableHead className="text-right">การจัดการ</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {profiles.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.department}</TableCell>
+                    <TableCell>{user.department || "-"}</TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{roleNames[user.role as keyof typeof roleNames]}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {user.roles.map((role) => (
+                          <Badge key={role} variant="outline" className="mr-1">
+                            {roleNames[role]?.split(" - ")[0] || role}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={user.status === "active" ? "default" : "secondary"}>
                         {user.status === "active" ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(user.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
