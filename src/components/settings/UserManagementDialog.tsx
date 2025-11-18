@@ -12,6 +12,7 @@ const userFormSchema = z.object({
   name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"),
   department: z.string().min(1, "กรุณาระบุแผนก"),
   email: z.string().email("อีเมลไม่ถูกต้อง"),
+  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร").optional(),
   role: z.string().min(1, "กรุณาเลือกบทบาท"),
   status: z.enum(["active", "inactive"]),
 });
@@ -39,12 +40,14 @@ export function UserManagementDialog({ user, open, onOpenChange, onSave }: UserM
       name: user.name,
       department: user.department || "",
       email: user.email,
+      password: "",
       role: user.roles[0] || "",
       status: user.status,
     } : {
       name: "",
       department: "",
       email: "",
+      password: "",
       role: "",
       status: "active",
     },
@@ -100,12 +103,28 @@ export function UserManagementDialog({ user, open, onOpenChange, onSave }: UserM
                 <FormItem>
                   <FormLabel>อีเมล</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="user@company.com" {...field} />
+                    <Input type="email" placeholder="user@company.com" {...field} disabled={!!user} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {!user && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>รหัสผ่าน</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

@@ -131,10 +131,70 @@ export function useProfiles() {
     },
   });
 
+  const createProfileMutation = useMutation({
+    mutationFn: async ({
+      email,
+      password,
+      name,
+      department,
+      role,
+    }: {
+      email: string;
+      password: string;
+      name: string;
+      department: string;
+      role: string;
+    }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          department,
+          role,
+          status: 'active',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create user');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast({
+        title: "เพิ่มผู้ใช้แล้ว",
+        description: "เพิ่มผู้ใช้ใหม่เรียบร้อยแล้ว",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: `ไม่สามารถเพิ่มผู้ใช้ได้: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     profiles,
     isLoading,
     deleteProfile: deleteProfileMutation.mutate,
     updateProfile: updateProfileMutation.mutate,
+    createProfile: createProfileMutation.mutate,
   };
 }
