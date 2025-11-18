@@ -74,7 +74,7 @@ export const useJobRequisitions = () => {
   });
 
   const createRequisition = useMutation({
-    mutationFn: async (data: Omit<JobRequisition, "id" | "requisition_number" | "created_at" | "updated_at" | "requester">) => {
+    mutationFn: async (data: Omit<JobRequisition, "id" | "requisition_number" | "created_at" | "updated_at" | "requester" | "status" | "requested_by">) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
@@ -88,6 +88,7 @@ export const useJobRequisitions = () => {
           ...data,
           requisition_number: reqNumber,
           requested_by: user.id,
+          status: "pending",
         })
         .select()
         .single();
