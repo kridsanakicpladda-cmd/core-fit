@@ -57,7 +57,7 @@ const roleDescriptions: Record<string, string[]> = {
 };
 
 export default function Settings() {
-  const { profiles, isLoading, deleteProfile, updateProfile } = useProfiles();
+  const { profiles, isLoading, deleteProfile, updateProfile, createProfile } = useProfiles();
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -74,11 +74,24 @@ export default function Settings() {
 
   const handleSaveUser = (userData: any) => {
     if (userData.id) {
+      // Update existing user
       updateProfile({
         userId: userData.id,
         name: userData.name,
         department: userData.department,
-        roles: [userData.role], // Convert single role to array
+        roles: [userData.role],
+      });
+    } else {
+      // Create new user
+      if (!userData.password) {
+        return; // Password is required for new users
+      }
+      createProfile({
+        email: userData.email,
+        password: userData.password,
+        name: userData.name,
+        department: userData.department,
+        role: userData.role,
       });
     }
   };
