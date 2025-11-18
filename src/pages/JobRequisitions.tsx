@@ -51,7 +51,7 @@ const JobRequisitions = () => {
       toast({ title: "กรุณากรอกข้อมูลให้ครบถ้วน", variant: "destructive" });
       return;
     }
-    await createRequisition.mutateAsync({ ...formData, quantity: parseInt(formData.quantity), status: "pending", requested_by: "", requisition_number: "", id: "", created_at: "", updated_at: "" });
+    await createRequisition.mutateAsync({ ...formData, quantity: parseInt(formData.quantity) });
     setOpen(false);
     setFormData({ department: "", position: "", quantity: "1", date_needed: "", work_location: "", reports_to: "", hiring_type: "permanent", replacement_for: "", replacement_date: "", temporary_duration: "", justification: "", job_description_no: "", gender: "", max_age: "", min_experience: "", min_education: "", field_of_study: "", other_skills: "", marital_status: "", experience_in: "" });
   };
@@ -63,7 +63,14 @@ const JobRequisitions = () => {
     return <Badge variant={variants[status as keyof typeof variants]}><Icon className="h-4 w-4 mr-1" />{labels[status as keyof typeof labels]}</Badge>;
   };
 
-  const getHiringTypeLabel = (type: string) => ({ permanent: "พนักงานประจำ", temporary: "พนักงานชั่วคราว", replacement: "ทดแทนตำแหน่ง" }[type as keyof typeof { permanent: string; temporary: string; replacement: string }] || type);
+  const getHiringTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      permanent: "พนักงานประจำ",
+      temporary: "พนักงานชั่วคราว",
+      replacement: "ทดแทนตำแหน่ง"
+    };
+    return labels[type] || type;
+  };
 
   return (
     <div className="space-y-6">
