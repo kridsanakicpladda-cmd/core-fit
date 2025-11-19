@@ -178,6 +178,36 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          action: string
+          allowed: boolean
+          created_at: string | null
+          id: string
+          resource: string
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          action: string
+          allowed?: boolean
+          created_at?: string | null
+          id?: string
+          resource: string
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          action?: string
+          allowed?: boolean
+          created_at?: string | null
+          id?: string
+          resource?: string
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -223,7 +253,13 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "hr_manager" | "recruiter" | "interviewer" | "viewer"
+      app_role:
+        | "admin"
+        | "hr_manager"
+        | "recruiter"
+        | "interviewer"
+        | "viewer"
+        | "manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -351,7 +387,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "hr_manager", "recruiter", "interviewer", "viewer"],
+      app_role: [
+        "admin",
+        "hr_manager",
+        "recruiter",
+        "interviewer",
+        "viewer",
+        "manager",
+      ],
     },
   },
 } as const
