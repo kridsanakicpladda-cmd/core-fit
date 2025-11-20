@@ -14,6 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          applied_at: string | null
+          candidate_id: string
+          id: string
+          notes: string | null
+          position_id: string
+          stage: string
+          updated_at: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          candidate_id: string
+          id?: string
+          notes?: string | null
+          position_id: string
+          stage?: string
+          updated_at?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          candidate_id?: string
+          id?: string
+          notes?: string | null
+          position_id?: string
+          stage?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "job_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidates: {
+        Row: {
+          ai_fit_score: number | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          resume_url: string | null
+          source: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_fit_score?: number | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          resume_url?: string | null
+          source: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_fit_score?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          resume_url?: string | null
+          source?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      interviews: {
+        Row: {
+          application_id: string
+          created_at: string | null
+          id: string
+          interviewer_id: string | null
+          notes: string | null
+          result: string | null
+          scheduled_at: string | null
+          score: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string | null
+          id?: string
+          interviewer_id?: string | null
+          notes?: string | null
+          result?: string | null
+          scheduled_at?: string | null
+          score?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string | null
+          id?: string
+          interviewer_id?: string | null
+          notes?: string | null
+          result?: string | null
+          scheduled_at?: string | null
+          score?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_interviewer_id_fkey"
+            columns: ["interviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_positions: {
+        Row: {
+          created_at: string | null
+          department: string
+          description: string | null
+          end_date: string | null
+          id: string
+          required_count: number | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          required_count?: number | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          required_count?: number | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       job_requisitions: {
         Row: {
           created_at: string | null
@@ -133,6 +307,36 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      recruitment_costs: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          period_end: string
+          period_start: string
+          source: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          period_end: string
+          period_start: string
+          source: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          source?: string
         }
         Relationships: []
       }
