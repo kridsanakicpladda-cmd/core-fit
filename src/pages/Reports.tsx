@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, FileDown } from 'lucide-react';
 import { Users, Briefcase, TrendingUp, UserCheck, MessageSquare, UserPlus } from 'lucide-react';
-import { DashboardFilters } from '@/types/reports';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardFilters, Position } from '@/types/reports';
 import { FilterBar } from '@/components/reports/FilterBar';
 import { StatCard } from '@/components/reports/StatCard';
 import { EfficiencyPanel } from '@/components/reports/EfficiencyPanel';
@@ -13,16 +14,7 @@ import { StatusDonut } from '@/components/reports/StatusDonut';
 import { DepartmentBarChart } from '@/components/reports/DepartmentBarChart';
 import { PositionTable } from '@/components/reports/PositionTable';
 import { DetailDrawer } from '@/components/reports/DetailDrawer';
-import {
-  getHeadlineStats,
-  getEfficiency,
-  getQuality,
-  getStageStats,
-  getPositions,
-  getCandidates,
-  getTrendData
-} from '@/lib/mockReportsData';
-import { Position } from '@/types/reports';
+import { useReportsData } from '@/hooks/useReportsData';
 
 export default function Reports() {
   const [filters, setFilters] = useState<DashboardFilters>({ dateRange: '30d' });
@@ -30,13 +22,18 @@ export default function Reports() {
   const [drawerType, setDrawerType] = useState<'position' | 'efficiency' | 'quality'>('position');
   const [selectedPosition, setSelectedPosition] = useState<Position>();
 
-  const headlineStats = getHeadlineStats();
-  const efficiency = getEfficiency();
-  const quality = getQuality();
-  const stageStats = getStageStats();
-  const positions = getPositions();
-  const candidates = getCandidates();
-  const trendData = getTrendData();
+  // Fetch real data from Supabase
+  const {
+    isLoading,
+    headlineStats,
+    efficiency,
+    quality,
+    stageStats,
+    positions,
+    sourcesCost,
+    candidates,
+    trendData
+  } = useReportsData();
 
   const handleExportCSV = () => {
     const csvContent = [
@@ -56,6 +53,23 @@ export default function Reports() {
     setDrawerType('position');
     setDrawerOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <Skeleton className="h-20 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-60 w-full" />
+          <Skeleton className="h-60 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
