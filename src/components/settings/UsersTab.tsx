@@ -88,6 +88,7 @@ export function UsersTab() {
         name: userData.name,
         department: userData.department,
         roles: userData.roles,
+        status: userData.status,
       });
     } else {
       // Create new user

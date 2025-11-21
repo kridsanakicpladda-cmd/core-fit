@@ -41,7 +41,7 @@ export function useProfiles() {
         roles: rolesData
           .filter((role) => role.user_id === profile.id)
           .map((role) => role.role),
-        status: "active" as const, // We'll determine this based on roles or a separate field
+        status: (profile.status || "active") as "active" | "inactive",
       }));
 
       return profilesWithRoles;
@@ -92,7 +92,11 @@ export function useProfiles() {
       // Update profile
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ name, department })
+        .update({ 
+          name, 
+          department,
+          status: status || "active"
+        })
         .eq("id", userId);
 
       if (profileError) throw profileError;
