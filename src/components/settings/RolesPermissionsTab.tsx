@@ -7,10 +7,12 @@ import { Shield, Lock } from "lucide-react";
 
 const ROLES = [
   { key: "admin", label: "Admin", description: "จัดการทุกอย่างในระบบ", isSystem: true },
+  { key: "ceo", label: "CEO", description: "อนุมัติและตัดสินใจระดับสูง", isSystem: false },
   { key: "manager", label: "Manager", description: "จัดการตามสิทธิ์ที่กำหนด", isSystem: false },
   { key: "hr_manager", label: "HR Manager", description: "จัดการ HR และรับสมัครงาน", isSystem: false },
   { key: "recruiter", label: "Recruiter", description: "จัดการการรับสมัครและคัดเลือก", isSystem: false },
   { key: "interviewer", label: "Interviewer", description: "สัมภาษณ์และประเมินผู้สมัคร", isSystem: false },
+  { key: "candidate", label: "Candidate", description: "ผู้สมัครงาน เข้าถึงข้อมูลส่วนตัวและใบสมัคร", isSystem: false },
   { key: "viewer", label: "Viewer", description: "ดูข้อมูลเท่านั้น", isSystem: false },
 ];
 
