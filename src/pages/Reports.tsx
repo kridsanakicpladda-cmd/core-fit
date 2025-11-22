@@ -17,9 +17,6 @@ import { PositionTable } from '@/components/reports/PositionTable';
 import { DetailDrawer } from '@/components/reports/DetailDrawer';
 import { YieldRatioHeatmap } from '@/components/reports/YieldRatioHeatmap';
 import { SourceTreemap } from '@/components/reports/SourceTreemap';
-import { CostBreakdownChart } from '@/components/reports/CostBreakdownChart';
-import { TurnoverChart } from '@/components/reports/TurnoverChart';
-import { SatisfactionGauge } from '@/components/reports/SatisfactionGauge';
 import { EmptyState } from '@/components/reports/EmptyState';
 import { useReportsData } from '@/hooks/useReportsData';
 import { exportToCSV, exportAllChartsToPNG } from '@/lib/exportUtils';
@@ -49,10 +46,7 @@ export default function Reports() {
     sourcesCost,
     candidates,
     trendData,
-    yieldRatios,
-    turnoverData,
-    satisfactionData,
-    costBreakdown
+    yieldRatios
   } = useReportsData();
 
   // Sync filters with URL
@@ -92,10 +86,7 @@ export default function Reports() {
       'status-donut',
       'department-bar-chart',
       'yield-ratio-heatmap',
-      'source-treemap',
-      'cost-breakdown-chart',
-      'turnover-first-month',
-      'turnover-first-year'
+      'source-treemap'
     ];
     await exportAllChartsToPNG(chartIds, 'recruitment-chart');
     toast.success('Export PNG สำเร็จ!');
@@ -272,50 +263,9 @@ export default function Reports() {
           {/* Sourcing Metrics */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Sourcing Metrics</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <SourceTreemap 
-                data={sourcesCost.map(s => ({ source: s.source, count: s.applicants }))}
-              />
-              <CostBreakdownChart data={costBreakdown} />
-            </div>
-          </div>
-
-          {/* Quality & Retention */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Quality & Retention</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div id="turnover-first-month">
-                <TurnoverChart
-                  title="First Month Turnover Rate"
-                  trendData={turnoverData.firstMonth.trend}
-                  departmentData={turnoverData.firstMonth.byDepartment}
-                />
-              </div>
-              <div id="turnover-first-year">
-                <TurnoverChart
-                  title="First Year Turnover Rate"
-                  trendData={turnoverData.firstYear.trend}
-                  departmentData={turnoverData.firstYear.byDepartment}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <SatisfactionGauge
-                title="Hiring Manager Satisfaction"
-                score={satisfactionData.hiringManager}
-                maxScore={5}
-                trend={satisfactionData.hiringManagerTrend}
-                description="ความพึงพอใจของผู้จัดการที่มีต่อคุณภาพผู้สมัคร"
-              />
-              <SatisfactionGauge
-                title="Candidate Job Satisfaction"
-                score={satisfactionData.candidateJob}
-                maxScore={5}
-                trend={satisfactionData.candidateJobTrend}
-                description="ความพึงพอใจของผู้สมัครที่มีต่อตำแหน่งงาน"
-              />
-            </div>
+            <SourceTreemap 
+              data={sourcesCost.map(s => ({ source: s.source, count: s.applicants }))}
+            />
           </div>
 
           {/* Position Table */}
