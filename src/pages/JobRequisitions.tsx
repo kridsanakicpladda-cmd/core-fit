@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Clock, CheckCircle, XCircle, Download } from "lucide-react";
+import { Plus, Clock, CheckCircle, XCircle, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useJobRequisitions, JobRequisition } from "@/hooks/useJobRequisitions";
 import { RequisitionDetailDialog } from "@/components/requisitions/RequisitionDetailDialog";
@@ -22,6 +22,8 @@ const JobRequisitions = () => {
   const [selectedRequisition, setSelectedRequisition] = useState<JobRequisition | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [canApprove, setCanApprove] = useState(false);
+  const [jdFile, setJdFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const { requisitions, isLoading, createRequisition } = useJobRequisitions();
 
   useEffect(() => {
@@ -72,9 +74,46 @@ const JobRequisitions = () => {
       toast({ title: "กรุณากรอกข้อมูลให้ครบถ้วน", variant: "destructive" });
       return;
     }
-    await createRequisition.mutateAsync({ ...formData, quantity: parseInt(formData.quantity) });
-    setOpen(false);
-    setFormData({ department: "", position: "", quantity: "1", date_needed: "", work_location: "", reports_to: "", hiring_type: "permanent", replacement_for: "", replacement_date: "", temporary_duration: "", justification: "", job_description_no: "", job_grade: "", gender: "", max_age: "", min_experience: "", min_education: "", field_of_study: "", other_skills: "", marital_status: "", experience_in: "" });
+
+    setUploading(true);
+    let jdFileUrl: string | undefined;
+
+    try {
+      // Upload JD file if selected
+      if (jdFile) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        const fileExt = jdFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('job-descriptions')
+          .upload(fileName, jdFile);
+
+        if (uploadError) throw uploadError;
+        jdFileUrl = data.path;
+      }
+
+      // Create requisition with JD file URL
+      await createRequisition.mutateAsync({ 
+        ...formData, 
+        quantity: parseInt(formData.quantity),
+        jd_file_url: jdFileUrl
+      });
+
+      setOpen(false);
+      setFormData({ department: "", position: "", quantity: "1", date_needed: "", work_location: "", reports_to: "", hiring_type: "permanent", replacement_for: "", replacement_date: "", temporary_duration: "", justification: "", job_description_no: "", job_grade: "", gender: "", max_age: "", min_experience: "", min_education: "", field_of_study: "", other_skills: "", marital_status: "", experience_in: "" });
+      setJdFile(null);
+    } catch (error) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error instanceof Error ? error.message : "ไม่สามารถอัปโหลดไฟล์ได้",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -140,6 +179,45 @@ const JobRequisitions = () => {
                       onChange={(e) => setFormData({...formData, justification: e.target.value})} 
                       rows={4} 
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>อัปโหลด Job Description (JD)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 20 * 1024 * 1024) {
+                              toast({
+                                title: "ไฟล์ใหญ่เกินไป",
+                                description: "ไฟล์ต้องมีขนาดไม่เกิน 20MB",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            setJdFile(file);
+                          }
+                        }}
+                      />
+                      {jdFile && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setJdFile(null)}
+                        >
+                          ลบ
+                        </Button>
+                      )}
+                    </div>
+                    {jdFile && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Upload className="h-4 w-4" />
+                        {jdFile.name} ({(jdFile.size / 1024).toFixed(2)} KB)
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -209,7 +287,9 @@ const JobRequisitions = () => {
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
-                  <Button type="submit" disabled={createRequisition.isPending}>ส่งคำขออนุมัติ</Button>
+                  <Button type="submit" disabled={createRequisition.isPending || uploading}>
+                    {uploading ? "กำลังอัปโหลด..." : "ส่งคำขออนุมัติ"}
+                  </Button>
                 </div>
               </form>
             </DialogContent>

@@ -18,6 +18,7 @@ export interface JobRequisition {
   justification: string;
   job_description_no?: string;
   job_grade?: string;
+  jd_file_url?: string;
   gender?: string;
   max_age?: string;
   min_experience?: string;

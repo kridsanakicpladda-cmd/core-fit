@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CheckCircle, XCircle, User, Calendar, MapPin, Briefcase } from "lucide-react";
+import { Clock, CheckCircle, XCircle, User, Calendar, MapPin, Briefcase, FileText, Download } from "lucide-react";
 import { JobRequisition, useRequisitionApprovals } from "@/hooks/useJobRequisitions";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -242,6 +242,33 @@ export const RequisitionDetailDialog = ({
               <p className="text-sm">{requisition.justification}</p>
             </CardContent>
           </Card>
+
+          {/* Job Description File */}
+          {requisition.jd_file_url && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">เอกสาร Job Description</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    const { data } = await supabase.storage
+                      .from('job-descriptions')
+                      .createSignedUrl(requisition.jd_file_url!, 60);
+                    if (data?.signedUrl) {
+                      window.open(data.signedUrl, '_blank');
+                    }
+                  }}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  ดาวน์โหลด Job Description
+                  <Download className="h-4 w-4 ml-auto" />
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Qualifications */}
           <Card>

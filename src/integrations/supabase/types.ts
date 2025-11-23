@@ -198,6 +198,7 @@ export type Database = {
           gender: string | null
           hiring_type: string
           id: string
+          jd_file_url: string | null
           job_description_no: string | null
           job_grade: string | null
           justification: string
@@ -227,6 +228,7 @@ export type Database = {
           gender?: string | null
           hiring_type: string
           id?: string
+          jd_file_url?: string | null
           job_description_no?: string | null
           job_grade?: string | null
           justification: string
@@ -256,6 +258,7 @@ export type Database = {
           gender?: string | null
           hiring_type?: string
           id?: string
+          jd_file_url?: string | null
           job_description_no?: string | null
           job_grade?: string | null
           justification?: string
