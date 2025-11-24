@@ -95,6 +95,39 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          ai_fit_score_weights: Json | null
+          company_email: string | null
+          company_name: string | null
+          created_at: string | null
+          id: string
+          microsoft_365_connected: boolean | null
+          microsoft_365_token: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_fit_score_weights?: Json | null
+          company_email?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          microsoft_365_connected?: boolean | null
+          microsoft_365_token?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_fit_score_weights?: Json | null
+          company_email?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          microsoft_365_connected?: boolean | null
+          microsoft_365_token?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       interviews: {
         Row: {
           application_id: string
