@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useToast } from "@/hooks/use-toast";
 import { addSparkleEffect } from "@/lib/sparkle";
@@ -34,7 +33,6 @@ export function SendToManagerDialog({
   onSent,
 }: SendToManagerDialogProps) {
   const [selectedManagerId, setSelectedManagerId] = useState<string>("");
-  const [isSending, setIsSending] = useState(false);
   const { profiles, isLoading } = useProfiles();
   const { toast } = useToast();
 
@@ -48,7 +46,7 @@ export function SendToManagerDialog({
 
   const selectedManager = managers.find((m) => m.id === selectedManagerId);
 
-  const handleSend = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSend = (e: React.MouseEvent<HTMLButtonElement>) => {
     addSparkleEffect(e);
 
     if (!selectedManagerId) {
@@ -60,16 +58,34 @@ export function SendToManagerDialog({
       return;
     }
 
-    setIsSending(true);
+    // Build email body
+    const candidatesList = candidates.map((c) => `- ${c.name} (${c.position})`).join('\n');
+    const resumeLinks = candidates.map((c) => `Resume ${c.name}: https://your-domain.com/resumes/${c.id}`).join('\n');
+    
+    const emailBody = `เรียน ${selectedManager?.name} (${selectedManager?.department || 'แผนก'})
 
-    // Simulate sending email
-    // TODO: Implement actual email sending via edge function
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+นำส่ง Resume ของผู้สมัครตำแหน่ง ${positions} และได้โทร Pre Screen เบื้องต้นแล้ว รบกวนพิจารณา Resume ให้ภายในวันพฤหัสบดี
 
-    setIsSending(false);
+รายชื่อผู้สมัคร:
+${candidatesList}
+
+ลิงก์ Resume:
+${resumeLinks}
+
+คลิกที่ลิงก์ด้านล่างเพื่อแจ้งผลพิจารณา:
+https://your-domain.com/manager-review
+
+ขอบคุณค่ะ`;
+
+    const subject = `Resume ผู้สมัครตำแหน่ง ${positions} - รอพิจารณา`;
+    const mailtoLink = `mailto:${selectedManager?.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+    
+    // Open Outlook/default email client
+    window.open(mailtoLink, '_blank');
+
     toast({
-      title: "ส่งอีเมลแล้ว",
-      description: `ส่ง Resume ของผู้สมัคร ${candidates.length} คนไปยัง ${selectedManager?.name} แล้ว`,
+      title: "เปิด Outlook แล้ว",
+      description: `กำลังเปิดอีเมลสำหรับส่งไปยัง ${selectedManager?.name}`,
     });
 
     onSent();
@@ -166,17 +182,15 @@ export function SendToManagerDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSending}
           >
             ยกเลิก
           </Button>
           <Button
             onClick={handleSend}
-            disabled={!selectedManagerId || isSending}
+            disabled={!selectedManagerId}
             className="gap-2"
           >
-            {isSending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSending ? "กำลังส่ง..." : "ส่งอีเมล"}
+            ส่งผ่าน Outlook
           </Button>
         </DialogFooter>
       </DialogContent>
