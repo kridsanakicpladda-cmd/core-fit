@@ -128,64 +128,89 @@ const JobApplication = () => {
     setIsParsing(true);
 
     try {
-      // Read PDF file as text (simplified - in production you'd use a proper PDF parser)
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const text = e.target?.result as string;
-        
-        // Call edge function to parse resume
-        const { data, error } = await supabase.functions.invoke('parse-resume', {
-          body: { resumeText: text }
-        });
+      // Dynamically import pdfjs-dist
+      const pdfjsLib = await import('pdfjs-dist');
+      
+      // Set worker path
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-        if (error) {
-          console.error('Error parsing resume:', error);
-          toast({
-            title: "เกิดข้อผิดพลาด",
-            description: "ไม่สามารถ parse Resume ได้ กรุณาลองอีกครั้ง",
-            variant: "destructive",
-          });
-          setIsParsing(false);
-          return;
-        }
+      // Read PDF file
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      let fullText = '';
+      
+      // Extract text from all pages
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + '\n';
+      }
 
-        if (data?.success && data?.data) {
-          const parsed = data.data;
-          
-          // Update form with parsed data
-          setFormData(prev => ({
-            ...prev,
-            fullName: parsed.name || prev.fullName,
-            email: parsed.email || prev.email,
-            phone: parsed.phone || prev.phone,
-            position: parsed.position || prev.position,
-            coverLetter: parsed.experience || prev.coverLetter,
-          }));
+      console.log('Extracted PDF text:', fullText.substring(0, 500));
 
-          toast({
-            title: "Parse สำเร็จ!",
-            description: "ข้อมูลจาก Resume ถูกกรอกในฟอร์มแล้ว กรุณาตรวจสอบความถูกต้อง",
-          });
-        }
-
-        setIsParsing(false);
-      };
-
-      reader.onerror = () => {
+      if (!fullText.trim()) {
         toast({
-          title: "เกิดข้อผิดพลาด",
-          description: "ไม่สามารถอ่านไฟล์ได้",
+          title: "ไม่พบข้อความ",
+          description: "ไม่สามารถดึงข้อความจาก PDF ได้ อาจเป็น PDF ที่สแกนมา",
           variant: "destructive",
         });
         setIsParsing(false);
-      };
+        return;
+      }
 
-      reader.readAsText(selectedFile);
+      // Call edge function to parse resume
+      const { data, error } = await supabase.functions.invoke('parse-resume', {
+        body: { resumeText: fullText }
+      });
+
+      if (error) {
+        console.error('Error parsing resume:', error);
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: "ไม่สามารถ parse Resume ได้ กรุณาลองอีกครั้ง",
+          variant: "destructive",
+        });
+        setIsParsing(false);
+        return;
+      }
+
+      if (data?.success && data?.data) {
+        const parsed = data.data;
+        
+        console.log('Parsed data from AI:', parsed);
+        
+        // Update form with parsed data
+        setFormData(prev => ({
+          ...prev,
+          fullName: parsed.name || prev.fullName,
+          email: parsed.email || prev.email,
+          phone: parsed.phone || prev.phone,
+          position: parsed.position || prev.position,
+          coverLetter: parsed.experience || prev.coverLetter,
+        }));
+
+        toast({
+          title: "Parse สำเร็จ!",
+          description: "ข้อมูลจาก Resume ถูกกรอกในฟอร์มแล้ว กรุณาตรวจสอบความถูกต้อง",
+        });
+      } else {
+        toast({
+          title: "ไม่พบข้อมูล",
+          description: "AI ไม่สามารถดึงข้อมูลจาก Resume ได้",
+          variant: "destructive",
+        });
+      }
+
+      setIsParsing(false);
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถ parse Resume ได้",
+        description: error instanceof Error ? error.message : "ไม่สามารถ parse Resume ได้",
         variant: "destructive",
       });
       setIsParsing(false);
