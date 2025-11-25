@@ -34,6 +34,11 @@ export interface Interview {
   interviewer: string;
   status: "upcoming" | "completed";
   score?: number;
+  interviewRound: "first" | "final";
+  schedulingStatus: "pending" | "not_interested" | "rejected" | "scheduled";
+  candidateEmail?: string;
+  managerEmail?: string;
+  proposedSlots?: string[];
 }
 
 interface InterviewFormDialogProps {
@@ -85,6 +90,11 @@ export function InterviewFormDialog({ interview, open, onOpenChange, onSave }: I
       type: values.type,
       interviewer: values.interviewer,
       status: "upcoming" as const,
+      interviewRound: interview?.interviewRound || "first" as const,
+      schedulingStatus: interview?.schedulingStatus || "scheduled" as const,
+      candidateEmail: interview?.candidateEmail,
+      managerEmail: interview?.managerEmail,
+      proposedSlots: interview?.proposedSlots,
     };
     
     onSave(interviewData);

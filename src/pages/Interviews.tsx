@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, Video, MapPin, Clock, Users, List } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { InterviewFormDialog, Interview } from "@/components/interviews/InterviewFormDialog";
-import { InterviewCalendarView } from "@/components/interviews/InterviewCalendarView";
+import { PendingScheduleBox } from "@/components/interviews/PendingScheduleBox";
+import { StatusBox } from "@/components/interviews/StatusBox";
+import { InterviewSection } from "@/components/interviews/InterviewSection";
 import { toast } from "sonner";
+import { addSparkleEffect } from "@/lib/sparkle";
 
 const initialInterviews: Interview[] = [
   {
@@ -19,6 +19,10 @@ const initialInterviews: Interview[] = [
     interviewer: "คุณสมชาย",
     status: "completed",
     score: 88,
+    interviewRound: "first",
+    schedulingStatus: "scheduled",
+    candidateEmail: "arun@example.com",
+    managerEmail: "manager@example.com",
   },
   {
     id: "2",
@@ -29,6 +33,10 @@ const initialInterviews: Interview[] = [
     type: "ออนไลน์",
     interviewer: "คุณสมหญิง",
     status: "upcoming",
+    interviewRound: "first",
+    schedulingStatus: "scheduled",
+    candidateEmail: "thanapol@example.com",
+    managerEmail: "manager@example.com",
   },
   {
     id: "3",
@@ -39,6 +47,10 @@ const initialInterviews: Interview[] = [
     type: "ออนไซต์",
     interviewer: "คุณประเสริฐ",
     status: "upcoming",
+    interviewRound: "final",
+    schedulingStatus: "scheduled",
+    candidateEmail: "siriporn@example.com",
+    managerEmail: "manager@example.com",
   },
   {
     id: "4",
@@ -49,6 +61,10 @@ const initialInterviews: Interview[] = [
     type: "ออนไลน์",
     interviewer: "คุณนภา",
     status: "upcoming",
+    interviewRound: "final",
+    schedulingStatus: "scheduled",
+    candidateEmail: "wichai@example.com",
+    managerEmail: "manager@example.com",
   },
   {
     id: "5",
@@ -59,16 +75,67 @@ const initialInterviews: Interview[] = [
     type: "ออนไลน์",
     interviewer: "คุณวิชัย",
     status: "upcoming",
+    interviewRound: "first",
+    schedulingStatus: "scheduled",
+    candidateEmail: "nipa@example.com",
+    managerEmail: "manager@example.com",
+  },
+  // Pending candidates
+  {
+    id: "p1",
+    name: "สมชาย ใจดี",
+    position: "Backend Developer",
+    date: new Date(),
+    time: "",
+    type: "ออนไลน์",
+    interviewer: "คุณสมชาย",
+    status: "upcoming",
+    interviewRound: "first",
+    schedulingStatus: "pending",
+    candidateEmail: "somchai@example.com",
+    managerEmail: "manager@example.com",
+    proposedSlots: ["10:00 - 11:00", "14:00 - 15:00"],
   },
   {
-    id: "6",
-    name: "สุรชัย ดีงาม",
-    position: "Backend Developer",
-    date: new Date(Date.now() + 86400000),
-    time: "15:00 - 16:00",
+    id: "p2",
+    name: "วันดี สุขสันต์",
+    position: "Marketing Manager",
+    date: new Date(),
+    time: "",
     type: "ออนไซต์",
-    interviewer: "คุณธนพล",
+    interviewer: "คุณนภา",
     status: "upcoming",
+    interviewRound: "final",
+    schedulingStatus: "pending",
+    candidateEmail: "wandee@example.com",
+    managerEmail: "manager@example.com",
+    proposedSlots: ["13:00 - 14:00", "15:00 - 16:00"],
+  },
+  // Not interested
+  {
+    id: "n1",
+    name: "ประเสริฐ มีชัย",
+    position: "Sales Executive",
+    date: new Date(),
+    time: "",
+    type: "ออนไลน์",
+    interviewer: "",
+    status: "upcoming",
+    interviewRound: "first",
+    schedulingStatus: "not_interested",
+  },
+  // Rejected
+  {
+    id: "r1",
+    name: "สุดา ปรีดา",
+    position: "HR Coordinator",
+    date: new Date(),
+    time: "",
+    type: "ออนไลน์",
+    interviewer: "",
+    status: "upcoming",
+    interviewRound: "first",
+    schedulingStatus: "rejected",
   },
 ];
 
@@ -77,15 +144,38 @@ export default function Interviews() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInterview, setEditingInterview] = useState<Interview | undefined>();
 
-  const todayInterviews = interviews.filter(i => {
-    const today = new Date();
-    return i.date.toDateString() === today.toDateString();
-  });
+  // Filter candidates by status
+  const pendingCandidates = interviews.filter(i => i.schedulingStatus === "pending");
+  const notInterestedCandidates = interviews.filter(i => i.schedulingStatus === "not_interested");
+  const rejectedCandidates = interviews.filter(i => i.schedulingStatus === "rejected");
 
-  const upcomingInterviews = interviews.filter(i => {
-    const today = new Date();
-    return i.date > today;
-  });
+  // Filter scheduled interviews by round
+  const firstInterviews = interviews.filter(
+    i => i.schedulingStatus === "scheduled" && i.interviewRound === "first"
+  );
+  const finalInterviews = interviews.filter(
+    i => i.schedulingStatus === "scheduled" && i.interviewRound === "final"
+  );
+
+  // Track booked time slots to prevent double-booking
+  const bookedSlots = new Set<string>(
+    interviews
+      .filter(i => i.schedulingStatus === "scheduled" && i.time)
+      .map(i => i.time)
+  );
+
+  const handleSchedule = (candidateId: string, timeSlot: string) => {
+    setInterviews(interviews.map(i => 
+      i.id === candidateId
+        ? { 
+            ...i, 
+            schedulingStatus: "scheduled" as const,
+            time: timeSlot,
+            date: new Date() // Set to today or selected date
+          }
+        : i
+    ));
+  };
 
   const handleSaveInterview = (interviewData: Omit<Interview, "id">) => {
     if (editingInterview) {
@@ -99,6 +189,8 @@ export default function Interviews() {
       const newInterview: Interview = {
         ...interviewData,
         id: Date.now().toString(),
+        interviewRound: "first",
+        schedulingStatus: "scheduled",
       };
       setInterviews([...interviews, newInterview]);
       toast.success("เพิ่มการสัมภาษณ์สำเร็จ");
@@ -106,7 +198,8 @@ export default function Interviews() {
     setEditingInterview(undefined);
   };
 
-  const handleNewInterview = () => {
+  const handleNewInterview = (e: React.MouseEvent) => {
+    addSparkleEffect(e);
     setEditingInterview(undefined);
     setIsFormOpen(true);
   };
@@ -117,10 +210,10 @@ export default function Interviews() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-luxury bg-clip-text text-transparent animate-float">
             การสัมภาษณ์
           </h1>
           <p className="text-muted-foreground">
@@ -128,7 +221,7 @@ export default function Interviews() {
           </p>
         </div>
         <Button 
-          className="shadow-primary hover:shadow-lg transition-all"
+          className="shadow-glow hover:shadow-hover hover:scale-105 transition-all"
           onClick={handleNewInterview}
         >
           <CalendarIcon className="h-4 w-4 mr-2" />
@@ -136,141 +229,41 @@ export default function Interviews() {
         </Button>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="list" className="flex items-center gap-2">
-            <List className="h-4 w-4" />
-            รายการ
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            ปฏิทิน
-          </TabsTrigger>
-        </TabsList>
+      {/* Status Boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <PendingScheduleBox
+          candidates={pendingCandidates}
+          onSchedule={handleSchedule}
+          bookedSlots={bookedSlots}
+        />
+        <StatusBox
+          title="ไม่สนใจ"
+          candidates={notInterestedCandidates}
+          type="not_interested"
+        />
+        <StatusBox
+          title="ปฏิเสธการสัมภาษณ์"
+          candidates={rejectedCandidates}
+          type="rejected"
+        />
+      </div>
 
-        <TabsContent value="list" className="space-y-6 mt-6">
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                สัมภาษณ์วันนี้
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {todayInterviews.map((interview) => (
-                  <div
-                    key={interview.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-card hover:shadow-md transition-all group border border-border/50 cursor-pointer"
-                    onClick={() => handleInterviewClick(interview)}
-                  >
-                    <div className="flex items-center gap-4">
-                      {interview.status === "completed" && interview.score ? (
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold shadow-md">
-                          {interview.score}
-                        </div>
-                      ) : (
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white shadow-md">
-                          <Video className="h-6 w-6" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-semibold group-hover:text-primary transition-colors">
-                          {interview.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">{interview.position}</p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {interview.time}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {interview.type}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {interview.interviewer}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {interview.status === "completed" ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-                          เสร็จสิ้น
-                        </Badge>
-                      ) : (
-                        <>
-                          <Badge className="bg-primary/10 text-primary border-primary/20">
-                            กำลังจะถึง
-                          </Badge>
-                          <Button size="sm" className="shadow-sm hover:shadow-md transition-all">
-                            เข้าร่วม
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {upcomingInterviews.length > 0 && (
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle>การสัมภาษณ์ที่กำลังจะมาถึง</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {upcomingInterviews.map((interview) => (
-                    <div
-                      key={interview.id}
-                      className="flex items-center justify-between p-4 rounded-xl hover:bg-accent/50 transition-colors border border-transparent hover:border-border cursor-pointer"
-                      onClick={() => handleInterviewClick(interview)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
-                          <CalendarIcon className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{interview.name}</h3>
-                          <p className="text-sm text-muted-foreground">{interview.position}</p>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {interview.time}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {interview.type}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {interview.interviewer}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge className="bg-primary/10 text-primary border-primary/20">
-                        กำลังจะถึง
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="calendar" className="mt-6">
-          <InterviewCalendarView 
-            interviews={interviews}
-            onInterviewClick={handleInterviewClick}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Interview Sections */}
+      <div className="space-y-8">
+        <InterviewSection
+          title="First Interview"
+          interviews={firstInterviews}
+          onInterviewClick={handleInterviewClick}
+          gradientClass="from-blue-500/5 to-transparent"
+        />
+        
+        <InterviewSection
+          title="Final Interview"
+          interviews={finalInterviews}
+          onInterviewClick={handleInterviewClick}
+          gradientClass="from-purple-500/5 to-transparent"
+        />
+      </div>
 
       <InterviewFormDialog
         interview={editingInterview}
