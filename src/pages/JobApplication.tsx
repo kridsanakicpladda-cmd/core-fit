@@ -131,8 +131,9 @@ const JobApplication = () => {
       // Dynamically import pdfjs-dist
       const pdfjsLib = await import('pdfjs-dist');
       
-      // Set worker path
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      // Set worker path - use the package worker instead of CDN
+      const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
 
       // Read PDF file
       const arrayBuffer = await selectedFile.arrayBuffer();
