@@ -18,11 +18,13 @@ import { Button } from "@/components/ui/button";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useToast } from "@/hooks/use-toast";
 import { addSparkleEffect } from "@/lib/sparkle";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface SendToManagerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  candidates: Array<{ id: number; name: string; position: string }>;
+  candidates: Array<{ id: number; name: string; position: string; resumeFile?: string }>;
   onSent: () => void;
 }
 
@@ -33,6 +35,7 @@ export function SendToManagerDialog({
   onSent,
 }: SendToManagerDialogProps) {
   const [selectedManagerId, setSelectedManagerId] = useState<string>("");
+  const [isSending, setIsSending] = useState(false);
   const { profiles, isLoading } = useProfiles();
   const { toast } = useToast();
 
@@ -46,55 +49,63 @@ export function SendToManagerDialog({
 
   const selectedManager = managers.find((m) => m.id === selectedManagerId);
 
-  const handleSend = (e: React.MouseEvent<HTMLButtonElement>) => {
+  // Get unique positions from candidates
+  const positions = [...new Set(candidates.map((c) => c.position))].join(", ");
+
+  const handleSend = async (e: React.MouseEvent<HTMLButtonElement>) => {
     addSparkleEffect(e);
 
     if (!selectedManagerId) {
       toast({
-        title: "กรุณาเลือกผู้จัดการ",
-        description: "กรุณาเลือกผู้จัดการที่ต้องการส่ง Resume",
+        title: "กรุณาเลือก Manager",
+        description: "กรุณาเลือก Manager ที่ต้องการส่ง Resume ไป",
         variant: "destructive",
       });
       return;
     }
 
-    // Build email body
-    const candidatesList = candidates.map((c) => `- ${c.name} (${c.position})`).join('\n');
-    const resumeLinks = candidates.map((c) => `Resume ${c.name}: https://your-domain.com/resumes/${c.id}`).join('\n');
-    
-    const emailBody = `เรียน ${selectedManager?.name} (${selectedManager?.department || 'แผนก'})
+    setIsSending(true);
 
-นำส่ง Resume ของผู้สมัครตำแหน่ง ${positions} และได้โทร Pre Screen เบื้องต้นแล้ว รบกวนพิจารณา Resume ให้ภายในวันพฤหัสบดี
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-email-with-attachments',
+        {
+          body: {
+            to: selectedManager?.email,
+            toName: selectedManager?.name,
+            department: selectedManager?.department || 'แผนก',
+            candidates: candidates.map(c => ({
+              id: c.id,
+              name: c.name,
+              position: c.position,
+              resume_url: c.resumeFile,
+            })),
+            positions,
+          },
+        }
+      );
 
-รายชื่อผู้สมัคร:
-${candidatesList}
+      if (error) throw error;
 
-ลิงก์ Resume:
-${resumeLinks}
+      toast({
+        title: "ส่งอีเมลสำเร็จ",
+        description: `ส่ง Resume ของผู้สมัคร ${candidates.length} คนไปยัง ${selectedManager?.name} แล้ว`,
+      });
 
-คลิกที่ลิงก์ด้านล่างเพื่อแจ้งผลพิจารณา:
-https://your-domain.com/manager-review
-
-ขอบคุณค่ะ`;
-
-    const subject = `Resume ผู้สมัครตำแหน่ง ${positions} - รอพิจารณา`;
-    const mailtoLink = `mailto:${selectedManager?.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
-    
-    // Open Outlook/default email client
-    window.open(mailtoLink, '_blank');
-
-    toast({
-      title: "เปิด Outlook แล้ว",
-      description: `กำลังเปิดอีเมลสำหรับส่งไปยัง ${selectedManager?.name}`,
-    });
-
-    onSent();
-    onOpenChange(false);
-    setSelectedManagerId("");
+      onSent();
+      onOpenChange(false);
+      setSelectedManagerId("");
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message || "ไม่สามารถส่งอีเมลได้ กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
-
-  // Get unique positions from candidates
-  const positions = [...new Set(candidates.map((c) => c.position))].join(", ");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -182,15 +193,17 @@ https://your-domain.com/manager-review
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
+            disabled={isSending}
           >
             ยกเลิก
           </Button>
           <Button
             onClick={handleSend}
-            disabled={!selectedManagerId}
+            disabled={!selectedManagerId || isSending}
             className="gap-2"
           >
-            ส่งผ่าน Outlook
+            {isSending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isSending ? "กำลังส่ง..." : "ส่งอีเมล"}
           </Button>
         </DialogFooter>
       </DialogContent>
