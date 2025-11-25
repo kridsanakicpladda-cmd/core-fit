@@ -128,8 +128,13 @@ async function sendEmail(accessToken: string, emailData: EmailRequest, senderEma
                     <tr>
                       <td align="center">
                         <a href="https://core-fit.lovable.app" 
-                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: transform 0.2s;">
-                          แจ้งผลพิจารณา
+                           style="display: inline-flex; align-items: center; padding: 16px 30px 16px 30px; background: linear-gradient(135deg, #f0f0ff 0%, #ffffff 100%); color: #7c3aed; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 18px; border: 3px solid #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); transition: transform 0.2s; gap: 15px;">
+                          <span style="flex: 1;">แจ้งผลการพิจารณา</span>
+                          <span style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; background: #10b981; border-radius: 50%; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);">
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M20 6L9 17L4 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          </span>
                         </a>
                       </td>
                     </tr>
