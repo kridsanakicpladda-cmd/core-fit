@@ -43,25 +43,56 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a resume parser. Extract the following information from the resume text and return ONLY a valid JSON object with this exact structure:
-{
-  "name": "full name",
-  "email": "email address",
-  "phone": "phone number",
-  "position": "desired position or job title",
-  "experience": "work experience summary",
-  "education": "education background",
-  "skills": ["skill1", "skill2", "skill3"]
-}
-
-If any field is not found, use an empty string for strings or empty array for skills. Do not include any other text or explanation, only the JSON object.`
+            content:
+              'You are a resume parser for job applications. Analyze the provided resume text and extract structured candidate information using the available tools.',
           },
           {
             role: 'user',
-            content: `Parse this resume and extract the information:\n\n${resumeText}`
-          }
+            content: `Parse this resume and extract the candidate information for the job application form. Resume text:\n\n${resumeText}`,
+          },
         ],
         temperature: 0.3,
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'parse_resume',
+              description:
+                'Extract structured candidate information from a resume for use in a job application form.',
+              parameters: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', description: 'Full name of the candidate' },
+                  email: { type: 'string', description: 'Email address' },
+                  phone: { type: 'string', description: 'Primary phone number' },
+                  position: {
+                    type: 'string',
+                    description:
+                      'Desired position or main job title this resume is intended for (Thai or English)',
+                  },
+                  experience: {
+                    type: 'string',
+                    description:
+                      'Short narrative summary of the candidate work experience and responsibilities',
+                  },
+                  education: {
+                    type: 'string',
+                    description:
+                      'Summary of highest education level, institution, major, year, and GPA if available',
+                  },
+                  skills: {
+                    type: 'array',
+                    description: 'List of key skills, tools, and competencies mentioned in the resume',
+                    items: { type: 'string' },
+                  },
+                },
+                required: ['name', 'email', 'phone', 'position', 'experience', 'education', 'skills'],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: 'function', function: { name: 'parse_resume' } },
       }),
     });
 
@@ -72,18 +103,42 @@ If any field is not found, use an empty string for strings or empty array for sk
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    
-    console.log('AI response:', content);
 
-    // Parse the JSON response
     let parsedData: ParsedResume;
+
     try {
-      // Remove markdown code blocks if present
-      const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      parsedData = JSON.parse(cleanedContent);
+      const choice = data.choices?.[0];
+      const toolCall = choice?.message?.tool_calls?.[0];
+
+      if (toolCall?.function?.arguments) {
+        // Preferred path: structured tool calling
+        const args = JSON.parse(toolCall.function.arguments);
+        parsedData = {
+          name: args.name ?? '',
+          email: args.email ?? '',
+          phone: args.phone ?? '',
+          position: args.position ?? '',
+          experience: args.experience ?? '',
+          education: args.education ?? '',
+          skills: Array.isArray(args.skills) ? args.skills : [],
+        };
+        console.log('Parsed via tool_call:', parsedData);
+      } else {
+        // Fallback: try to parse JSON content from message.content like the old implementation
+        const content = choice?.message?.content ?? '';
+        console.log('AI response (fallback path):', content);
+
+        const cleanedContent = content
+          .replace(/```json\s*/g, '')
+          .replace(/```\s*/g, '')
+          // Remove problematic control characters that break JSON.parse
+          .replace(/[\u0000-\u0019]+/g, ' ')
+          .trim();
+
+        parsedData = JSON.parse(cleanedContent);
+      }
     } catch (parseError) {
-      console.error('Failed to parse AI response:', content);
+      console.error('Failed to parse AI response:', parseError);
       throw new Error('Failed to parse AI response');
     }
 
