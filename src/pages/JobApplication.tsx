@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, FileText, Plus, User, X, Loader2, Sparkles, Briefcase, GraduationCap, Users, Home, Heart, Phone as PhoneIcon, Shield, Calendar } from "lucide-react";
+import { Upload, FileText, Plus, User, X, Loader2, Sparkles, Briefcase, GraduationCap, Users, Home, Heart, Phone as PhoneIcon, Shield, Calendar, Car, Languages as LanguagesIcon, Award, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCandidates } from "@/contexts/CandidatesContext";
 import PrivacyPolicyDialog from "@/components/PrivacyPolicyDialog";
@@ -28,14 +28,22 @@ interface WorkExperience {
   position: string;
   duration: string;
   salary: string;
+  responsibilities: string;
   reason: string;
 }
 
-interface Reference {
+interface FamilyMember {
   name: string;
-  position: string;
-  company: string;
-  phone: string;
+  relationship: string;
+  age: string;
+  occupation: string;
+}
+
+interface LanguageSkill {
+  language: string;
+  spoken: string;
+  written: string;
+  understand: string;
 }
 
 const JobApplication = () => {
@@ -46,71 +54,92 @@ const JobApplication = () => {
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
-  const [languages, setLanguages] = useState<Array<{ language: string; level: string }>>([
-    { language: "", level: "good" }
-  ]);
-  const [educations, setEducations] = useState<Education[]>([
-    { level: "", institution: "", major: "", gpa: "", yearGraduated: "" }
-  ]);
-  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([
-    { company: "", position: "", duration: "", salary: "", reason: "" }
-  ]);
-  const [references, setReferences] = useState<Reference[]>([
-    { name: "", position: "", company: "", phone: "" }
-  ]);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
+  
+  const [educations, setEducations] = useState<Education[]>([
+    { level: "high-school", institution: "", major: "", gpa: "", yearGraduated: "" },
+    { level: "diploma", institution: "", major: "", gpa: "", yearGraduated: "" },
+    { level: "bachelor", institution: "", major: "", gpa: "", yearGraduated: "" },
+    { level: "master", institution: "", major: "", gpa: "", yearGraduated: "" },
+    { level: "others", institution: "", major: "", gpa: "", yearGraduated: "" },
+  ]);
+  
+  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([
+    { company: "", position: "", duration: "", salary: "", responsibilities: "", reason: "" }
+  ]);
+  
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
+    { name: "", relationship: "บิดา", age: "", occupation: "" },
+    { name: "", relationship: "มารดา", age: "", occupation: "" }
+  ]);
+  
+  const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([
+    { language: "ภาษาอังกฤษ (English)", spoken: "", written: "", understand: "" }
+  ]);
+  
   const [formData, setFormData] = useState({
     // Job Application Info
     position: "",
-    salaryRequired: "",
-    startDate: "",
+    expectedSalary: "",
     
     // Personal Info
-    fullName: "",
+    titleName: "นาย",
+    firstName: "",
+    lastName: "",
     nickname: "",
-    idCard: "",
+    presentAddress: "",
+    moo: "",
+    district: "",
+    subDistrict: "",
+    province: "",
+    zipCode: "",
+    mobilePhone: "",
+    email: "",
     birthDate: "",
     age: "",
-    nationality: "ไทย",
-    religion: "พุทธ",
-    race: "ไทย",
+    idCard: "",
+    sex: "male",
+    bloodType: "",
+    religion: "",
     height: "",
     weight: "",
-    bloodType: "",
-    maritalStatus: "single",
-    militaryStatus: "",
     
-    // Contact
-    email: "",
-    phone: "",
-    lineId: "",
-    currentAddress: "",
-    permanentAddress: "",
-    sameAddress: false,
+    // Marital Status
+    maritalStatus: "single",
+    spouseName: "",
+    spouseOccupation: "",
+    numberOfChildren: "",
     
     // Emergency Contact
     emergencyName: "",
     emergencyRelation: "",
+    emergencyAddress: "",
     emergencyPhone: "",
     
-    // Family
-    fatherName: "",
-    fatherAge: "",
-    fatherOccupation: "",
-    motherName: "",
-    motherAge: "",
-    motherOccupation: "",
-    spouseName: "",
-    spouseAge: "",
-    spouseOccupation: "",
-    siblings: "",
+    // Special Skills
+    computerSkill: false,
+    drivingCar: false,
+    drivingCarLicenseNo: "",
+    drivingMotorcycle: false,
+    drivingMotorcycleLicenseNo: "",
+    otherSkills: "",
     
-    // Additional
-    coverLetter: "",
-    skills: "",
-    certifications: "",
-    informationSource: "",
-    referrerName: "",
+    // Training
+    trainingCurriculums: "",
+    
+    // Other Questions
+    workedAtICPBefore: "",
+    workedAtICPDetails: "",
+    relativesAtICP: "",
+    relativesAtICPDetails: "",
+    criminalRecord: "",
+    criminalRecordDetails: "",
+    seriousIllness: "",
+    seriousIllnessDetails: "",
+    colorBlindness: "",
+    pregnant: "",
+    contagiousDisease: "",
+    
     privacyConsent: false,
   });
 
@@ -162,40 +191,8 @@ const JobApplication = () => {
     }
   };
 
-  const addLanguage = () => {
-    setLanguages([...languages, { language: "", level: "good" }]);
-  };
-
-  const removeLanguage = (index: number) => {
-    if (languages.length > 1) {
-      setLanguages(languages.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateLanguage = (index: number, field: "language" | "level", value: string) => {
-    const updated = [...languages];
-    updated[index][field] = value;
-    setLanguages(updated);
-  };
-
-  const addEducation = () => {
-    setEducations([...educations, { level: "", institution: "", major: "", gpa: "", yearGraduated: "" }]);
-  };
-
-  const removeEducation = (index: number) => {
-    if (educations.length > 1) {
-      setEducations(educations.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateEducation = (index: number, field: keyof Education, value: string) => {
-    const updated = [...educations];
-    updated[index][field] = value;
-    setEducations(updated);
-  };
-
   const addWorkExperience = () => {
-    setWorkExperiences([...workExperiences, { company: "", position: "", duration: "", salary: "", reason: "" }]);
+    setWorkExperiences([...workExperiences, { company: "", position: "", duration: "", salary: "", responsibilities: "", reason: "" }]);
   };
 
   const removeWorkExperience = (index: number) => {
@@ -210,20 +207,42 @@ const JobApplication = () => {
     setWorkExperiences(updated);
   };
 
-  const addReference = () => {
-    setReferences([...references, { name: "", position: "", company: "", phone: "" }]);
+  const addFamilyMember = () => {
+    setFamilyMembers([...familyMembers, { name: "", relationship: "", age: "", occupation: "" }]);
   };
 
-  const removeReference = (index: number) => {
-    if (references.length > 1) {
-      setReferences(references.filter((_, i) => i !== index));
+  const removeFamilyMember = (index: number) => {
+    if (familyMembers.length > 2) {
+      setFamilyMembers(familyMembers.filter((_, i) => i !== index));
     }
   };
 
-  const updateReference = (index: number, field: keyof Reference, value: string) => {
-    const updated = [...references];
+  const updateFamilyMember = (index: number, field: keyof FamilyMember, value: string) => {
+    const updated = [...familyMembers];
     updated[index][field] = value;
-    setReferences(updated);
+    setFamilyMembers(updated);
+  };
+
+  const addLanguageSkill = () => {
+    setLanguageSkills([...languageSkills, { language: "", spoken: "", written: "", understand: "" }]);
+  };
+
+  const removeLanguageSkill = (index: number) => {
+    if (languageSkills.length > 1) {
+      setLanguageSkills(languageSkills.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateLanguageSkill = (index: number, field: keyof LanguageSkill, value: string) => {
+    const updated = [...languageSkills];
+    updated[index][field] = value;
+    setLanguageSkills(updated);
+  };
+
+  const updateEducation = (index: number, field: keyof Education, value: string) => {
+    const updated = [...educations];
+    updated[index][field] = value;
+    setEducations(updated);
   };
 
   const parseResumeWithAI = async () => {
@@ -294,11 +313,10 @@ const JobApplication = () => {
         
         setFormData(prev => ({
           ...prev,
-          fullName: parsed.name || prev.fullName,
+          firstName: parsed.name || prev.firstName,
           email: parsed.email || prev.email,
-          phone: parsed.phone || prev.phone,
+          mobilePhone: parsed.phone || prev.mobilePhone,
           position: parsed.position || prev.position,
-          coverLetter: parsed.experience || prev.coverLetter,
         }));
 
         toast({
@@ -320,7 +338,7 @@ const JobApplication = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.position || !formData.fullName || !formData.email || !selectedFile || !formData.privacyConsent) {
+    if (!formData.position || !formData.firstName || !formData.email || !selectedFile || !formData.privacyConsent) {
       toast({
         title: "กรุณากรอกข้อมูลให้ครบถ้วน",
         description: "กรุณากรอกข้อมูลทุกช่องที่มีเครื่องหมาย * อัปโหลดเรซูเม่ และยินยอมนโยบายความเป็นส่วนตัว",
@@ -330,72 +348,20 @@ const JobApplication = () => {
     }
 
     addCandidate({
-      name: formData.fullName,
+      name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
-      phone: formData.phone || "-",
+      phone: formData.mobilePhone || "-",
       position: formData.position,
       experience: "ระบุในเรซูเม่",
       skills: [],
       resumeFile: selectedFile.name,
-      coverLetter: formData.coverLetter,
+      coverLetter: "",
     });
 
     toast({
       title: "ส่งใบสมัครสำเร็จ",
       description: `ใบสมัครของคุณสำหรับตำแหน่ง ${formData.position} ถูกส่งแล้ว`,
     });
-
-    // Reset form
-    setFormData({
-      position: "",
-      salaryRequired: "",
-      startDate: "",
-      fullName: "",
-      nickname: "",
-      idCard: "",
-      birthDate: "",
-      age: "",
-      nationality: "ไทย",
-      religion: "พุทธ",
-      race: "ไทย",
-      height: "",
-      weight: "",
-      bloodType: "",
-      maritalStatus: "single",
-      militaryStatus: "",
-      email: "",
-      phone: "",
-      lineId: "",
-      currentAddress: "",
-      permanentAddress: "",
-      sameAddress: false,
-      emergencyName: "",
-      emergencyRelation: "",
-      emergencyPhone: "",
-      fatherName: "",
-      fatherAge: "",
-      fatherOccupation: "",
-      motherName: "",
-      motherAge: "",
-      motherOccupation: "",
-      spouseName: "",
-      spouseAge: "",
-      spouseOccupation: "",
-      siblings: "",
-      coverLetter: "",
-      skills: "",
-      certifications: "",
-      informationSource: "",
-      referrerName: "",
-      privacyConsent: false,
-    });
-    setSelectedFile(null);
-    setProfilePhoto(null);
-    setProfilePhotoPreview(null);
-    setLanguages([{ language: "", level: "good" }]);
-    setEducations([{ level: "", institution: "", major: "", gpa: "", yearGraduated: "" }]);
-    setWorkExperiences([{ company: "", position: "", duration: "", salary: "", reason: "" }]);
-    setReferences([{ name: "", position: "", company: "", phone: "" }]);
   };
 
   return (
@@ -404,10 +370,13 @@ const JobApplication = () => {
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-3">
-            ฟอร์มสมัครงาน
+            EMPLOYMENT APPLICATION
           </h1>
-          <p className="text-lg text-muted-foreground">
-            เข้าร่วมทีมกับเราและสร้างอนาคตที่สดใสไปด้วยกัน ✨
+          <p className="text-3xl font-semibold text-muted-foreground mb-2">
+            ใบสมัครงาน
+          </p>
+          <p className="text-sm text-muted-foreground italic">
+            (Please fill in English, if capable)
           </p>
         </div>
 
@@ -420,8 +389,8 @@ const JobApplication = () => {
                   <Briefcase className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">ข้อมูลการสมัครงาน</CardTitle>
-                  <CardDescription>ตำแหน่งและเงินเดือนที่คาดหวัง</CardDescription>
+                  <CardTitle className="text-2xl">Position & Salary</CardTitle>
+                  <CardDescription>ตำแหน่งที่สมัครและเงินเดือนที่คาดหวัง</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -429,9 +398,9 @@ const JobApplication = () => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Profile Photo */}
                 <div className="lg:col-span-3">
-                  <Label className="text-base font-semibold">รูปถ่าย / Photo</Label>
+                  <Label className="text-base font-semibold">รูปถ่าย 1-2 นิ้ว / Photo</Label>
                   <div className="mt-3 space-y-4">
-                    <div className="relative w-full aspect-square max-w-[200px] rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <div className="relative w-full aspect-[3/4] max-w-[180px] rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                       {profilePhotoPreview ? (
                         <img 
                           src={profilePhotoPreview} 
@@ -439,7 +408,7 @@ const JobApplication = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-24 h-24 text-primary/50" />
+                        <User className="w-20 h-20 text-primary/50" />
                       )}
                     </div>
                     <input
@@ -470,7 +439,7 @@ const JobApplication = () => {
                 <div className="lg:col-span-9 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="position" className="text-base font-semibold">
-                      ตำแหน่งที่สมัคร / Position <span className="text-destructive">*</span>
+                      Position Applied / ตำแหน่งที่สมัคร <span className="text-destructive">*</span>
                     </Label>
                     <Select
                       value={formData.position}
@@ -489,38 +458,23 @@ const JobApplication = () => {
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="salaryRequired">
-                        เงินเดือนที่ต้องการ / Salary (บาท)
-                      </Label>
-                      <Input
-                        id="salaryRequired"
-                        type="number"
-                        value={formData.salaryRequired}
-                        onChange={(e) => setFormData({ ...formData, salaryRequired: e.target.value })}
-                        placeholder="25,000"
-                        className="border-2 focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">
-                        วันที่สามารถเริ่มงานได้ / Start Date
-                      </Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="border-2 focus:border-primary"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expectedSalary" className="text-base font-semibold">
+                      Expected Salary / เงินเดือนที่คาดหวัง (บาท)
+                    </Label>
+                    <Input
+                      id="expectedSalary"
+                      type="number"
+                      value={formData.expectedSalary}
+                      onChange={(e) => setFormData({ ...formData, expectedSalary: e.target.value })}
+                      placeholder="25,000"
+                      className="border-2 focus:border-primary"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="resume" className="text-base font-semibold">
-                      แนบไฟล์ Resume / CV <span className="text-destructive">*</span>
+                    <Label className="text-base font-semibold">
+                      Attached CV / แนบไฟล์ Resume <span className="text-destructive">*</span>
                     </Label>
                     <div className="flex gap-2">
                       <Input
@@ -546,7 +500,7 @@ const JobApplication = () => {
                         >
                           <span className="flex items-center gap-2">
                             <Upload className="w-4 h-4" />
-                            เลือกไฟล์
+                            Browse
                           </span>
                         </Button>
                       </label>
@@ -560,7 +514,7 @@ const JobApplication = () => {
                           {isParsing ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin" />
-                              กำลัง Parse...
+                              Parsing...
                             </>
                           ) : (
                             <>
@@ -577,7 +531,7 @@ const JobApplication = () => {
             </CardContent>
           </Card>
 
-          {/* Section 2: Personal Information */}
+          {/* Section 2: Personal Record */}
           <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
             <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
               <div className="flex items-center gap-3">
@@ -585,32 +539,58 @@ const JobApplication = () => {
                   <User className="w-6 h-6 text-secondary" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">ข้อมูลส่วนตัว</CardTitle>
-                  <CardDescription>กรุณากรอกข้อมูลของคุณให้ครบถ้วน</CardDescription>
+                  <CardTitle className="text-2xl">PERSONAL RECORD</CardTitle>
+                  <CardDescription>ประวัติส่วนตัว</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">
-                    ชื่อ-นามสกุล / Full Name <span className="text-destructive">*</span>
+              {/* Name */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-2 space-y-2">
+                  <Label>คำนำหน้า / Title</Label>
+                  <Select
+                    value={formData.titleName}
+                    onValueChange={(value) => setFormData({ ...formData, titleName: value })}
+                  >
+                    <SelectTrigger className="border-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="นาย">นาย / Mr.</SelectItem>
+                      <SelectItem value="นางสาว">นางสาว / Miss</SelectItem>
+                      <SelectItem value="นาง">นาง / Mrs.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-3 space-y-2">
+                  <Label>
+                    ชื่อ / Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="fullName"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="นายสมชาย ใจดี"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="สมชาย / Somchai"
                     className="border-2 focus:border-secondary"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="nickname">
-                    ชื่อเล่น / Nickname
+                <div className="md:col-span-4 space-y-2">
+                  <Label>
+                    นามสกุล / Last Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="nickname"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    placeholder="ใจดี / Jaidee"
+                    className="border-2 focus:border-secondary"
+                  />
+                </div>
+
+                <div className="md:col-span-3 space-y-2">
+                  <Label>ชื่อเล่น / Nickname</Label>
+                  <Input
                     value={formData.nickname}
                     onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                     placeholder="ชาย"
@@ -619,125 +599,151 @@ const JobApplication = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Address */}
+              <div className="space-y-2">
+                <Label>Present Address / ที่อยู่ปัจจุบัน</Label>
+                <Input
+                  value={formData.presentAddress}
+                  onChange={(e) => setFormData({ ...formData, presentAddress: e.target.value })}
+                  placeholder="123 ถนน..."
+                  className="border-2 focus:border-secondary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="idCard">
-                    เลขบัตรประชาชน / ID Card Number
-                  </Label>
+                  <Label>Moo / หมู่</Label>
                   <Input
-                    id="idCard"
-                    value={formData.idCard}
-                    onChange={(e) => setFormData({ ...formData, idCard: e.target.value })}
-                    placeholder="1-2345-67890-12-3"
-                    maxLength={17}
-                    className="border-2 focus:border-secondary"
+                    value={formData.moo}
+                    onChange={(e) => setFormData({ ...formData, moo: e.target.value })}
+                    placeholder="1"
+                    className="border-2"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="birthDate">
-                      วันเกิด / Birth Date
-                    </Label>
-                    <Input
-                      id="birthDate"
-                      type="date"
-                      value={formData.birthDate}
-                      onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                      className="border-2 focus:border-secondary"
-                    />
-                  </div>
+                <div className="md:col-span-2 space-y-2">
+                  <Label>District / ตำบล</Label>
+                  <Input
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    placeholder="บางกะปิ"
+                    className="border-2"
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="age">
-                      อายุ / Age
-                    </Label>
-                    <Input
-                      id="age"
-                      type="number"
-                      value={formData.age}
-                      onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                      placeholder="25"
-                      className="border-2 focus:border-secondary"
-                    />
-                  </div>
+                <div className="md:col-span-2 space-y-2">
+                  <Label>District / เขต/อำเภอ</Label>
+                  <Input
+                    value={formData.subDistrict}
+                    onChange={(e) => setFormData({ ...formData, subDistrict: e.target.value })}
+                    placeholder="หัวหมาก"
+                    className="border-2"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Province / จังหวัด</Label>
+                  <Input
+                    value={formData.province}
+                    onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                    placeholder="กรุงเทพฯ"
+                    className="border-2"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nationality">
-                    สัญชาติ / Nationality
-                  </Label>
+                  <Label>Zip Code / รหัสไปรษณีย์</Label>
                   <Input
-                    id="nationality"
-                    value={formData.nationality}
-                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                    placeholder="ไทย"
-                    className="border-2 focus:border-secondary"
+                    value={formData.zipCode}
+                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                    placeholder="10240"
+                    maxLength={5}
+                    className="border-2"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="religion">
-                    ศาสนา / Religion
+                  <Label>
+                    Mobile Phone / โทรศัพท์มือถือ <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="religion"
-                    value={formData.religion}
-                    onChange={(e) => setFormData({ ...formData, religion: e.target.value })}
-                    placeholder="พุทธ"
-                    className="border-2 focus:border-secondary"
+                    value={formData.mobilePhone}
+                    onChange={(e) => setFormData({ ...formData, mobilePhone: e.target.value })}
+                    placeholder="081-234-5678"
+                    className="border-2"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="race">
-                    เชื้อชาติ / Race
+                  <Label>
+                    E-mail / อีเมล์ <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="race"
-                    value={formData.race}
-                    onChange={(e) => setFormData({ ...formData, race: e.target.value })}
-                    placeholder="ไทย"
-                    className="border-2 focus:border-secondary"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@example.com"
+                    className="border-2"
                   />
                 </div>
               </div>
 
+              {/* Birth & Personal Details */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="height">
-                    ส่วนสูง (ซม.) / Height
-                  </Label>
+                  <Label>Date of Birth / ว/ด/ป เกิด</Label>
                   <Input
-                    id="height"
-                    type="number"
-                    value={formData.height}
-                    onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                    placeholder="170"
-                    className="border-2 focus:border-secondary"
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    className="border-2"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="weight">
-                    น้ำหนัก (กก.) / Weight
-                  </Label>
+                  <Label>Age / อายุ (ปี)</Label>
                   <Input
-                    id="weight"
                     type="number"
-                    value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                    placeholder="65"
-                    className="border-2 focus:border-secondary"
+                    value={formData.age}
+                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                    placeholder="25"
+                    className="border-2"
                   />
                 </div>
 
+                <div className="md:col-span-2 space-y-2">
+                  <Label>ID Card No. / เลขบัตรประชาชน</Label>
+                  <Input
+                    value={formData.idCard}
+                    onChange={(e) => setFormData({ ...formData, idCard: e.target.value })}
+                    placeholder="1-2345-67890-12-3"
+                    maxLength={17}
+                    className="border-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bloodType">
-                    กรุ๊ปเลือด / Blood Type
-                  </Label>
+                  <Label>Sex / เพศ</Label>
+                  <Select
+                    value={formData.sex}
+                    onValueChange={(value) => setFormData({ ...formData, sex: value })}
+                  >
+                    <SelectTrigger className="border-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">ชาย / Male</SelectItem>
+                      <SelectItem value="female">หญิง / Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Blood Type / กรุ๊ปเลือด</Label>
                   <Select
                     value={formData.bloodType}
                     onValueChange={(value) => setFormData({ ...formData, bloodType: value })}
@@ -754,220 +760,59 @@ const JobApplication = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="maritalStatus">
-                    สถานะ / Status
-                  </Label>
-                  <Select
-                    value={formData.maritalStatus}
-                    onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}
-                  >
-                    <SelectTrigger className="border-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single">โสด</SelectItem>
-                      <SelectItem value="married">สมรส</SelectItem>
-                      <SelectItem value="divorced">หย่า</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Religion / ศาสนา</Label>
+                  <Input
+                    value={formData.religion}
+                    onChange={(e) => setFormData({ ...formData, religion: e.target.value })}
+                    placeholder="พุทธ"
+                    className="border-2"
+                  />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="militaryStatus">
-                  สถานะทางทหาร / Military Status (สำหรับเพศชาย)
-                </Label>
-                <Select
-                  value={formData.militaryStatus}
-                  onValueChange={(value) => setFormData({ ...formData, militaryStatus: value })}
-                >
-                  <SelectTrigger className="border-2">
-                    <SelectValue placeholder="เลือกสถานะ..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="completed">ผ่านการเกณฑ์ทหาร</SelectItem>
-                    <SelectItem value="exempted">ได้รับการยกเว้น</SelectItem>
-                    <SelectItem value="not-applicable">ไม่มี</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label>Height / ส่วนสูง (cm)</Label>
+                  <Input
+                    type="number"
+                    value={formData.height}
+                    onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                    placeholder="170"
+                    className="border-2"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Weight / น้ำหนัก (kg)</Label>
+                  <Input
+                    type="number"
+                    value={formData.weight}
+                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                    placeholder="65"
+                    className="border-2"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Section 3: Contact Information */}
+          {/* Section 3: Family Record */}
           <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
             <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <PhoneIcon className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl">ข้อมูลติดต่อ</CardTitle>
-                  <CardDescription>ที่อยู่และช่องทางติดต่อ</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">
-                    อีเมล / Email <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@example.com"
-                    className="border-2 focus:border-primary"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">
-                    เบอร์โทรศัพท์ / Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="081-234-5678"
-                    className="border-2 focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lineId">
-                  Line ID
-                </Label>
-                <Input
-                  id="lineId"
-                  value={formData.lineId}
-                  onChange={(e) => setFormData({ ...formData, lineId: e.target.value })}
-                  placeholder="@yourlineid"
-                  className="border-2 focus:border-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="currentAddress">
-                  ที่อยู่ปัจจุบัน / Current Address
-                </Label>
-                <Textarea
-                  id="currentAddress"
-                  value={formData.currentAddress}
-                  onChange={(e) => setFormData({ ...formData, currentAddress: e.target.value })}
-                  placeholder="123 ถนน... แขวง... เขต... กรุงเทพฯ 10XXX"
-                  rows={3}
-                  className="border-2 focus:border-primary resize-none"
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="sameAddress"
-                  checked={formData.sameAddress}
-                  onCheckedChange={(checked) => {
-                    setFormData({ 
-                      ...formData, 
-                      sameAddress: checked as boolean,
-                      permanentAddress: checked ? formData.currentAddress : formData.permanentAddress
-                    });
-                  }}
-                />
-                <Label htmlFor="sameAddress" className="font-normal cursor-pointer">
-                  ที่อยู่ตามทะเบียนบ้านเหมือนที่อยู่ปัจจุบัน
-                </Label>
-              </div>
-
-              {!formData.sameAddress && (
-                <div className="space-y-2 animate-fade-in">
-                  <Label htmlFor="permanentAddress">
-                    ที่อยู่ตามทะเบียนบ้าน / Permanent Address
-                  </Label>
-                  <Textarea
-                    id="permanentAddress"
-                    value={formData.permanentAddress}
-                    onChange={(e) => setFormData({ ...formData, permanentAddress: e.target.value })}
-                    placeholder="123 ถนน... ตำบล... อำเภอ... จังหวัด... 10XXX"
-                    rows={3}
-                    className="border-2 focus:border-primary resize-none"
-                  />
-                </div>
-              )}
-
-              {/* Emergency Contact */}
-              <div className="pt-4 border-t">
-                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" />
-                  ผู้ติดต่อฉุกเฉิน / Emergency Contact
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="emergencyName">
-                      ชื่อ / Name
-                    </Label>
-                    <Input
-                      id="emergencyName"
-                      value={formData.emergencyName}
-                      onChange={(e) => setFormData({ ...formData, emergencyName: e.target.value })}
-                      placeholder="นางสาวสมหญิง ใจดี"
-                      className="border-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="emergencyRelation">
-                      ความสัมพันธ์ / Relation
-                    </Label>
-                    <Input
-                      id="emergencyRelation"
-                      value={formData.emergencyRelation}
-                      onChange={(e) => setFormData({ ...formData, emergencyRelation: e.target.value })}
-                      placeholder="แม่"
-                      className="border-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="emergencyPhone">
-                      เบอร์โทร / Phone
-                    </Label>
-                    <Input
-                      id="emergencyPhone"
-                      type="tel"
-                      value={formData.emergencyPhone}
-                      onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
-                      placeholder="081-234-5678"
-                      className="border-2"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Section 4: Education */}
-          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary/20 rounded-lg">
-                    <GraduationCap className="w-6 h-6 text-secondary" />
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <Users className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">ประวัติการศึกษา</CardTitle>
-                    <CardDescription>กรุณาระบุประวัติการศึกษาของคุณ</CardDescription>
+                    <CardTitle className="text-2xl">FAMILY RECORD</CardTitle>
+                    <CardDescription>ประวัติครอบครัว (บิดา มารดา พี่น้อง)</CardDescription>
                   </div>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={addEducation}
+                  onClick={addFamilyMember}
                   className="gap-2 hover-scale"
                 >
                   <Plus className="w-4 h-4" />
@@ -976,16 +821,16 @@ const JobApplication = () => {
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              {educations.map((edu, index) => (
-                <div key={index} className="p-4 border-2 rounded-xl bg-secondary/5 space-y-3 hover:bg-secondary/10 transition-colors">
+              {familyMembers.map((member, index) => (
+                <div key={index} className="p-4 border-2 rounded-xl bg-primary/5 space-y-3 hover:bg-primary/10 transition-colors">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold">การศึกษาที่ {index + 1}</h4>
-                    {educations.length > 1 && (
+                    <h4 className="font-semibold">สมาชิกครอบครัวที่ {index + 1}</h4>
+                    {familyMembers.length > 2 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeEducation(index)}
+                        onClick={() => removeFamilyMember(index)}
                         className="hover:bg-destructive/10 hover:text-destructive"
                       >
                         <X className="w-4 h-4" />
@@ -993,28 +838,230 @@ const JobApplication = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div className="space-y-2">
-                      <Label>ระดับการศึกษา / Level</Label>
+                      <Label>Name / ชื่อ</Label>
+                      <Input
+                        value={member.name}
+                        onChange={(e) => updateFamilyMember(index, "name", e.target.value)}
+                        placeholder="นายสมศักดิ์ ใจดี"
+                        className="border-2"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Relationship / ความสัมพันธ์</Label>
                       <Select
-                        value={edu.level}
-                        onValueChange={(value) => updateEducation(index, "level", value)}
+                        value={member.relationship}
+                        onValueChange={(value) => updateFamilyMember(index, "relationship", value)}
                       >
                         <SelectTrigger className="border-2">
-                          <SelectValue placeholder="เลือก..." />
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="high-school">มัธยมศึกษา</SelectItem>
-                          <SelectItem value="vocational">ปวช./ปวส.</SelectItem>
-                          <SelectItem value="bachelor">ปริญญาตรี</SelectItem>
-                          <SelectItem value="master">ปริญญาโท</SelectItem>
-                          <SelectItem value="doctorate">ปริญญาเอก</SelectItem>
+                          <SelectItem value="บิดา">บิดา / Father</SelectItem>
+                          <SelectItem value="มารดา">มารดา / Mother</SelectItem>
+                          <SelectItem value="พี่ชาย">พี่ชาย / Brother</SelectItem>
+                          <SelectItem value="พี่สาว">พี่สาว / Sister</SelectItem>
+                          <SelectItem value="น้องชาย">น้องชาย / Brother</SelectItem>
+                          <SelectItem value="น้องสาว">น้องสาว / Sister</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>สถาบันการศึกษา / Institution</Label>
+                      <Label>Age / อายุ</Label>
+                      <Input
+                        value={member.age}
+                        onChange={(e) => updateFamilyMember(index, "age", e.target.value)}
+                        placeholder="55"
+                        className="border-2"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Occupation / อาชีพ</Label>
+                      <Input
+                        value={member.occupation}
+                        onChange={(e) => updateFamilyMember(index, "occupation", e.target.value)}
+                        placeholder="ธุรกิจส่วนตัว"
+                        className="border-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Section 4: Marital Status */}
+          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-secondary/20 rounded-lg">
+                  <Heart className="w-6 h-6 text-secondary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">MARITAL STATUS</CardTitle>
+                  <CardDescription>สถานภาพสมรส</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-3">
+                <RadioGroup
+                  value={formData.maritalStatus}
+                  onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="single" id="single" />
+                    <Label htmlFor="single" className="font-normal cursor-pointer">
+                      ☐ Single / โสด
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="married" id="married" />
+                    <Label htmlFor="married" className="font-normal cursor-pointer">
+                      ☐ Married / แต่งงาน
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {formData.maritalStatus === "married" && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
+                  <div className="space-y-2">
+                    <Label>Spouse's name / ชื่อคู่สมรส</Label>
+                    <Input
+                      value={formData.spouseName}
+                      onChange={(e) => setFormData({ ...formData, spouseName: e.target.value })}
+                      placeholder="นางสาวสมหญิง ใจดี"
+                      className="border-2"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Occupation / อาชีพ</Label>
+                    <Input
+                      value={formData.spouseOccupation}
+                      onChange={(e) => setFormData({ ...formData, spouseOccupation: e.target.value })}
+                      placeholder="พนักงานบริษัท"
+                      className="border-2"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>No. of Children / จำนวนบุตร</Label>
+                    <Input
+                      type="number"
+                      value={formData.numberOfChildren}
+                      onChange={(e) => setFormData({ ...formData, numberOfChildren: e.target.value })}
+                      placeholder="2"
+                      className="border-2"
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Section 5: Emergency Contact */}
+          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Shield className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">EMERGENCY CONTACT</CardTitle>
+                  <CardDescription>บุคคลติดต่อในกรณีฉุกเฉิน</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Name / ชื่อ</Label>
+                  <Input
+                    value={formData.emergencyName}
+                    onChange={(e) => setFormData({ ...formData, emergencyName: e.target.value })}
+                    placeholder="นางสาวสมหญิง ใจดี"
+                    className="border-2"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Relationship / ความสัมพันธ์</Label>
+                  <Input
+                    value={formData.emergencyRelation}
+                    onChange={(e) => setFormData({ ...formData, emergencyRelation: e.target.value })}
+                    placeholder="มารดา / Mother"
+                    className="border-2"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Address / ที่อยู่</Label>
+                <Textarea
+                  value={formData.emergencyAddress}
+                  onChange={(e) => setFormData({ ...formData, emergencyAddress: e.target.value })}
+                  placeholder="123 ถนน... แขวง... เขต... กรุงเทพฯ"
+                  rows={2}
+                  className="border-2 resize-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Mobile Phone / โทรศัพท์มือถือ</Label>
+                <Input
+                  value={formData.emergencyPhone}
+                  onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
+                  placeholder="081-234-5678"
+                  className="border-2"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 6: Educational Record */}
+          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-secondary/20 rounded-lg">
+                  <GraduationCap className="w-6 h-6 text-secondary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">EDUCATIONAL RECORD</CardTitle>
+                  <CardDescription>ประวัติการศึกษา</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {educations.map((edu, index) => (
+                <div key={index} className="p-4 border-2 rounded-xl bg-secondary/5 space-y-3">
+                  <h4 className="font-semibold">
+                    {edu.level === "high-school" && "High School / มัธยมศึกษา"}
+                    {edu.level === "diploma" && "Diploma / อนุปริญญา"}
+                    {edu.level === "bachelor" && "Bachelor / ปริญญาตรี"}
+                    {edu.level === "master" && "Master / ปริญญาโท"}
+                    {edu.level === "others" && "Others / อื่นๆ"}
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="space-y-2">
+                      <Label>Year Graduated / ปีที่จบ</Label>
+                      <Input
+                        value={edu.yearGraduated}
+                        onChange={(e) => updateEducation(index, "yearGraduated", e.target.value)}
+                        placeholder="2565"
+                        className="border-2"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Name of Institution / สถาบัน</Label>
                       <Input
                         value={edu.institution}
                         onChange={(e) => updateEducation(index, "institution", e.target.value)}
@@ -1024,7 +1071,7 @@ const JobApplication = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>สาขาวิชา / Major</Label>
+                      <Label>Major / สาขา</Label>
                       <Input
                         value={edu.major}
                         onChange={(e) => updateEducation(index, "major", e.target.value)}
@@ -1033,26 +1080,14 @@ const JobApplication = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label>GPA</Label>
-                        <Input
-                          value={edu.gpa}
-                          onChange={(e) => updateEducation(index, "gpa", e.target.value)}
-                          placeholder="3.50"
-                          className="border-2"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>ปีที่จบ / Year</Label>
-                        <Input
-                          value={edu.yearGraduated}
-                          onChange={(e) => updateEducation(index, "yearGraduated", e.target.value)}
-                          placeholder="2565"
-                          className="border-2"
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label>G.P.A</Label>
+                      <Input
+                        value={edu.gpa}
+                        onChange={(e) => updateEducation(index, "gpa", e.target.value)}
+                        placeholder="3.50"
+                        className="border-2"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1060,7 +1095,223 @@ const JobApplication = () => {
             </CardContent>
           </Card>
 
-          {/* Section 5: Work Experience */}
+          {/* Section 7: Special Skills - Languages */}
+          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <LanguagesIcon className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl">SPECIAL SKILL - Foreign Languages</CardTitle>
+                    <CardDescription>ความสามารถพิเศษ - ภาษาต่างประเทศ</CardDescription>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLanguageSkill}
+                  className="gap-2 hover-scale"
+                >
+                  <Plus className="w-4 h-4" />
+                  เพิ่มภาษา
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {languageSkills.map((lang, index) => (
+                <div key={index} className="p-4 border-2 rounded-xl bg-primary/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">ภาษาที่ {index + 1}</h4>
+                    {languageSkills.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeLanguageSkill(index)}
+                        className="hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="space-y-2">
+                      <Label>Language / ภาษา</Label>
+                      <Input
+                        value={lang.language}
+                        onChange={(e) => updateLanguageSkill(index, "language", e.target.value)}
+                        placeholder="ภาษาอังกฤษ / English"
+                        className="border-2"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Spoken / พูด</Label>
+                      <Select
+                        value={lang.spoken}
+                        onValueChange={(value) => updateLanguageSkill(index, "spoken", value)}
+                      >
+                        <SelectTrigger className="border-2">
+                          <SelectValue placeholder="เลือก..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="excellent">ดีมาก / Excellent</SelectItem>
+                          <SelectItem value="good">ดี / Good</SelectItem>
+                          <SelectItem value="fair">พอใช้ / Fair</SelectItem>
+                          <SelectItem value="no">ไม่ได้ / No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Written / เขียน</Label>
+                      <Select
+                        value={lang.written}
+                        onValueChange={(value) => updateLanguageSkill(index, "written", value)}
+                      >
+                        <SelectTrigger className="border-2">
+                          <SelectValue placeholder="เลือก..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="excellent">ดีมาก / Excellent</SelectItem>
+                          <SelectItem value="good">ดี / Good</SelectItem>
+                          <SelectItem value="fair">พอใช้ / Fair</SelectItem>
+                          <SelectItem value="no">ไม่ได้ / No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Understand / เข้าใจ</Label>
+                      <Select
+                        value={lang.understand}
+                        onValueChange={(value) => updateLanguageSkill(index, "understand", value)}
+                      >
+                        <SelectTrigger className="border-2">
+                          <SelectValue placeholder="เลือก..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="excellent">ดีมาก / Excellent</SelectItem>
+                          <SelectItem value="good">ดี / Good</SelectItem>
+                          <SelectItem value="fair">พอใช้ / Fair</SelectItem>
+                          <SelectItem value="no">ไม่ได้ / No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Other Skills */}
+              <div className="pt-4 border-t space-y-4">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" />
+                  Other Skills / ทักษะอื่นๆ
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="computerSkill"
+                      checked={formData.computerSkill}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, computerSkill: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="computerSkill" className="font-normal cursor-pointer">
+                      ☐ Computer / คอมพิวเตอร์
+                    </Label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="drivingCar"
+                        checked={formData.drivingCar}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, drivingCar: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="drivingCar" className="font-normal cursor-pointer">
+                        ☐ Driving Car / การขับขี่รถยนต์
+                      </Label>
+                    </div>
+                    {formData.drivingCar && (
+                      <Input
+                        placeholder="Driver Licence No. / ใบขับขี่หมายเลข"
+                        value={formData.drivingCarLicenseNo}
+                        onChange={(e) => setFormData({ ...formData, drivingCarLicenseNo: e.target.value })}
+                        className="border-2 ml-6"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="drivingMotorcycle"
+                        checked={formData.drivingMotorcycle}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, drivingMotorcycle: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="drivingMotorcycle" className="font-normal cursor-pointer">
+                        ☐ Driving Motorcycle / การขับขี่จักรยานยนต์
+                      </Label>
+                    </div>
+                    {formData.drivingMotorcycle && (
+                      <Input
+                        placeholder="Driver Licence No. / ใบขับขี่หมายเลข"
+                        value={formData.drivingMotorcycleLicenseNo}
+                        onChange={(e) => setFormData({ ...formData, drivingMotorcycleLicenseNo: e.target.value })}
+                        className="border-2 ml-6"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>☐ Others / อื่นๆ</Label>
+                    <Input
+                      placeholder="ระบุทักษะอื่นๆ..."
+                      value={formData.otherSkills}
+                      onChange={(e) => setFormData({ ...formData, otherSkills: e.target.value })}
+                      className="border-2"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 8: Professional Training */}
+          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-secondary/20 rounded-lg">
+                  <Award className="w-6 h-6 text-secondary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">PROFESSIONAL TRAINING</CardTitle>
+                  <CardDescription>ประวัติการฝึกอบรม (Curriculums / หลักสูตร)</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <Textarea
+                value={formData.trainingCurriculums}
+                onChange={(e) => setFormData({ ...formData, trainingCurriculums: e.target.value })}
+                placeholder="ระบุหลักสูตรการฝึกอบรมที่เคยเข้าร่วม เช่น&#10;- หลักสูตรการพัฒนาทักษะการบริหารจัดการ (2565)&#10;- หลักสูตร ISO 9001:2015 (2564)"
+                rows={5}
+                className="border-2 resize-none"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Section 9: Employment Record */}
           <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
             <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg">
               <div className="flex items-center justify-between">
@@ -1069,8 +1320,8 @@ const JobApplication = () => {
                     <Briefcase className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">ประสบการณ์ทำงาน</CardTitle>
-                    <CardDescription>ประวัติการทำงานของคุณ</CardDescription>
+                    <CardTitle className="text-2xl">EMPLOYMENT RECORD</CardTitle>
+                    <CardDescription>ประวัติการทำงาน</CardDescription>
                   </div>
                 </div>
                 <Button
@@ -1087,7 +1338,7 @@ const JobApplication = () => {
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
               {workExperiences.map((work, index) => (
-                <div key={index} className="p-4 border-2 rounded-xl bg-primary/5 space-y-3 hover:bg-primary/10 transition-colors">
+                <div key={index} className="p-4 border-2 rounded-xl bg-primary/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold">ประสบการณ์ที่ {index + 1}</h4>
                     {workExperiences.length > 1 && (
@@ -1103,9 +1354,19 @@ const JobApplication = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-2">
-                      <Label>บริษัท / Company</Label>
+                      <Label>Period Time / ระยะเวลา</Label>
+                      <Input
+                        value={work.duration}
+                        onChange={(e) => updateWorkExperience(index, "duration", e.target.value)}
+                        placeholder="2563-2565 (2 ปี)"
+                        className="border-2"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Company / ชื่อสถานประกอบการ</Label>
                       <Input
                         value={work.company}
                         onChange={(e) => updateWorkExperience(index, "company", e.target.value)}
@@ -1115,7 +1376,7 @@ const JobApplication = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>ตำแหน่ง / Position</Label>
+                      <Label>Position / ตำแหน่ง</Label>
                       <Input
                         value={work.position}
                         onChange={(e) => updateWorkExperience(index, "position", e.target.value)}
@@ -1124,28 +1385,28 @@ const JobApplication = () => {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>ระยะเวลา / Duration</Label>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label>Responsibilities / หน้าที่รับผิดชอบ</Label>
                       <Input
-                        value={work.duration}
-                        onChange={(e) => updateWorkExperience(index, "duration", e.target.value)}
-                        placeholder="2 ปี 6 เดือน"
+                        value={work.responsibilities}
+                        onChange={(e) => updateWorkExperience(index, "responsibilities", e.target.value)}
+                        placeholder="พัฒนาระบบ Web Application"
                         className="border-2"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label>เงินเดือน / Salary (บาท)</Label>
+                      <Label>Salary / เงินเดือน</Label>
                       <Input
                         value={work.salary}
                         onChange={(e) => updateWorkExperience(index, "salary", e.target.value)}
-                        placeholder="30,000"
+                        placeholder="30,000 บาท"
                         className="border-2"
                       />
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>เหตุผลที่ลาออก / Reason for Leaving</Label>
+                    <div className="md:col-span-3 space-y-2">
+                      <Label>Reason for Leaving / เหตุผลที่ลาออก</Label>
                       <Input
                         value={work.reason}
                         onChange={(e) => updateWorkExperience(index, "reason", e.target.value)}
@@ -1159,379 +1420,213 @@ const JobApplication = () => {
             </CardContent>
           </Card>
 
-          {/* Section 6: Languages */}
+          {/* Section 10: Other Information */}
           <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
             <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary/20 rounded-lg">
-                    <FileText className="w-6 h-6 text-secondary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-2xl">ทักษะทางภาษา</CardTitle>
-                    <CardDescription>ภาษาที่คุณสามารถใช้ได้</CardDescription>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addLanguage}
-                  className="gap-2 hover-scale"
-                >
-                  <Plus className="w-4 h-4" />
-                  เพิ่ม
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {languages.map((lang, index) => (
-                <div key={index} className="p-4 border-2 rounded-xl bg-secondary/5 space-y-3 hover:bg-secondary/10 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 space-y-3">
-                      <Select
-                        value={lang.language}
-                        onValueChange={(value) => updateLanguage(index, "language", value)}
-                      >
-                        <SelectTrigger className="border-2">
-                          <SelectValue placeholder="เลือกภาษา..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="english">ภาษาอังกฤษ / English</SelectItem>
-                          <SelectItem value="chinese">ภาษาจีน / Chinese</SelectItem>
-                          <SelectItem value="japanese">ภาษาญี่ปุ่น / Japanese</SelectItem>
-                          <SelectItem value="korean">ภาษาเกาหลี / Korean</SelectItem>
-                          <SelectItem value="french">ภาษาฝรั่งเศส / French</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <RadioGroup
-                        value={lang.level}
-                        onValueChange={(value) => updateLanguage(index, "level", value)}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="excellent" id={`excellent-${index}`} />
-                          <Label htmlFor={`excellent-${index}`} className="font-normal cursor-pointer">
-                            ดีมาก
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="good" id={`good-${index}`} />
-                          <Label htmlFor={`good-${index}`} className="font-normal cursor-pointer">
-                            ดี
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="fair" id={`fair-${index}`} />
-                          <Label htmlFor={`fair-${index}`} className="font-normal cursor-pointer">
-                            พอใช้
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {languages.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeLanguage(index)}
-                        className="hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Section 7: Family Information */}
-          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <Users className="w-6 h-6 text-primary" />
+                <div className="p-2 bg-secondary/20 rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-secondary" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">ข้อมูลครอบครัว</CardTitle>
-                  <CardDescription>ข้อมูลครอบครัวของคุณ</CardDescription>
+                  <CardTitle className="text-2xl">OTHER</CardTitle>
+                  <CardDescription>ข้อมูลด้านอื่นๆ</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>ชื่อบิดา / Father's Name</Label>
-                  <Input
-                    value={formData.fatherName}
-                    onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-                    placeholder="นายสมศักดิ์ ใจดี"
-                    className="border-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>อายุ / Age</Label>
-                  <Input
-                    value={formData.fatherAge}
-                    onChange={(e) => setFormData({ ...formData, fatherAge: e.target.value })}
-                    placeholder="55"
-                    className="border-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>อาชีพ / Occupation</Label>
-                  <Input
-                    value={formData.fatherOccupation}
-                    onChange={(e) => setFormData({ ...formData, fatherOccupation: e.target.value })}
-                    placeholder="ธุรกิจส่วนตัว"
-                    className="border-2"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>ชื่อมารดา / Mother's Name</Label>
-                  <Input
-                    value={formData.motherName}
-                    onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
-                    placeholder="นางสาวสมหญิง ใจดี"
-                    className="border-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>อายุ / Age</Label>
-                  <Input
-                    value={formData.motherAge}
-                    onChange={(e) => setFormData({ ...formData, motherAge: e.target.value })}
-                    placeholder="50"
-                    className="border-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>อาชีพ / Occupation</Label>
-                  <Input
-                    value={formData.motherOccupation}
-                    onChange={(e) => setFormData({ ...formData, motherOccupation: e.target.value })}
-                    placeholder="แม่บ้าน"
-                    className="border-2"
-                  />
-                </div>
-              </div>
-
-              {formData.maritalStatus === "married" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
-                  <div className="space-y-2">
-                    <Label>ชื่อคู่สมรส / Spouse's Name</Label>
-                    <Input
-                      value={formData.spouseName}
-                      onChange={(e) => setFormData({ ...formData, spouseName: e.target.value })}
-                      placeholder="นางสมศรี ใจดี"
-                      className="border-2"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>อายุ / Age</Label>
-                    <Input
-                      value={formData.spouseAge}
-                      onChange={(e) => setFormData({ ...formData, spouseAge: e.target.value })}
-                      placeholder="28"
-                      className="border-2"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>อาชีพ / Occupation</Label>
-                    <Input
-                      value={formData.spouseOccupation}
-                      onChange={(e) => setFormData({ ...formData, spouseOccupation: e.target.value })}
-                      placeholder="พนักงานบริษัท"
-                      className="border-2"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>จำนวนพี่น้อง / Number of Siblings</Label>
-                <Input
-                  value={formData.siblings}
-                  onChange={(e) => setFormData({ ...formData, siblings: e.target.value })}
-                  placeholder="3 คน (เป็นบุตรคนที่ 2)"
-                  className="border-2"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Section 8: References */}
-          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary/20 rounded-lg">
-                    <Heart className="w-6 h-6 text-secondary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-2xl">บุคคลอ้างอิง</CardTitle>
-                    <CardDescription>ผู้ที่สามารถติดต่อเพื่อขอข้อมูลเกี่ยวกับคุณ</CardDescription>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addReference}
-                  className="gap-2 hover-scale"
+            <CardContent className="pt-6 space-y-6">
+              {/* Question 1 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  1. Have you ever applied or worked with ICP Group before?<br />
+                  ท่านเคยสมัครหรือทำงานในกลุ่มบริษัทในเครือ ไอ ซี พี มาก่อนหรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.workedAtICPBefore}
+                  onValueChange={(value) => setFormData({ ...formData, workedAtICPBefore: value })}
+                  className="flex gap-6"
                 >
-                  <Plus className="w-4 h-4" />
-                  เพิ่ม
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {references.map((ref, index) => (
-                <div key={index} className="p-4 border-2 rounded-xl bg-secondary/5 space-y-3 hover:bg-secondary/10 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold">บุคคลอ้างอิงที่ {index + 1}</h4>
-                    {references.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeReference(index)}
-                        className="hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="icp-yes" />
+                    <Label htmlFor="icp-yes" className="font-normal cursor-pointer">Yes / เคย</Label>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>ชื่อ / Name</Label>
-                      <Input
-                        value={ref.name}
-                        onChange={(e) => updateReference(index, "name", e.target.value)}
-                        placeholder="นายสมชาย รักงาน"
-                        className="border-2"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>ตำแหน่ง / Position</Label>
-                      <Input
-                        value={ref.position}
-                        onChange={(e) => updateReference(index, "position", e.target.value)}
-                        placeholder="ผู้จัดการ"
-                        className="border-2"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>บริษัท / Company</Label>
-                      <Input
-                        value={ref.company}
-                        onChange={(e) => updateReference(index, "company", e.target.value)}
-                        placeholder="ABC Company Ltd."
-                        className="border-2"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>เบอร์โทร / Phone</Label>
-                      <Input
-                        value={ref.phone}
-                        onChange={(e) => updateReference(index, "phone", e.target.value)}
-                        placeholder="081-234-5678"
-                        className="border-2"
-                      />
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="icp-no" />
+                    <Label htmlFor="icp-no" className="font-normal cursor-pointer">No / ไม่เคย</Label>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Section 9: Additional Info */}
-          <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <FileText className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl">ข้อมูลเพิ่มเติม</CardTitle>
-                  <CardDescription>ทักษะและข้อมูลอื่นๆ</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="space-y-2">
-                <Label>ทักษะพิเศษ / Special Skills</Label>
-                <Textarea
-                  value={formData.skills}
-                  onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                  placeholder="เช่น Microsoft Office, Adobe Photoshop, การขับรถ, etc."
-                  rows={3}
-                  className="border-2 focus:border-primary resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>ใบประกาศนียบัตร / Certifications</Label>
-                <Textarea
-                  value={formData.certifications}
-                  onChange={(e) => setFormData({ ...formData, certifications: e.target.value })}
-                  placeholder="เช่น TOEIC 800, ใบขับขี่ประเภท 1, etc."
-                  rows={3}
-                  className="border-2 focus:border-primary resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>จดหมายสมัครงาน / Cover Letter</Label>
-                <Textarea
-                  value={formData.coverLetter}
-                  onChange={(e) => setFormData({ ...formData, coverLetter: e.target.value })}
-                  placeholder="แนะนำตัวและเหตุผลที่สนใจสมัครงานตำแหน่งนี้..."
-                  rows={5}
-                  className="border-2 focus:border-primary resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>ท่านทราบข้อมูลการสมัครจากที่ใด / Information Source</Label>
-                <Select
-                  value={formData.informationSource}
-                  onValueChange={(value) => setFormData({ ...formData, informationSource: value })}
-                >
-                  <SelectTrigger className="border-2">
-                    <SelectValue placeholder="เลือกช่องทาง..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="website">เว็บไซต์บริษัท</SelectItem>
-                    <SelectItem value="jobboard">เว็บไซต์หางาน</SelectItem>
-                    <SelectItem value="social-media">โซเชียลมีเดีย</SelectItem>
-                    <SelectItem value="referral">เพื่อนแนะนำ</SelectItem>
-                    <SelectItem value="newspaper">หนังสือพิมพ์</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.informationSource === "referral" && (
-                <div className="space-y-2 animate-fade-in">
-                  <Label>ชื่อผู้แนะนำ / Referrer Name</Label>
+                </RadioGroup>
+                {formData.workedAtICPBefore === "yes" && (
                   <Input
-                    value={formData.referrerName}
-                    onChange={(e) => setFormData({ ...formData, referrerName: e.target.value })}
-                    placeholder="กรอกชื่อผู้แนะนำ"
+                    placeholder="If yes, please give details / ถ้าเคยโปรดระบุ"
+                    value={formData.workedAtICPDetails}
+                    onChange={(e) => setFormData({ ...formData, workedAtICPDetails: e.target.value })}
                     className="border-2"
                   />
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Question 2 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  2. Do you have any relatives or friends working in ICP Group?<br />
+                  ท่านมีญาติพี่น้องหรือคนรู้จักทำงานในกลุ่มบริษัทในเครือ ไอ ซี พี หรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.relativesAtICP}
+                  onValueChange={(value) => setFormData({ ...formData, relativesAtICP: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="relatives-yes" />
+                    <Label htmlFor="relatives-yes" className="font-normal cursor-pointer">Yes / เคย</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="relatives-no" />
+                    <Label htmlFor="relatives-no" className="font-normal cursor-pointer">No / ไม่เคย</Label>
+                  </div>
+                </RadioGroup>
+                {formData.relativesAtICP === "yes" && (
+                  <Input
+                    placeholder="If yes, please give details / ถ้าเคยโปรดระบุ"
+                    value={formData.relativesAtICPDetails}
+                    onChange={(e) => setFormData({ ...formData, relativesAtICPDetails: e.target.value })}
+                    className="border-2"
+                  />
+                )}
+              </div>
+
+              {/* Question 3 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  3. Have you ever been convicted for any crimes?<br />
+                  ท่านเคยถูกตัดสินดำเนินคดีหรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.criminalRecord}
+                  onValueChange={(value) => setFormData({ ...formData, criminalRecord: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="criminal-yes" />
+                    <Label htmlFor="criminal-yes" className="font-normal cursor-pointer">Yes / เคย</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="criminal-no" />
+                    <Label htmlFor="criminal-no" className="font-normal cursor-pointer">No / ไม่เคย</Label>
+                  </div>
+                </RadioGroup>
+                {formData.criminalRecord === "yes" && (
+                  <Input
+                    placeholder="If yes, please give details / ถ้าเคยโปรดระบุ"
+                    value={formData.criminalRecordDetails}
+                    onChange={(e) => setFormData({ ...formData, criminalRecordDetails: e.target.value })}
+                    className="border-2"
+                  />
+                )}
+              </div>
+
+              {/* Question 4 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  4. Have you ever been seriously ill within the past 5 years?<br />
+                  ใน 5 ปีที่ผ่านมา ท่านเคยป่วยเป็นโรคติดต่อร้ายแรงหรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.seriousIllness}
+                  onValueChange={(value) => setFormData({ ...formData, seriousIllness: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="illness-yes" />
+                    <Label htmlFor="illness-yes" className="font-normal cursor-pointer">Yes / เคย</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="illness-no" />
+                    <Label htmlFor="illness-no" className="font-normal cursor-pointer">No / ไม่เคย</Label>
+                  </div>
+                </RadioGroup>
+                {formData.seriousIllness === "yes" && (
+                  <Input
+                    placeholder="If yes, please give details / ถ้าเคยโปรดระบุ"
+                    value={formData.seriousIllnessDetails}
+                    onChange={(e) => setFormData({ ...formData, seriousIllnessDetails: e.target.value })}
+                    className="border-2"
+                  />
+                )}
+              </div>
+
+              {/* Question 5 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  5. Do you have color blindness?<br />
+                  ท่านมีภาวะตาบอดสีหรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.colorBlindness}
+                  onValueChange={(value) => setFormData({ ...formData, colorBlindness: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="color-yes" />
+                    <Label htmlFor="color-yes" className="font-normal cursor-pointer">Yes / มี</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="color-no" />
+                    <Label htmlFor="color-no" className="font-normal cursor-pointer">No / ไม่มี</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Question 6 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  6. Are you pregnant at the moment?<br />
+                  ขณะนี้ท่านอยู่ในระหว่างการตั้งครรภ์หรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.pregnant}
+                  onValueChange={(value) => setFormData({ ...formData, pregnant: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="pregnant-yes" />
+                    <Label htmlFor="pregnant-yes" className="font-normal cursor-pointer">Yes / มี</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="pregnant-no" />
+                    <Label htmlFor="pregnant-no" className="font-normal cursor-pointer">No / ไม่มี</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Question 7 */}
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                <Label className="text-base font-medium">
+                  7. Have you ever been seriously or contracted with contagious disease?<br />
+                  ท่านเคยป่วยหนักและเป็นโรคติดต่อร้ายแรงมาก่อนหรือไม่?
+                </Label>
+                <RadioGroup
+                  value={formData.contagiousDisease}
+                  onValueChange={(value) => setFormData({ ...formData, contagiousDisease: value })}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="disease-yes" />
+                    <Label htmlFor="disease-yes" className="font-normal cursor-pointer">Yes / เคย</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="disease-no" />
+                    <Label htmlFor="disease-no" className="font-normal cursor-pointer">No / ไม่เคย</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Declaration */}
+              <div className="p-4 bg-muted/50 rounded-xl border-2 border-primary/20">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <strong>I understand that any falsified statement on this application can be sufficient cause for dismissal if I am employed.</strong><br />
+                  ข้าพเจ้าขอรับรองว่าข้อความข้างต้นเป็นความจริงทุกประการ การปิดบังความจริงใดๆ จะทำให้ข้าพเจ้าหมดสิทธิในการได้รับการพิจารณาจ้างงานหรือถูกปลดออกจากงานในกรณีบริษัทฯ ได้ว่าจ้างข้าพเจ้าแล้ว
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -1568,66 +1663,7 @@ const JobApplication = () => {
                     onClick={(e) => addSparkleEffect(e as any)}
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
-                    ส่งใบสมัคร
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-12 px-8 border-2 hover-scale"
-                    onClick={() => {
-                      setFormData({
-                        position: "",
-                        salaryRequired: "",
-                        startDate: "",
-                        fullName: "",
-                        nickname: "",
-                        idCard: "",
-                        birthDate: "",
-                        age: "",
-                        nationality: "ไทย",
-                        religion: "พุทธ",
-                        race: "ไทย",
-                        height: "",
-                        weight: "",
-                        bloodType: "",
-                        maritalStatus: "single",
-                        militaryStatus: "",
-                        email: "",
-                        phone: "",
-                        lineId: "",
-                        currentAddress: "",
-                        permanentAddress: "",
-                        sameAddress: false,
-                        emergencyName: "",
-                        emergencyRelation: "",
-                        emergencyPhone: "",
-                        fatherName: "",
-                        fatherAge: "",
-                        fatherOccupation: "",
-                        motherName: "",
-                        motherAge: "",
-                        motherOccupation: "",
-                        spouseName: "",
-                        spouseAge: "",
-                        spouseOccupation: "",
-                        siblings: "",
-                        coverLetter: "",
-                        skills: "",
-                        certifications: "",
-                        informationSource: "",
-                        referrerName: "",
-                        privacyConsent: false,
-                      });
-                      setSelectedFile(null);
-                      setProfilePhoto(null);
-                      setProfilePhotoPreview(null);
-                      setLanguages([{ language: "", level: "good" }]);
-                      setEducations([{ level: "", institution: "", major: "", gpa: "", yearGraduated: "" }]);
-                      setWorkExperiences([{ company: "", position: "", duration: "", salary: "", reason: "" }]);
-                      setReferences([{ name: "", position: "", company: "", phone: "" }]);
-                    }}
-                  >
-                    ล้างฟอร์ม
+                    ส่งใบสมัคร / Submit
                   </Button>
                 </div>
               </div>
