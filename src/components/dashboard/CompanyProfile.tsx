@@ -38,7 +38,7 @@ export function CompanyProfile() {
           <CarouselContent>
             {carouselImages.map((image, index) => (
               <CarouselItem key={index}>
-                <div className="relative h-96 md:h-[500px] overflow-hidden">
+                <div className="relative h-64 md:h-80 overflow-hidden">
                   <img src={image.src} alt={image.alt} className="w-full h-full object-cover" />
                 </div>
               </CarouselItem>
@@ -49,15 +49,15 @@ export function CompanyProfile() {
         </Carousel>
 
         {/* Company Information Section */}
-        <div className="p-8 md:p-10">
+        <div className="p-6 md:p-8">
           {/* Company Header */}
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-success to-success/80 flex items-center justify-center shadow-lg shadow-success/20">
-                <Award className="h-8 w-8 text-white" />
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-success to-success/80 flex items-center justify-center shadow-md shadow-success/20">
+                <Award className="h-6 w-6 text-white" />
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 text-lg text-muted-foreground mb-2">
+            <div className="flex items-center justify-center gap-2 text-base text-muted-foreground mb-2">
               <div className="h-1 w-1 rounded-full bg-success animate-pulse" />
               <span>ผู้นำธุรกิจเคมีเกษตรมากว่า 50 ปี</span>
               <div className="h-1 w-1 rounded-full bg-success animate-pulse" />
@@ -66,39 +66,39 @@ export function CompanyProfile() {
 
           {/* Company Description */}
           <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-accent/50 to-accent/30 p-6 md:p-8 rounded-2xl border border-border/50 mb-8 hover:shadow-md transition-all duration-300">
-              <p className="text-base md:text-lg leading-relaxed text-foreground/90">
+            <div className="bg-gradient-to-br from-accent/50 to-accent/30 p-4 md:p-6 rounded-xl border border-border/50 mb-6 hover:shadow-md transition-all duration-300">
+              <p className="text-sm md:text-base leading-relaxed text-foreground/90">
                 เป็นบริษัทชั้นนำในด้านธุรกิจเคมีเกษตร ดำเนินธุรกิจนาน{" "}
                 <span className="font-bold text-success">50 ปี</span> ดำเนินการผลิต นำเข้า
                 และจัดจำหน่ายสารเคมีป้องกันศัตรูพืช ปุ๋ยเคมี และฮอร์โมนสำหรับพืช ฯลฯ
               </p>
-              <p className="text-base md:text-lg leading-relaxed text-foreground/90 mt-4">
+              <p className="text-sm md:text-base leading-relaxed text-foreground/90 mt-3">
                 ทางบริษัทให้ความสำคัญอย่างยิ่งต่อเนื่องเสมอมาในการควบคุมคุณภาพของผลิตภัณฑ์ และใส่ใจในการรักษาสิ่งแวดล้อม
                 พร้อมห้องปฏิบัติการที่ทันสมัยเพื่อตรวจสอบคุณภาพอย่างเข้มงวด
               </p>
             </div>
 
             {/* Certifications Grid */}
-            <div className="bg-gradient-to-br from-primary/5 to-success/5 p-6 md:p-8 rounded-2xl border border-border/50">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                  <Award className="h-5 w-5 text-white" />
+            <div className="bg-gradient-to-br from-primary/5 to-success/5 p-4 md:p-6 rounded-xl border border-border/50">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                  <Award className="h-4 w-4 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">มาตรฐานและการรับรอง</h3>
+                <h3 className="text-lg font-bold">มาตรฐานและการรับรอง</h3>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-3">
                 {certifications.map((cert, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-4 rounded-xl bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-md border border-border/30 hover-scale group"
+                    className="flex items-start gap-2 p-3 rounded-lg bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-sm border border-border/30 hover-scale group"
                   >
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm leading-relaxed">{cert}</span>
+                    <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs leading-relaxed">{cert}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <p className="text-sm text-muted-foreground text-center">
+              <div className="mt-4 pt-4 border-t border-border/50">
+                <p className="text-xs text-muted-foreground text-center">
                   รับรองโดย <span className="font-semibold text-primary">Bureau Veritas (BV)</span>,
                   <span className="font-semibold text-primary"> สำนักบริหารและรับรองห้องปฏิบัติการ</span> และ
                   <span className="font-semibold text-primary"> กระทรวงสาธารณสุข</span>

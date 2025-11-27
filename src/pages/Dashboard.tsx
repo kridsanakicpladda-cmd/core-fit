@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { CompanyProfile } from "@/components/dashboard/CompanyProfile";
 import { ContactMap } from "@/components/dashboard/ContactMap";
+import { EmployeeBenefits } from "@/components/dashboard/EmployeeBenefits";
 import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
 import { CandidateDetailDialog } from "@/components/candidates/CandidateDetailDialog";
 import { Candidate } from "@/contexts/CandidatesContext";
@@ -309,7 +310,10 @@ export default function Dashboard() {
       {/* Company Profile */}
       <CompanyProfile />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Employee Benefits */}
+      <EmployeeBenefits />
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">ตำแหน่งที่เปิดรับ</CardTitle>
@@ -328,71 +332,6 @@ export default function Dashboard() {
                       {position.numberOfPositions} อัตรา • {position.applicants} ผู้สมัคร
                     </p>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              ผู้สมัครล่าสุด
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentCandidatesData.map((candidate) => (
-                <div
-                  key={candidate.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors group cursor-pointer"
-                  onClick={() => handleCandidateClick(candidate)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-sm group-hover:shadow-md transition-shadow">
-                      {candidate.score}
-                    </div>
-                    <div>
-                      <p className="font-medium group-hover:text-primary transition-colors">{candidate.name}</p>
-                      <p className="text-sm text-muted-foreground">{candidate.position}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">{candidate.appliedDate}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              การสัมภาษณ์วันนี้
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {todayInterviewsData.map((candidate) => (
-                <div
-                  key={candidate.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => handleCandidateClick(candidate)}
-                >
-                  <div>
-                    <p className="font-medium">{candidate.name}</p>
-                    <p className="text-sm text-muted-foreground">{candidate.position}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{candidate.appliedDate}</p>
-                  </div>
-                  <Badge
-                    variant={candidate.pipelineStatus === "interview_2" ? "secondary" : "default"}
-                    className={candidate.pipelineStatus === "interview_1" ? "bg-primary/10 text-primary border-primary/20" : ""}
-                  >
-                    {candidate.pipelineStatus === "interview_2" ? "เสร็จสิ้น" : "กำลังจะถึง"}
-                  </Badge>
                 </div>
               ))}
             </div>

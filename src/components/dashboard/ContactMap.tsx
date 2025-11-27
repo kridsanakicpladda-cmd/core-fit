@@ -59,8 +59,14 @@ export function ContactMap() {
             <div>
               <p className="font-semibold mb-1">เวลาทำการ</p>
               <p className="text-sm text-muted-foreground">
-                จันทร์-ศุกร์ 8.30-17.30 น.<br />
+                <strong>สำนักงานใหญ่กรุงเทพ:</strong><br />
+                จันทร์ - ศุกร์ 08:30-17:30 น.<br />
                 เสาร์-อาทิตย์ ปิดทำการ
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                <strong>โรงงานนครปฐม:</strong><br />
+                จันทร์ - เสาร์ 08:00-17:00 น.<br />
+                อาทิตย์ ปิดทำการ
               </p>
             </div>
           </div>
@@ -76,20 +82,29 @@ export function ContactMap() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-[400px] rounded-lg overflow-hidden border-2 border-dashed border-border bg-muted/30 flex items-center justify-center">
-            <div className="text-center p-6">
-              <MapPin className="h-16 w-16 mx-auto mb-4 text-primary/50" />
-              <p className="text-lg font-semibold mb-2">แผนที่บริษัท</p>
-              <p className="text-sm text-muted-foreground mb-1">
-                สำนักงานใหญ่: 42 อาคารไอ ซี พี ชั้น 5 ถนนสุรวงศ์
-              </p>
-              <p className="text-sm text-muted-foreground">
-                แขวงสี่พระยา เขตบางรัก กรุงเทพมหานคร 10500
-              </p>
+          <a
+            href="https://www.google.com/maps/place/42+Soi+Surawong+Plaza,+Suriwong+Rd,+Si+Phraya,+Bang+Rak,+Bangkok+10500"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full"
+          >
+            <div className="w-full h-[400px] rounded-lg overflow-hidden border border-border hover:shadow-lg transition-all duration-300 relative group">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.8537267234586!2d100.52396931483176!3d13.727899990358992!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e298c95f7e29c9%3A0x4a1e4d6c1e2a7b1c!2z4Lit4Liy4LiE4Liy4Lij4LmE4Lit4LiL4Li14Lie4Li1!5e0!3m2!1sth!2sth!4v1620000000000!5m2!1sth!2sth"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="แผนที่บริษัท ICP Ladda"
+              />
+              <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors pointer-events-none" />
             </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            เพิ่ม Mapbox Token เพื่อแสดงแผนที่แบบโต้ตอบได้
+          </a>
+          <p className="text-xs text-muted-foreground mt-3 text-center flex items-center justify-center gap-1">
+            <MapPin className="h-3 w-3" />
+            คลิกเพื่อเปิดใน Google Maps
           </p>
         </CardContent>
       </Card>
