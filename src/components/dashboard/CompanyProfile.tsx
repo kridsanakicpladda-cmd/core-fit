@@ -79,31 +79,25 @@ export function CompanyProfile() {
             </div>
 
             {/* Certifications Grid */}
-            <div className="bg-gradient-to-br from-primary/5 to-success/5 p-4 md:p-6 rounded-xl border border-border/50">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                  <Award className="h-4 w-4 text-white" />
-                </div>
-                <h3 className="text-lg font-bold">มาตรฐานและการรับรอง</h3>
+            <div className="bg-gradient-to-br from-primary/5 to-success/5 p-3 rounded-lg border border-border/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Award className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold">มาตรฐานและการรับรอง</h3>
               </div>
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid md:grid-cols-2 gap-2">
                 {certifications.map((cert, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-2 p-3 rounded-lg bg-card/80 hover:bg-card transition-all duration-300 hover:shadow-sm border border-border/30 hover-scale group"
+                    className="flex items-center gap-2 p-2 rounded-md bg-card/60 hover:bg-card transition-colors border border-border/20"
                   >
-                    <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                    <span className="text-xs leading-relaxed">{cert}</span>
+                    <CheckCircle2 className="h-3 w-3 text-success flex-shrink-0" />
+                    <span className="text-[11px] leading-tight">{cert}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-4 border-t border-border/50">
-                <p className="text-xs text-muted-foreground text-center">
-                  รับรองโดย <span className="font-semibold text-primary">Bureau Veritas (BV)</span>,
-                  <span className="font-semibold text-primary"> สำนักบริหารและรับรองห้องปฏิบัติการ</span> และ
-                  <span className="font-semibold text-primary"> กระทรวงสาธารณสุข</span>
-                </p>
-              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-2 pt-2 border-t border-border/30">
+                รับรองโดย <span className="font-medium">BV</span>, <span className="font-medium">สำนักบริหารห้องปฏิบัติการ</span> และ <span className="font-medium">กระทรวงสาธารณสุข</span>
+              </p>
             </div>
           </div>
         </div>

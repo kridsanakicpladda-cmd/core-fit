@@ -76,30 +76,28 @@ export function EmployeeBenefits() {
   ];
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Heart className="h-6 w-6 text-primary" />
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Heart className="h-5 w-5 text-primary" />
           สวัสดิการพนักงาน
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-5">
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className={`${benefit.bgColor} p-5 rounded-xl hover:shadow-md transition-all duration-300 hover-scale border border-border/30 group`}
+              className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors border border-border/20"
             >
-              <div className="flex items-start gap-3">
-                <div className={`${benefit.color} ${benefit.bgColor} p-2.5 rounded-lg group-hover:scale-110 transition-transform`}>
-                  {benefit.icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold mb-1.5 text-sm">{benefit.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {benefit.description}
-                  </p>
-                </div>
+              <div className={`${benefit.color} flex-shrink-0`}>
+                {benefit.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-xs leading-tight truncate">{benefit.title}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1">
+                  {benefit.description}
+                </p>
               </div>
             </div>
           ))}

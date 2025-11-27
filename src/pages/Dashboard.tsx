@@ -313,31 +313,44 @@ export default function Dashboard() {
       {/* Employee Benefits */}
       <EmployeeBenefits />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">ตำแหน่งที่เปิดรับ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {openPositions.map((position) => (
-                <div
-                  key={position.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => handleJobClick(position)}
-                >
+      {/* Open Positions */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            ตำแหน่งที่เปิดรับสมัคร
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {openPositions.map((position) => (
+              <div
+                key={position.id}
+                className="group p-4 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 hover:from-accent/50 hover:to-accent/20 border border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer hover:shadow-md hover-scale"
+                onClick={() => handleJobClick(position)}
+              >
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <p className="font-medium hover:text-primary transition-colors">{position.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {position.numberOfPositions} อัตรา • {position.applicants} ผู้สมัคร
-                    </p>
+                    <h3 className="font-semibold text-base group-hover:text-primary transition-colors mb-1">
+                      {position.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{position.department}</p>
                   </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {position.status === "open" ? "เปิดรับ" : "ปิดรับ"}
+                  </Badge>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/30">
+                  <span className="flex items-center gap-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    {position.numberOfPositions} อัตรา
+                  </span>
+                  <span>{position.applicants} ผู้สมัคร</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Contact & Map Section */}
       <ContactMap />
