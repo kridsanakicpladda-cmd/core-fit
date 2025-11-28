@@ -67,6 +67,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          photo_url: string | null
           resume_url: string | null
           source: string
           updated_at: string | null
@@ -78,6 +79,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          photo_url?: string | null
           resume_url?: string | null
           source: string
           updated_at?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          photo_url?: string | null
           resume_url?: string | null
           source?: string
           updated_at?: string | null
