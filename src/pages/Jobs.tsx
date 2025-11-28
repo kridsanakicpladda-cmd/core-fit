@@ -265,19 +265,13 @@ export default function Jobs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            ตำแหน่งงาน
-          </h1>
-          <p className="text-muted-foreground">
-            จัดการตำแหน่งงานที่เปิดรับสมัครทั้งหมด
-          </p>
-        </div>
-        <Button onClick={handleAddNew} className="shadow-primary hover:shadow-lg transition-all">
-          <Plus className="h-4 w-4 mr-2" />
-          เพิ่มตำแหน่งงาน
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          ตำแหน่งงาน
+        </h1>
+        <p className="text-muted-foreground">
+          จัดการตำแหน่งงานที่เปิดรับสมัครทั้งหมด
+        </p>
       </div>
 
       {/* Search and Filter Section */}
@@ -389,8 +383,8 @@ export default function Jobs() {
                   <Button variant="outline" onClick={() => handleViewDetails(job)} className="hover:bg-accent transition-colors">
                     ดูรายละเอียด
                   </Button>
-                  <Button onClick={() => handleViewCandidates(job.id)} className="shadow-sm hover:shadow-md transition-all">
-                    ดูผู้สมัคร
+                  <Button onClick={() => navigate('/job-application', { state: { jobTitle: job.title } })} className="shadow-sm hover:shadow-md transition-all">
+                    สมัครงาน
                   </Button>
                 </div>
               </div>

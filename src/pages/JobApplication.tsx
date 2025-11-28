@@ -442,7 +442,7 @@ const JobApplication = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
@@ -467,21 +467,156 @@ const JobApplication = () => {
       return;
     }
 
-    addCandidate({
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      phone: formData.mobilePhone || "-",
-      position: formData.position,
-      experience: "ระบุในเรซูเม่",
-      skills: [],
-      resumeFile: selectedFile.name,
-      coverLetter: "",
-    });
+    try {
+      let resumeUrl = "";
+      let photoUrl = "";
 
-    toast({
-      title: "ส่งใบสมัครสำเร็จ",
-      description: `ใบสมัครของคุณสำหรับตำแหน่ง ${formData.position} ถูกส่งแล้ว`,
-    });
+      // Upload resume file
+      if (selectedFile) {
+        const resumeFileName = `${Date.now()}_${selectedFile.name}`;
+        const { error: resumeError } = await supabase.storage
+          .from('resumes')
+          .upload(resumeFileName, selectedFile);
+
+        if (resumeError) {
+          toast({
+            title: "เกิดข้อผิดพลาด",
+            description: "ไม่สามารถอัปโหลดไฟล์เรซูเม่ได้",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: resumeData } = supabase.storage
+          .from('resumes')
+          .getPublicUrl(resumeFileName);
+        
+        resumeUrl = resumeData.publicUrl;
+      }
+
+      // Upload profile photo
+      if (profilePhoto) {
+        const photoFileName = `${Date.now()}_${profilePhoto.name}`;
+        const { error: photoError } = await supabase.storage
+          .from('profile-photos')
+          .upload(photoFileName, profilePhoto);
+
+        if (photoError) {
+          toast({
+            title: "เกิดข้อผิดพลาด",
+            description: "ไม่สามารถอัปโหลดรูปภาพได้",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: photoData } = supabase.storage
+          .from('profile-photos')
+          .getPublicUrl(photoFileName);
+        
+        photoUrl = photoData.publicUrl;
+      }
+
+      // Insert candidate data
+      const { error: insertError } = await supabase
+        .from('candidates')
+        .insert({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.mobilePhone || null,
+          source: 'Job Application Form',
+          resume_url: resumeUrl || null,
+          photo_url: photoUrl || null,
+        });
+
+      if (insertError) {
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: "ไม่สามารถบันทึกข้อมูลผู้สมัครได้",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Also add to context for UI update
+      addCandidate({
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.mobilePhone || "-",
+        position: formData.position,
+        experience: "ระบุในเรซูเม่",
+        skills: [],
+        resumeFile: selectedFile.name,
+        coverLetter: "",
+      });
+
+      toast({
+        title: "ส่งใบสมัครสำเร็จ",
+        description: `ใบสมัครของคุณสำหรับตำแหน่ง ${formData.position} ถูกส่งแล้ว`,
+      });
+
+      // Reset form
+      setFormData({
+        position: "",
+        expectedSalary: "",
+        titleName: "นาย",
+        firstName: "",
+        lastName: "",
+        nickname: "",
+        presentAddress: "",
+        moo: "",
+        district: "",
+        subDistrict: "",
+        province: "",
+        zipCode: "",
+        mobilePhone: "",
+        email: "",
+        birthDate: "",
+        age: "",
+        idCard: "",
+        sex: "male",
+        bloodType: "",
+        religion: "",
+        height: "",
+        weight: "",
+        maritalStatus: "single",
+        spouseName: "",
+        spouseOccupation: "",
+        numberOfChildren: "",
+        emergencyName: "",
+        emergencyRelation: "",
+        emergencyAddress: "",
+        emergencyPhone: "",
+        computerSkill: false,
+        drivingCar: false,
+        drivingCarLicenseNo: "",
+        drivingMotorcycle: false,
+        drivingMotorcycleLicenseNo: "",
+        otherSkills: "",
+        trainingCurriculums: "",
+        workedAtICPBefore: "",
+        workedAtICPDetails: "",
+        relativesAtICP: "",
+        relativesAtICPDetails: "",
+        criminalRecord: "",
+        criminalRecordDetails: "",
+        seriousIllness: "",
+        seriousIllnessDetails: "",
+        colorBlindness: "",
+        pregnant: "",
+        contagiousDisease: "",
+        privacyConsent: false,
+      });
+      setSelectedFile(null);
+      setProfilePhoto(null);
+      setProfilePhotoPreview(null);
+    } catch (error) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error instanceof Error ? error.message : "ไม่สามารถส่งใบสมัครได้",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
