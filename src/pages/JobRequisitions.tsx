@@ -15,13 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Clock, CheckCircle, XCircle, Download, Upload } from "lucide-react";
+import { Plus, Clock, CheckCircle, XCircle, Download, Upload, Briefcase, Users, FileText, Award, MapPin, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useJobRequisitions, JobRequisition } from "@/hooks/useJobRequisitions";
 import { RequisitionDetailDialog } from "@/components/requisitions/RequisitionDetailDialog";
 import { exportRequisitionsPDF } from "@/lib/exportRequisitionsPDF";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { addSparkleEffect } from "@/lib/sparkle";
 
 const JobRequisitions = () => {
   const { toast } = useToast();
@@ -191,37 +192,51 @@ const JobRequisitions = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">คำขออนุมัติการจ้างงาน</h1>
-          <p className="text-muted-foreground mt-2">จัดการคำขออนุมัติตำแหน่งงานใหม่</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="mb-8 text-center space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+            แบบขออนุมัติกำลังพล
+          </h1>
+          <p className="text-muted-foreground text-lg">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อขออนุมัติเปิดรับสมัครตำแหน่งงานใหม่</p>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex justify-end gap-2 mb-6">
           <Button
             variant="outline"
             onClick={() => exportRequisitionsPDF(requisitions)}
             disabled={requisitions.length === 0}
+            className="transition-all hover:scale-105"
           >
             <Download className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button 
+                className="transition-all hover:scale-105"
+                onClick={(e) => addSparkleEffect(e)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 สร้างคำขอใหม่
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>สร้างคำขออนุมัติการจ้างงาน</DialogTitle>
-                <DialogDescription>กรอกข้อมูลเพื่อขออนุมัติเปิดตำแหน่งงานใหม่</DialogDescription>
+                <DialogTitle className="text-2xl">สร้างคำขออนุมัติกำลังพล</DialogTitle>
+                <DialogDescription>กรุณากรอกข้อมูลให้ครบถ้วนตามแบบฟอร์ม</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                 {/* ข้อมูลทั่วไป */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">1. ข้อมูลทั่วไป</h3>
+                <Card className="border-primary/20 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-primary" />
+                      1. ข้อมูลตำแหน่งงาน
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>ฝ่าย/แผนก *</Label>
@@ -310,11 +325,18 @@ const JobRequisitions = () => {
                       />
                     </div>
                   </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* รายละเอียดการจ้างงาน */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">2. รายละเอียดการจ้างงาน</h3>
+                <Card className="border-primary/20 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      2. ประเภท / เหตุผลของการขออนุมัติ
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-4">
                   <div className="space-y-2">
                     <Label>ประเภท/เหตุผลการจ้าง *</Label>
                     <Select
@@ -342,45 +364,84 @@ const JobRequisitions = () => {
                       rows={4}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>อัปโหลด Job Description (JD)</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 20 * 1024 * 1024) {
-                              toast({
-                                title: "ไฟล์ใหญ่เกินไป",
-                                description: "ไฟล์ต้องมีขนาดไม่เกิน 20MB",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            setJdFile(file);
-                          }
-                        }}
-                      />
-                      {jdFile && (
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setJdFile(null)}>
-                          ลบ
-                        </Button>
-                      )}
+                  </CardContent>
+                </Card>
+
+                {/* Job Description Upload */}
+                <Card className="border-primary/20 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Job Description
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-2">
+                      <Label>อัปโหลดไฟล์ Job Description (PDF)</Label>
+                      <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:border-primary/50 transition-colors">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="p-4 rounded-full bg-primary/10">
+                            <Upload className="h-8 w-8 text-primary" />
+                          </div>
+                          <div className="text-center">
+                            <Input
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              className="hidden"
+                              id="jd-upload"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 20 * 1024 * 1024) {
+                                    toast({
+                                      title: "ไฟล์ใหญ่เกินไป",
+                                      description: "ไฟล์ต้องมีขนาดไม่เกิน 20MB",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+                                  setJdFile(file);
+                                }
+                              }}
+                            />
+                            <Label htmlFor="jd-upload" className="cursor-pointer">
+                              <Button type="button" variant="outline" asChild>
+                                <span>เลือกไฟล์</span>
+                              </Button>
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              รองรับไฟล์ PDF, DOC, DOCX (ขนาดไม่เกิน 20MB)
+                            </p>
+                          </div>
+                          {jdFile && (
+                            <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg w-full">
+                              <FileText className="h-5 w-5 text-primary" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{jdFile.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {(jdFile.size / 1024).toFixed(2)} KB
+                                </p>
+                              </div>
+                              <Button type="button" variant="ghost" size="sm" onClick={() => setJdFile(null)}>
+                                ลบ
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    {jdFile && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Upload className="h-4 w-4" />
-                        {jdFile.name} ({(jdFile.size / 1024).toFixed(2)} KB)
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* คุณสมบัติและหน้าที่ */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">3. คุณสมบัติและหน้าที่</h3>
+                <Card className="border-primary/20 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="h-5 w-5 text-primary" />
+                      3. คุณสมบัติเบื้องต้น
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>เพศ *</Label>
@@ -447,70 +508,82 @@ const JobRequisitions = () => {
                       rows={3}
                     />
                   </div>
-                </div>
+                  </CardContent>
+                </Card>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm p-4 -mx-6 -mb-6 border-t">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     ยกเลิก
                   </Button>
-                  <Button type="submit" disabled={createRequisition.isPending || uploading}>
-                    {uploading ? "กำลังอัปโหลด..." : "ส่งคำขออนุมัติ"}
+                  <Button 
+                    type="submit" 
+                    disabled={uploading}
+                    onClick={(e) => addSparkleEffect(e)}
+                    className="transition-all hover:scale-105"
+                  >
+                    {uploading ? "กำลังบันทึก..." : "ส่งคำขออนุมัติ"}
                   </Button>
                 </div>
               </form>
             </DialogContent>
           </Dialog>
         </div>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>รายการคำขออนุมัติ</CardTitle>
-          <CardDescription>รายการคำขอทั้งหมด {requisitions.length} รายการ</CardDescription>
-        </CardHeader>
-        <CardContent>
+
+        {/* Requisitions Table */}
+        <Card className="shadow-xl border-primary/20">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              รายการคำขออนุมัติ
+            </CardTitle>
+            <CardDescription>รายการคำขออนุมัติกำลังพลทั้งหมด</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
           {isLoading ? (
             <div className="text-center py-8">กำลังโหลด...</div>
           ) : requisitions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">ยังไม่มีคำขออนุมัติ</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>เลขที่</TableHead>
-                  <TableHead>แผนก</TableHead>
-                  <TableHead>ตำแหน่ง</TableHead>
-                  <TableHead>จำนวน</TableHead>
-                  <TableHead>วันที่ต้องการ</TableHead>
-                  <TableHead>ประเภท</TableHead>
-                  <TableHead>สถานะ</TableHead>
-                  <TableHead>ผู้ขอ</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {requisitions.map((req) => (
-                  <TableRow
-                    key={req.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      setSelectedRequisition(req);
-                      setDetailOpen(true);
-                    }}
-                  >
-                    <TableCell className="font-medium">{req.requisition_number}</TableCell>
-                    <TableCell>{req.department}</TableCell>
-                    <TableCell>{req.position}</TableCell>
-                    <TableCell>{req.quantity}</TableCell>
-                    <TableCell>{format(new Date(req.date_needed), "dd/MM/yyyy")}</TableCell>
-                    <TableCell>{getHiringTypeLabel(req.hiring_type)}</TableCell>
-                    <TableCell>{getStatusBadge(req.status)}</TableCell>
-                    <TableCell>{req.requester?.name || "N/A"}</TableCell>
+            <div className="rounded-lg border border-primary/20 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">เลขที่คำขอ</TableHead>
+                    <TableHead className="font-semibold">ตำแหน่ง</TableHead>
+                    <TableHead className="font-semibold">ฝ่าย/แผนก</TableHead>
+                    <TableHead className="font-semibold">จำนวน</TableHead>
+                    <TableHead className="font-semibold">ประเภท</TableHead>
+                    <TableHead className="font-semibold">สถานะ</TableHead>
+                    <TableHead className="font-semibold">วันที่ขอ</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                 <TableBody>
+                  {requisitions.map((req) => (
+                    <TableRow
+                      key={req.id}
+                      className="cursor-pointer hover:bg-primary/5 transition-colors"
+                      onClick={() => {
+                        setSelectedRequisition(req);
+                        setDetailOpen(true);
+                      }}
+                    >
+                      <TableCell className="font-medium text-primary">{req.requisition_number}</TableCell>
+                      <TableCell className="font-medium">{req.position}</TableCell>
+                      <TableCell>{req.department}</TableCell>
+                      <TableCell>{req.quantity}</TableCell>
+                      <TableCell>{getHiringTypeLabel(req.hiring_type)}</TableCell>
+                      <TableCell>{getStatusBadge(req.status)}</TableCell>
+                      <TableCell>{req.created_at ? format(new Date(req.created_at), "dd/MM/yyyy") : "-"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
+
       <RequisitionDetailDialog
         requisition={selectedRequisition}
         open={detailOpen}
