@@ -571,7 +571,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           {candidate.resumeUrl && (
             <Button onClick={() => window.open(candidate.resumeUrl, '_blank')}>
               <FileText className="h-4 w-4 mr-2" />
-              ดาวน์โหลด Resume
+              ดู Resume ฉบับเต็ม
             </Button>
           )}
         </DialogFooter>
