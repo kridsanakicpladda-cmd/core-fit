@@ -15,9 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, FileDown } from "lucide-react";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
 import { ManagerInterviewDialog } from "./ManagerInterviewDialog";
+import { FinalInterviewDialog } from "./FinalInterviewDialog";
+import { exportCandidateEvaluationPDF } from "@/lib/exportCandidateEvaluationPDF";
 import { TestScoreDialog } from "./TestScoreDialog";
 import { ResumeDialog } from "./ResumeDialog";
 
@@ -61,7 +63,21 @@ interface CandidateDetailDialogProps {
           culture_fit?: number;
         };
       };
-      isTeam?: { date: string; passed: boolean; feedback: string };
+      isTeam?: { 
+        date: string; 
+        passed: boolean; 
+        feedback: string;
+        total_score?: number;
+        scores?: {
+          skill_knowledge?: number;
+          communication?: number;
+          creativity?: number;
+          motivation?: number;
+          teamwork?: number;
+          analytical?: number;
+          culture_fit?: number;
+        };
+      };
     };
   } | null;
   open: boolean;
@@ -104,6 +120,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [activeInterview, setActiveInterview] = useState<'hr' | 'isTeam' | null>(null);
   const [managerDialogOpen, setManagerDialogOpen] = useState(false);
+  const [finalDialogOpen, setFinalDialogOpen] = useState(false);
   const [showPipelineConfirm, setShowPipelineConfirm] = useState(false);
   const [selectedPipelineStep, setSelectedPipelineStep] = useState<string | null>(null);
   
@@ -201,6 +218,14 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     const updatedInterviews = {
       ...candidate.interviews,
       manager: interviewData,
+    };
+    onInterviewUpdate(candidate.id, updatedInterviews);
+  };
+
+  const handleFinalInterviewSave = (interviewData: any) => {
+    const updatedInterviews = {
+      ...candidate.interviews,
+      isTeam: interviewData,
     };
     onInterviewUpdate(candidate.id, updatedInterviews);
   };
@@ -559,7 +584,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <div className="font-semibold text-sm">Final Interview (IS)</div>
-                  <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('isTeam')}>
+                  <Button variant="ghost" size="sm" onClick={() => setFinalDialogOpen(true)}>
                     <Edit className="h-4 w-4 mr-1" />
                     แก้ไข
                   </Button>
@@ -568,6 +593,12 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   <div>
                     <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
                     <div>{candidate.interviews?.isTeam?.date || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground mb-1">คะแนนรวม</div>
+                    <div className="font-semibold text-primary">
+                      {candidate.interviews?.isTeam?.total_score || "-"} / 70
+                    </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
@@ -595,6 +626,23 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
             ลบ
           </Button>
           <div className="flex-1" />
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              exportCandidateEvaluationPDF({
+                name: candidate.name,
+                email: candidate.email,
+                phone: candidate.phone || "",
+                position: candidate.position,
+                source: candidate.status,
+                aiScore: candidate.score,
+                interviews: candidate.interviews,
+              });
+            }}
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             ปิด
           </Button>
@@ -653,6 +701,15 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
         open={managerDialogOpen}
         onOpenChange={setManagerDialogOpen}
         onSave={handleManagerInterviewSave}
+      />
+
+      <FinalInterviewDialog
+        candidateName={candidate.name}
+        position={candidate.position}
+        interview={candidate.interviews?.isTeam}
+        open={finalDialogOpen}
+        onOpenChange={setFinalDialogOpen}
+        onSave={handleFinalInterviewSave}
       />
 
       <ResumeDialog
