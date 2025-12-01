@@ -17,8 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, FileDown } from "lucide-react";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
-import { ManagerInterviewDialog } from "./ManagerInterviewDialog";
-import { FinalInterviewDialog } from "./FinalInterviewDialog";
+import { CombinedInterviewDialog } from "./CombinedInterviewDialog";
 import { exportCandidateEvaluationPDF } from "@/lib/exportCandidateEvaluationPDF";
 import { TestScoreDialog } from "./TestScoreDialog";
 import { ResumeDialog } from "./ResumeDialog";
@@ -118,9 +117,8 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showTestScoreDialog, setShowTestScoreDialog] = useState(false);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [activeInterview, setActiveInterview] = useState<'hr' | 'isTeam' | null>(null);
-  const [managerDialogOpen, setManagerDialogOpen] = useState(false);
-  const [finalDialogOpen, setFinalDialogOpen] = useState(false);
+  const [activeInterview, setActiveInterview] = useState<'hr' | null>(null);
+  const [combinedInterviewOpen, setCombinedInterviewOpen] = useState(false);
   const [showPipelineConfirm, setShowPipelineConfirm] = useState(false);
   const [selectedPipelineStep, setSelectedPipelineStep] = useState<string | null>(null);
   
@@ -214,23 +212,16 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     setActiveInterview(null);
   };
 
-  const handleManagerInterviewSave = (interviewData: any) => {
+  const handleCombinedInterviewSave = (interviews: any) => {
     const updatedInterviews = {
       ...candidate.interviews,
-      manager: interviewData,
+      manager: interviews.manager,
+      isTeam: interviews.isTeam,
     };
     onInterviewUpdate(candidate.id, updatedInterviews);
   };
 
-  const handleFinalInterviewSave = (interviewData: any) => {
-    const updatedInterviews = {
-      ...candidate.interviews,
-      isTeam: interviewData,
-    };
-    onInterviewUpdate(candidate.id, updatedInterviews);
-  };
-
-  const handleInterviewEdit = (type: 'hr' | 'isTeam') => {
+  const handleInterviewEdit = (type: 'hr') => {
     setActiveInterview(type);
   };
 
@@ -543,76 +534,77 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                 </div>
               </div>
 
-              {/* Manager Interview */}
+              {/* Combined Interview Section */}
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-sm">First Interview (Manager)</div>
-                  <Button variant="ghost" size="sm" onClick={() => setManagerDialogOpen(true)}>
+                  <div className="font-semibold text-sm">การประเมินผลการสัมภาษณ์ (First Interview / Final Interview)</div>
+                  <Button variant="ghost" size="sm" onClick={() => setCombinedInterviewOpen(true)}>
                     <Edit className="h-4 w-4 mr-1" />
                     แก้ไข
                   </Button>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
-                    <div>{candidate.interviews?.manager?.date || "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground mb-1">คะแนนรวม</div>
-                    <div className="font-semibold text-primary">
-                      {candidate.interviews?.manager?.total_score || "-"} / 70
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* First Interview (Manager) */}
+                  <div className="space-y-3">
+                    <div className="font-medium text-sm text-primary">First Interview (Manager)</div>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
+                        <div>{candidate.interviews?.manager?.date || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1">คะแนนรวม</div>
+                        <div className="font-semibold text-primary">
+                          {candidate.interviews?.manager?.total_score || "-"} / 70
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
+                        <div>
+                          {candidate.interviews?.manager?.passed !== undefined ? (
+                            <Badge variant={candidate.interviews.manager.passed ? "default" : "destructive"}>
+                              {candidate.interviews.manager.passed ? "ผ่าน" : "ไม่ผ่าน"}
+                            </Badge>
+                          ) : "-"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1">Comment</div>
+                        <div className="text-xs">{candidate.interviews?.manager?.feedback || "-"}</div>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
-                    <div>
-                      {candidate.interviews?.manager?.passed !== undefined ? (
-                        <Badge variant={candidate.interviews.manager.passed ? "default" : "destructive"}>
-                          {candidate.interviews.manager.passed ? "ผ่าน" : "ไม่ผ่าน"}
-                        </Badge>
-                      ) : "-"}
-                    </div>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="text-muted-foreground mb-1">Comment</div>
-                    <div>{candidate.interviews?.manager?.feedback || "-"}</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* IS Team Interview */}
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-sm">Final Interview (IS)</div>
-                  <Button variant="ghost" size="sm" onClick={() => setFinalDialogOpen(true)}>
-                    <Edit className="h-4 w-4 mr-1" />
-                    แก้ไข
-                  </Button>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
-                    <div>{candidate.interviews?.isTeam?.date || "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground mb-1">คะแนนรวม</div>
-                    <div className="font-semibold text-primary">
-                      {candidate.interviews?.isTeam?.total_score || "-"} / 70
+                  {/* Final Interview (IS) */}
+                  <div className="space-y-3">
+                    <div className="font-medium text-sm text-primary">Final Interview (IS)</div>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
+                        <div>{candidate.interviews?.isTeam?.date || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1">คะแนนรวม</div>
+                        <div className="font-semibold text-primary">
+                          {candidate.interviews?.isTeam?.total_score || "-"} / 70
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
+                        <div>
+                          {candidate.interviews?.isTeam?.passed !== undefined ? (
+                            <Badge variant={candidate.interviews.isTeam.passed ? "default" : "destructive"}>
+                              {candidate.interviews.isTeam.passed ? "ผ่าน" : "ไม่ผ่าน"}
+                            </Badge>
+                          ) : "-"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1">Comment</div>
+                        <div className="text-xs">{candidate.interviews?.isTeam?.feedback || "-"}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
-                    <div>
-                      {candidate.interviews?.isTeam?.passed !== undefined ? (
-                        <Badge variant={candidate.interviews.isTeam.passed ? "default" : "destructive"}>
-                          {candidate.interviews.isTeam.passed ? "ผ่าน" : "ไม่ผ่าน"}
-                        </Badge>
-                      ) : "-"}
-                    </div>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="text-muted-foreground mb-1">Comment</div>
-                    <div>{candidate.interviews?.isTeam?.feedback || "-"}</div>
                   </div>
                 </div>
               </div>
@@ -681,35 +673,21 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
       />
 
       <SingleInterviewDialog
-        title={
-          activeInterview === 'hr' ? 'แก้ไขการสัมภาษณ์โดย HR' :
-          'แก้ไขการสัมภาษณ์โดยทีม IS'
-        }
-        interview={
-          activeInterview === 'hr' ? candidate.interviews?.hr :
-          candidate.interviews?.isTeam
-        }
-        open={activeInterview !== null}
+        title="แก้ไขการสัมภาษณ์โดย HR"
+        interview={candidate.interviews?.hr}
+        open={activeInterview === 'hr'}
         onOpenChange={(open) => !open && setActiveInterview(null)}
         onSave={handleSingleInterviewSave}
       />
 
-      <ManagerInterviewDialog
+      <CombinedInterviewDialog
         candidateName={candidate.name}
         position={candidate.position}
-        interview={candidate.interviews?.manager}
-        open={managerDialogOpen}
-        onOpenChange={setManagerDialogOpen}
-        onSave={handleManagerInterviewSave}
-      />
-
-      <FinalInterviewDialog
-        candidateName={candidate.name}
-        position={candidate.position}
-        interview={candidate.interviews?.isTeam}
-        open={finalDialogOpen}
-        onOpenChange={setFinalDialogOpen}
-        onSave={handleFinalInterviewSave}
+        managerInterview={candidate.interviews?.manager}
+        isInterview={candidate.interviews?.isTeam}
+        open={combinedInterviewOpen}
+        onOpenChange={setCombinedInterviewOpen}
+        onSave={handleCombinedInterviewSave}
       />
 
       <ResumeDialog
