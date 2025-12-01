@@ -199,20 +199,8 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                 </AvatarFallback>
               </Avatar>
               
-              {/* Score Badge */}
-              <div className="relative">
-                <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                  {candidate.score}
-                </div>
-                {candidate.score >= 90 && (
-                  <div className="absolute -top-1 -right-1 h-6 w-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                    <Star className="h-3 w-3 text-white fill-white" />
-                  </div>
-                )}
-              </div>
-              
               {/* Candidate Info */}
-              <div>
+              <div className="flex-1">
                 <DialogTitle className="text-2xl mb-2">{candidate.name}</DialogTitle>
                 <div className="flex items-center gap-2">
                   <Badge className={statusColors[candidate.status as keyof typeof statusColors]}>
@@ -223,6 +211,18 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   </span>
                 </div>
               </div>
+            </div>
+            
+            {/* Score Badge - Moved to top right */}
+            <div className="relative flex-shrink-0">
+              <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                {candidate.score}
+              </div>
+              {candidate.score >= 90 && (
+                <div className="absolute -top-1 -right-1 h-6 w-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <Star className="h-3 w-3 text-white fill-white" />
+                </div>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -568,10 +568,12 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             ปิด
           </Button>
-          <Button onClick={() => setShowResumeDialog(true)}>
-            <FileText className="h-4 w-4 mr-2" />
-            ดูเรซูเม่
-          </Button>
+          {candidate.resumeUrl && (
+            <Button onClick={() => window.open(candidate.resumeUrl, '_blank')}>
+              <FileText className="h-4 w-4 mr-2" />
+              ดาวน์โหลด Resume
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
 
