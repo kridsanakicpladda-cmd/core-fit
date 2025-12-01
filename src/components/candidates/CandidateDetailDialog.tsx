@@ -466,7 +466,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               {/* HR Interview */}
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-sm">สัมภาษณ์โดย HR</div>
+                  <div className="font-semibold text-sm">Pre Screen</div>
                   <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('hr')}>
                     <Edit className="h-4 w-4 mr-1" />
                     แก้ไข
@@ -488,7 +488,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                     </div>
                   </div>
                   <div className="col-span-3">
-                    <div className="text-muted-foreground mb-1">ข้อคิดเห็น</div>
+                    <div className="text-muted-foreground mb-1">Comment</div>
                     <div>{candidate.interviews?.hr?.feedback || "-"}</div>
                   </div>
                 </div>
@@ -497,7 +497,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               {/* Manager Interview */}
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-sm">สัมภาษณ์โดยหัวหน้าแผนก</div>
+                  <div className="font-semibold text-sm">First Interview (Manager)</div>
                   <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('manager')}>
                     <Edit className="h-4 w-4 mr-1" />
                     แก้ไข
@@ -519,7 +519,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                     </div>
                   </div>
                   <div className="col-span-3">
-                    <div className="text-muted-foreground mb-1">ข้อคิดเห็น</div>
+                    <div className="text-muted-foreground mb-1">Comment</div>
                     <div>{candidate.interviews?.manager?.feedback || "-"}</div>
                   </div>
                 </div>
@@ -528,7 +528,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               {/* IS Team Interview */}
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-sm">สัมภาษณ์โดยทีม IS</div>
+                  <div className="font-semibold text-sm">Final Interview (IS)</div>
                   <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('isTeam')}>
                     <Edit className="h-4 w-4 mr-1" />
                     แก้ไข
@@ -550,7 +550,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                     </div>
                   </div>
                   <div className="col-span-3">
-                    <div className="text-muted-foreground mb-1">ข้อคิดเห็น</div>
+                    <div className="text-muted-foreground mb-1">Comment</div>
                     <div>{candidate.interviews?.isTeam?.feedback || "-"}</div>
                   </div>
                 </div>

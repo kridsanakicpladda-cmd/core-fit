@@ -146,11 +146,11 @@ const statusColors = {
 };
 
 const statusLabels = {
-  screening: "กำลังคัดกรอง",
-  interview: "รอสัมภาษณ์",
-  shortlisted: "รายชื่อสั้น",
-  interested: "สนใจ",
-  not_interested: "ไม่สนใจ",
+  screening: "Screening",
+  interview: "Interview",
+  shortlisted: "Shortlisted",
+  interested: "Interested",
+  not_interested: "Not Interested",
 };
 
 export default function Candidates() {
