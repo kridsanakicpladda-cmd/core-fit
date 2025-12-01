@@ -552,7 +552,9 @@ export default function Candidates() {
           return {
             id,
             name: candidate?.name || '',
-            position: candidate?.position || ''
+            position: candidate?.position || '',
+            score: candidate?.score,
+            preScreenComment: candidate?.interviews?.hr?.feedback
           };
         })}
         onSent={() => {

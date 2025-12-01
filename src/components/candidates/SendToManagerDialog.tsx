@@ -24,7 +24,14 @@ import { Loader2 } from "lucide-react";
 interface SendToManagerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  candidates: Array<{ id: number; name: string; position: string; resumeFile?: string }>;
+  candidates: Array<{ 
+    id: number; 
+    name: string; 
+    position: string; 
+    resumeFile?: string;
+    score?: number;
+    preScreenComment?: string;
+  }>;
   onSent: () => void;
 }
 
@@ -79,6 +86,8 @@ export function SendToManagerDialog({
               name: c.name,
               position: c.position,
               resume_url: c.resumeFile,
+              ai_score: c.score || 0,
+              pre_screen_comment: c.preScreenComment || '-',
             })),
             positions,
           },

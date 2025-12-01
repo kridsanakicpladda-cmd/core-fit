@@ -18,6 +18,8 @@ interface Candidate {
   name: string;
   position: string;
   resume_url?: string;
+  ai_score?: number;
+  pre_screen_comment?: string;
 }
 
 interface EmailRequest {
@@ -58,13 +60,23 @@ async function getAccessToken(): Promise<string> {
 
 async function sendEmail(accessToken: string, emailData: EmailRequest, senderEmail: string) {
   const candidatesTableRows = emailData.candidates
-    .map((c, index) => `
-      <tr style="background-color: ${index % 2 === 0 ? '#f9fafb' : '#ffffff'};">
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${index + 1}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${c.name}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${c.position}</td>
+    .map((c, index) => {
+      const rowBg = index % 2 === 0 ? '#f0fdf4' : '#ffffff';
+      const scorePercentage = c.ai_score || 0;
+      return `
+      <tr style="background-color: ${rowBg}; transition: all 0.3s ease;">
+        <td style="padding: 16px 12px; border-bottom: 2px solid #e5e7eb; text-align: center; font-weight: 600; color: #059669; font-size: 15px;">${index + 1}</td>
+        <td style="padding: 16px 12px; border-bottom: 2px solid #e5e7eb; font-weight: 500; color: #111827; font-size: 14px;">${c.name}</td>
+        <td style="padding: 16px 12px; border-bottom: 2px solid #e5e7eb; color: #374151; font-size: 14px;">${c.position}</td>
+        <td style="padding: 16px 12px; border-bottom: 2px solid #e5e7eb; text-align: center;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; min-width: 70px; padding: 6px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 700; font-size: 16px; border-radius: 20px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+            ${scorePercentage}%
+          </div>
+        </td>
+        <td style="padding: 16px 12px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-size: 13px; line-height: 1.6;">${c.pre_screen_comment || '-'}</td>
       </tr>
-    `)
+    `;
+    })
     .join('');
 
   const emailBody = `
@@ -101,16 +113,18 @@ async function sendEmail(accessToken: string, emailData: EmailRequest, senderEma
                   </p>
                   
                   <!-- Candidates Table -->
-                  <h2 style="margin: 0 0 20px 0; font-size: 18px; color: #111827; font-weight: 600;">
-                    รายชื่อผู้สมัคร
+                  <h2 style="margin: 0 0 24px 0; font-size: 20px; color: #111827; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 24px;">📋</span> รายชื่อผู้สมัคร
                   </h2>
                   
-                  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 30px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; border: 3px solid #10b981; border-radius: 12px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);">
                     <thead>
-                      <tr style="background-color: #059669;">
-                        <th style="padding: 14px; color: #ffffff; font-weight: 600; text-align: center; width: 60px;">ลำดับ</th>
-                        <th style="padding: 14px; color: #ffffff; font-weight: 600; text-align: left;">ชื่อ-นามสกุล</th>
-                        <th style="padding: 14px; color: #ffffff; font-weight: 600; text-align: left;">ตำแหน่ง</th>
+                      <tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <th style="padding: 18px 12px; color: #ffffff; font-weight: 700; text-align: center; width: 70px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">ลำดับ</th>
+                        <th style="padding: 18px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">ชื่อผู้สมัคร</th>
+                        <th style="padding: 18px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">ตำแหน่งที่สมัคร</th>
+                        <th style="padding: 18px 12px; color: #ffffff; font-weight: 700; text-align: center; width: 130px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">AI Score</th>
+                        <th style="padding: 18px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; min-width: 200px;">Comment Pre-Screen จาก HR/IS</th>
                       </tr>
                     </thead>
                     <tbody>
