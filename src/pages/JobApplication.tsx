@@ -535,7 +535,7 @@ const JobApplication = () => {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           phone: formData.mobilePhone || null,
-          source: 'Job Application Form',
+          source: 'Website',
           resume_url: resumeUrl || null,
           photo_url: photoUrl || null,
         });
