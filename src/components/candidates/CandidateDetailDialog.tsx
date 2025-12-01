@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X } from "lucide-react";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
+import { ManagerInterviewDialog } from "./ManagerInterviewDialog";
 import { TestScoreDialog } from "./TestScoreDialog";
 import { ResumeDialog } from "./ResumeDialog";
 
@@ -45,7 +46,21 @@ interface CandidateDetailDialogProps {
     };
     interviews?: {
       hr?: { date: string; passed: boolean; feedback: string };
-      manager?: { date: string; passed: boolean; feedback: string };
+      manager?: { 
+        date: string; 
+        passed: boolean; 
+        feedback: string;
+        total_score?: number;
+        scores?: {
+          skill_knowledge?: number;
+          communication?: number;
+          creativity?: number;
+          motivation?: number;
+          teamwork?: number;
+          analytical?: number;
+          culture_fit?: number;
+        };
+      };
       isTeam?: { date: string; passed: boolean; feedback: string };
     };
   } | null;
@@ -87,7 +102,8 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showTestScoreDialog, setShowTestScoreDialog] = useState(false);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [activeInterview, setActiveInterview] = useState<'hr' | 'manager' | 'isTeam' | null>(null);
+  const [activeInterview, setActiveInterview] = useState<'hr' | 'isTeam' | null>(null);
+  const [managerDialogOpen, setManagerDialogOpen] = useState(false);
   const [showPipelineConfirm, setShowPipelineConfirm] = useState(false);
   const [selectedPipelineStep, setSelectedPipelineStep] = useState<string | null>(null);
   
@@ -181,7 +197,15 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     setActiveInterview(null);
   };
 
-  const handleInterviewEdit = (type: 'hr' | 'manager' | 'isTeam') => {
+  const handleManagerInterviewSave = (interviewData: any) => {
+    const updatedInterviews = {
+      ...candidate.interviews,
+      manager: interviewData,
+    };
+    onInterviewUpdate(candidate.id, updatedInterviews);
+  };
+
+  const handleInterviewEdit = (type: 'hr' | 'isTeam') => {
     setActiveInterview(type);
   };
 
@@ -498,7 +522,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <div className="font-semibold text-sm">First Interview (Manager)</div>
-                  <Button variant="ghost" size="sm" onClick={() => handleInterviewEdit('manager')}>
+                  <Button variant="ghost" size="sm" onClick={() => setManagerDialogOpen(true)}>
                     <Edit className="h-4 w-4 mr-1" />
                     แก้ไข
                   </Button>
@@ -507,6 +531,12 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   <div>
                     <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
                     <div>{candidate.interviews?.manager?.date || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground mb-1">คะแนนรวม</div>
+                    <div className="font-semibold text-primary">
+                      {candidate.interviews?.manager?.total_score || "-"} / 70
+                    </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
@@ -605,17 +635,24 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
       <SingleInterviewDialog
         title={
           activeInterview === 'hr' ? 'แก้ไขการสัมภาษณ์โดย HR' :
-          activeInterview === 'manager' ? 'แก้ไขการสัมภาษณ์โดยหัวหน้าแผนก' :
           'แก้ไขการสัมภาษณ์โดยทีม IS'
         }
         interview={
           activeInterview === 'hr' ? candidate.interviews?.hr :
-          activeInterview === 'manager' ? candidate.interviews?.manager :
           candidate.interviews?.isTeam
         }
         open={activeInterview !== null}
         onOpenChange={(open) => !open && setActiveInterview(null)}
         onSave={handleSingleInterviewSave}
+      />
+
+      <ManagerInterviewDialog
+        candidateName={candidate.name}
+        position={candidate.position}
+        interview={candidate.interviews?.manager}
+        open={managerDialogOpen}
+        onOpenChange={setManagerDialogOpen}
+        onSave={handleManagerInterviewSave}
       />
 
       <ResumeDialog
