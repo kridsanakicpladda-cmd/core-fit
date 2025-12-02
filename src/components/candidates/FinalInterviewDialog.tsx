@@ -18,14 +18,14 @@ const evaluationSchema = z.object({
   date: z.date({
     required_error: "กรุณาเลือกวันที่สัมภาษณ์",
   }),
-  // 7 evaluation criteria (1-10 each)
-  skill_knowledge: z.number().min(1).max(10),
-  communication: z.number().min(1).max(10),
-  creativity: z.number().min(1).max(10),
-  motivation: z.number().min(1).max(10),
-  teamwork: z.number().min(1).max(10),
-  analytical: z.number().min(1).max(10),
-  culture_fit: z.number().min(1).max(10),
+  // 7 evaluation criteria (0-10 each, optional)
+  skill_knowledge: z.coerce.number().min(0).max(10).optional(),
+  communication: z.coerce.number().min(0).max(10).optional(),
+  creativity: z.coerce.number().min(0).max(10).optional(),
+  motivation: z.coerce.number().min(0).max(10).optional(),
+  teamwork: z.coerce.number().min(0).max(10).optional(),
+  analytical: z.coerce.number().min(0).max(10).optional(),
+  culture_fit: z.coerce.number().min(0).max(10).optional(),
   feedback: z.string().optional(),
 });
 
@@ -81,13 +81,13 @@ export function FinalInterviewDialog({
     resolver: zodResolver(evaluationSchema),
     defaultValues: {
       date: undefined,
-      skill_knowledge: 5,
-      communication: 5,
-      creativity: 5,
-      motivation: 5,
-      teamwork: 5,
-      analytical: 5,
-      culture_fit: 5,
+      skill_knowledge: undefined,
+      communication: undefined,
+      creativity: undefined,
+      motivation: undefined,
+      teamwork: undefined,
+      analytical: undefined,
+      culture_fit: undefined,
       feedback: "",
     },
   });
@@ -120,25 +120,25 @@ export function FinalInterviewDialog({
       
       form.reset({
         date: parsedDate,
-        skill_knowledge: interview.scores?.skill_knowledge || 5,
-        communication: interview.scores?.communication || 5,
-        creativity: interview.scores?.creativity || 5,
-        motivation: interview.scores?.motivation || 5,
-        teamwork: interview.scores?.teamwork || 5,
-        analytical: interview.scores?.analytical || 5,
-        culture_fit: interview.scores?.culture_fit || 5,
+        skill_knowledge: interview.scores?.skill_knowledge,
+        communication: interview.scores?.communication,
+        creativity: interview.scores?.creativity,
+        motivation: interview.scores?.motivation,
+        teamwork: interview.scores?.teamwork,
+        analytical: interview.scores?.analytical,
+        culture_fit: interview.scores?.culture_fit,
         feedback: interview.feedback || "",
       });
     } else {
       form.reset({
         date: undefined,
-        skill_knowledge: 5,
-        communication: 5,
-        creativity: 5,
-        motivation: 5,
-        teamwork: 5,
-        analytical: 5,
-        culture_fit: 5,
+        skill_knowledge: undefined,
+        communication: undefined,
+        creativity: undefined,
+        motivation: undefined,
+        teamwork: undefined,
+        analytical: undefined,
+        culture_fit: undefined,
         feedback: "",
       });
     }
@@ -189,11 +189,12 @@ export function FinalInterviewDialog({
           <FormControl>
             <Input
               type="number"
-              min={1}
+              min={0}
               max={10}
-              value={Number(field.value) || 5}
-              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+              value={typeof field.value === 'number' ? field.value : ""}
+              onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
               className="text-center"
+              placeholder="0-10"
             />
           </FormControl>
           <FormMessage />

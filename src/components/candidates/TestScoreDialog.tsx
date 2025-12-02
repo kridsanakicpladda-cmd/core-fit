@@ -28,21 +28,21 @@ export function TestScoreDialog({ testScores, open, onOpenChange, onSave }: Test
   const form = useForm<TestScoreFormValues>({
     resolver: zodResolver(testScoreSchema),
     defaultValues: {
-      hrTest: 0,
-      departmentTest: 0,
+      hrTest: undefined,
+      departmentTest: undefined,
     },
   });
 
   useEffect(() => {
     if (testScores) {
       form.reset({
-        hrTest: testScores.hrTest ?? 0,
-        departmentTest: testScores.departmentTest ?? 0,
+        hrTest: testScores.hrTest,
+        departmentTest: testScores.departmentTest,
       });
     } else {
       form.reset({
-        hrTest: 0,
-        departmentTest: 0,
+        hrTest: undefined,
+        departmentTest: undefined,
       });
     }
   }, [testScores, form, open]);

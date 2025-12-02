@@ -17,24 +17,24 @@ import { Badge } from "@/components/ui/badge";
 const evaluationSchema = z.object({
   // First Interview (Manager)
   manager_date: z.date().optional(),
-  manager_skill_knowledge: z.number().min(1).max(10),
-  manager_communication: z.number().min(1).max(10),
-  manager_creativity: z.number().min(1).max(10),
-  manager_motivation: z.number().min(1).max(10),
-  manager_teamwork: z.number().min(1).max(10),
-  manager_analytical: z.number().min(1).max(10),
-  manager_culture_fit: z.number().min(1).max(10),
+  manager_skill_knowledge: z.coerce.number().min(0).max(10).optional(),
+  manager_communication: z.coerce.number().min(0).max(10).optional(),
+  manager_creativity: z.coerce.number().min(0).max(10).optional(),
+  manager_motivation: z.coerce.number().min(0).max(10).optional(),
+  manager_teamwork: z.coerce.number().min(0).max(10).optional(),
+  manager_analytical: z.coerce.number().min(0).max(10).optional(),
+  manager_culture_fit: z.coerce.number().min(0).max(10).optional(),
   manager_feedback: z.string().optional(),
   
   // Final Interview (IS)
   is_date: z.date().optional(),
-  is_skill_knowledge: z.number().min(1).max(10),
-  is_communication: z.number().min(1).max(10),
-  is_creativity: z.number().min(1).max(10),
-  is_motivation: z.number().min(1).max(10),
-  is_teamwork: z.number().min(1).max(10),
-  is_analytical: z.number().min(1).max(10),
-  is_culture_fit: z.number().min(1).max(10),
+  is_skill_knowledge: z.coerce.number().min(0).max(10).optional(),
+  is_communication: z.coerce.number().min(0).max(10).optional(),
+  is_creativity: z.coerce.number().min(0).max(10).optional(),
+  is_motivation: z.coerce.number().min(0).max(10).optional(),
+  is_teamwork: z.coerce.number().min(0).max(10).optional(),
+  is_analytical: z.coerce.number().min(0).max(10).optional(),
+  is_culture_fit: z.coerce.number().min(0).max(10).optional(),
   is_feedback: z.string().optional(),
 });
 
@@ -123,22 +123,22 @@ export function CombinedInterviewDialog({
     resolver: zodResolver(evaluationSchema),
     defaultValues: {
       manager_date: undefined,
-      manager_skill_knowledge: 5,
-      manager_communication: 5,
-      manager_creativity: 5,
-      manager_motivation: 5,
-      manager_teamwork: 5,
-      manager_analytical: 5,
-      manager_culture_fit: 5,
+      manager_skill_knowledge: undefined,
+      manager_communication: undefined,
+      manager_creativity: undefined,
+      manager_motivation: undefined,
+      manager_teamwork: undefined,
+      manager_analytical: undefined,
+      manager_culture_fit: undefined,
       manager_feedback: "",
       is_date: undefined,
-      is_skill_knowledge: 5,
-      is_communication: 5,
-      is_creativity: 5,
-      is_motivation: 5,
-      is_teamwork: 5,
-      is_analytical: 5,
-      is_culture_fit: 5,
+      is_skill_knowledge: undefined,
+      is_communication: undefined,
+      is_creativity: undefined,
+      is_motivation: undefined,
+      is_teamwork: undefined,
+      is_analytical: undefined,
+      is_culture_fit: undefined,
       is_feedback: "",
     },
   });
@@ -199,22 +199,22 @@ export function CombinedInterviewDialog({
       
       form.reset({
         manager_date: managerDate,
-        manager_skill_knowledge: managerInterview?.scores?.skill_knowledge || 5,
-        manager_communication: managerInterview?.scores?.communication || 5,
-        manager_creativity: managerInterview?.scores?.creativity || 5,
-        manager_motivation: managerInterview?.scores?.motivation || 5,
-        manager_teamwork: managerInterview?.scores?.teamwork || 5,
-        manager_analytical: managerInterview?.scores?.analytical || 5,
-        manager_culture_fit: managerInterview?.scores?.culture_fit || 5,
+        manager_skill_knowledge: managerInterview?.scores?.skill_knowledge,
+        manager_communication: managerInterview?.scores?.communication,
+        manager_creativity: managerInterview?.scores?.creativity,
+        manager_motivation: managerInterview?.scores?.motivation,
+        manager_teamwork: managerInterview?.scores?.teamwork,
+        manager_analytical: managerInterview?.scores?.analytical,
+        manager_culture_fit: managerInterview?.scores?.culture_fit,
         manager_feedback: managerInterview?.feedback || "",
         is_date: isDate,
-        is_skill_knowledge: isInterview?.scores?.skill_knowledge || 5,
-        is_communication: isInterview?.scores?.communication || 5,
-        is_creativity: isInterview?.scores?.creativity || 5,
-        is_motivation: isInterview?.scores?.motivation || 5,
-        is_teamwork: isInterview?.scores?.teamwork || 5,
-        is_analytical: isInterview?.scores?.analytical || 5,
-        is_culture_fit: isInterview?.scores?.culture_fit || 5,
+        is_skill_knowledge: isInterview?.scores?.skill_knowledge,
+        is_communication: isInterview?.scores?.communication,
+        is_creativity: isInterview?.scores?.creativity,
+        is_motivation: isInterview?.scores?.motivation,
+        is_teamwork: isInterview?.scores?.teamwork,
+        is_analytical: isInterview?.scores?.analytical,
+        is_culture_fit: isInterview?.scores?.culture_fit,
         is_feedback: isInterview?.feedback || "",
       });
     }
@@ -294,11 +294,12 @@ export function CombinedInterviewDialog({
             <FormControl>
               <Input
                 type="number"
-                min={1}
+                min={0}
                 max={10}
-                value={Number(field.value) || 5}
-                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                value={typeof field.value === 'number' ? field.value : ""}
+                onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
                 className="text-center h-9"
+                placeholder="0-10"
               />
             </FormControl>
             <FormMessage />
@@ -313,11 +314,12 @@ export function CombinedInterviewDialog({
             <FormControl>
               <Input
                 type="number"
-                min={1}
+                min={0}
                 max={10}
-                value={Number(field.value) || 5}
-                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                value={typeof field.value === 'number' ? field.value : ""}
+                onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
                 className="text-center h-9"
+                placeholder="0-10"
               />
             </FormControl>
             <FormMessage />
