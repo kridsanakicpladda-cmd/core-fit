@@ -15,10 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, FileDown } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X } from "lucide-react";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
 import { CombinedInterviewDialog } from "./CombinedInterviewDialog";
-import { exportCandidateEvaluationPDF } from "@/lib/exportCandidateEvaluationPDF";
 import { TestScoreDialog } from "./TestScoreDialog";
 import { ResumeDialog } from "./ResumeDialog";
 
@@ -618,23 +617,6 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
             ลบ
           </Button>
           <div className="flex-1" />
-          <Button 
-            variant="secondary" 
-            onClick={() => {
-              exportCandidateEvaluationPDF({
-                name: candidate.name,
-                email: candidate.email,
-                phone: candidate.phone || "",
-                position: candidate.position,
-                source: candidate.status,
-                aiScore: candidate.score,
-                interviews: candidate.interviews,
-              });
-            }}
-          >
-            <FileDown className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             ปิด
           </Button>
