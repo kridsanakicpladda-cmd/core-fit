@@ -190,9 +190,16 @@ export type Database = {
           created_at: string | null
           department: string
           description: string | null
+          employment_type: string | null
           end_date: string | null
           id: string
+          job_grade: string | null
+          location: string | null
           required_count: number | null
+          requirements: string | null
+          responsibilities: string | null
+          salary_max: number | null
+          salary_min: number | null
           start_date: string
           status: string
           title: string
@@ -202,9 +209,16 @@ export type Database = {
           created_at?: string | null
           department: string
           description?: string | null
+          employment_type?: string | null
           end_date?: string | null
           id?: string
+          job_grade?: string | null
+          location?: string | null
           required_count?: number | null
+          requirements?: string | null
+          responsibilities?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
           start_date: string
           status?: string
           title: string
@@ -214,9 +228,16 @@ export type Database = {
           created_at?: string | null
           department?: string
           description?: string | null
+          employment_type?: string | null
           end_date?: string | null
           id?: string
+          job_grade?: string | null
+          location?: string | null
           required_count?: number | null
+          requirements?: string | null
+          responsibilities?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
           start_date?: string
           status?: string
           title?: string
