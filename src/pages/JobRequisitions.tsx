@@ -178,17 +178,25 @@ const JobRequisitions = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !formData.department ||
-      !formData.position ||
-      !formData.date_needed ||
-      !formData.work_location ||
-      !formData.reports_to ||
-      !formData.justification ||
-      !formData.gender ||
-      !formData.min_education
-    ) {
-      toast({ title: "กรุณากรอกข้อมูลให้ครบถ้วน", variant: "destructive" });
+    console.log("Form submitted with data:", formData);
+    
+    const missingFields: string[] = [];
+    if (!formData.department) missingFields.push("แผนก/ฝ่าย");
+    if (!formData.position) missingFields.push("ตำแหน่งที่ต้องการ");
+    if (!formData.date_needed) missingFields.push("วันที่ต้องการ");
+    if (!formData.work_location) missingFields.push("สถานที่ปฏิบัติงาน");
+    if (!formData.reports_to) missingFields.push("สายการบังคับบัญชา");
+    if (!formData.justification) missingFields.push("เหตุผลในการขอ");
+    if (!formData.gender) missingFields.push("เพศ");
+    if (!formData.min_education) missingFields.push("วุฒิการศึกษาขั้นต่ำ");
+    
+    if (missingFields.length > 0) {
+      console.log("Missing fields:", missingFields);
+      toast({ 
+        title: "กรุณากรอกข้อมูลให้ครบถ้วน", 
+        description: `ฟิลด์ที่ยังไม่ได้กรอก: ${missingFields.join(", ")}`,
+        variant: "destructive" 
+      });
       return;
     }
 
