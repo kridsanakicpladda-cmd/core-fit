@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import * as pdfjsLib from "pdfjs-dist";
 
 const JobRequisitions = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedRequisition, setSelectedRequisition] = useState<JobRequisition | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [canApprove, setCanApprove] = useState(false);
@@ -27,7 +29,6 @@ const JobRequisitions = () => {
   const [requisitionFormFile, setRequisitionFormFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [parsingJD, setParsingJD] = useState(false);
-  const [parsingReqForm, setParsingReqForm] = useState(false);
   const { requisitions, isLoading, createRequisition } = useJobRequisitions();
 
   const [currentPositions, setCurrentPositions] = useState([
@@ -174,55 +175,6 @@ const JobRequisitions = () => {
     }
   };
 
-  const parseRequisitionFormWithAI = async () => {
-    if (!requisitionFormFile) return;
-
-    setParsingReqForm(true);
-    try {
-      toast({ title: "กำลัง Parse ใบขออัตราด้วย AI...", description: "กรุณารอสักครู่" });
-
-      const documentText = await extractTextFromPDF(requisitionFormFile);
-
-      const { data: functionData, error: functionError } = await supabase.functions.invoke("parse-jd-document", {
-        body: { documentText, documentType: "requisition_form" },
-      });
-
-      if (functionError) throw functionError;
-
-      if (functionData.success && functionData.data) {
-        const parsed = functionData.data;
-        
-        // Auto-fill form with parsed data
-        setFormData(prev => ({
-          ...prev,
-          ...(parsed.position && { position: parsed.position }),
-          ...(parsed.department && { department: parsed.department }),
-          ...(parsed.work_location && { work_location: parsed.work_location }),
-          ...(parsed.reports_to && { reports_to: parsed.reports_to }),
-          ...(parsed.quantity && { quantity: parsed.quantity.toString() }),
-          ...(parsed.justification && { justification: parsed.justification }),
-          ...(parsed.hiring_type && { hiring_type: parsed.hiring_type as any }),
-          ...(parsed.job_grade && { job_grade: parsed.job_grade }),
-        }));
-
-        toast({ 
-          title: "Parse ใบขออัตราสำเร็จ!", 
-          description: "ข้อมูลถูกนำเข้าฟอร์มอัตโนมัติแล้ว" 
-        });
-      } else {
-        throw new Error(functionData.error || "Failed to parse requisition form");
-      }
-    } catch (error: any) {
-      console.error("Error parsing requisition form:", error);
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message || "ไม่สามารถ Parse ใบขออัตราได้",
-        variant: "destructive",
-      });
-    } finally {
-      setParsingReqForm(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,16 +194,18 @@ const JobRequisitions = () => {
 
     setUploading(true);
     let jdFileUrl: string | undefined;
+    let requisitionFormUrl: string | undefined;
 
     try {
-      if (jdFile) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) throw new Error("User not authenticated");
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
+      // Upload JD file if exists
+      if (jdFile) {
         const fileExt = jdFile.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${user.id}/${Date.now()}-jd.${fileExt}`;
 
         const { error: uploadError, data } = await supabase.storage.from("job-descriptions").upload(fileName, jdFile);
 
@@ -259,11 +213,23 @@ const JobRequisitions = () => {
         jdFileUrl = data.path;
       }
 
+      // Upload Requisition Form file if exists
+      if (requisitionFormFile) {
+        const fileExt = requisitionFormFile.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}-req-form.${fileExt}`;
+
+        const { error: uploadError, data } = await supabase.storage.from("job-descriptions").upload(fileName, requisitionFormFile);
+
+        if (uploadError) throw uploadError;
+        requisitionFormUrl = data.path;
+      }
+
       // Create requisition
       await createRequisition.mutateAsync({
         ...formData,
         quantity: parseInt(formData.quantity),
         jd_file_url: jdFileUrl,
+        requisition_form_url: requisitionFormUrl,
       });
 
       // Create job position in job_positions table
@@ -335,6 +301,9 @@ const JobRequisitions = () => {
         title: "บันทึกคำขอสำเร็จ", 
         description: "ส่งคำขออนุมัติและสร้างตำแหน่งงานเรียบร้อยแล้ว" 
       });
+
+      // Navigate to Jobs page
+      navigate("/jobs");
     } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
@@ -512,39 +481,18 @@ const JobRequisitions = () => {
                         </p>
                       </div>
                       {requisitionFormFile && (
-                        <div className="space-y-2 w-full">
-                          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg w-full">
-                            <div className="p-1.5 rounded-lg bg-blue-100">
-                              <FileText className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-blue-900 text-sm truncate">{requisitionFormFile.name}</p>
-                              <p className="text-xs text-blue-700">
-                                {(requisitionFormFile.size / 1024).toFixed(2)} KB
-                              </p>
-                            </div>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => setRequisitionFormFile(null)}>
-                              <XCircle className="h-4 w-4" />
-                            </Button>
+                        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg w-full">
+                          <div className="p-1.5 rounded-lg bg-blue-100">
+                            <FileText className="h-5 w-5 text-blue-600" />
                           </div>
-                          <Button
-                            type="button"
-                            onClick={parseRequisitionFormWithAI}
-                            disabled={parsingReqForm}
-                            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
-                            size="sm"
-                          >
-                            {parsingReqForm ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                กำลัง Parse ด้วย AI...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="h-4 w-4 mr-2" />
-                                Parse ใบขออัตราด้วย AI
-                              </>
-                            )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-blue-900 text-sm truncate">{requisitionFormFile.name}</p>
+                            <p className="text-xs text-blue-700">
+                              {(requisitionFormFile.size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setRequisitionFormFile(null)}>
+                            <XCircle className="h-4 w-4" />
                           </Button>
                         </div>
                       )}

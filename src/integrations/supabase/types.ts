@@ -270,6 +270,7 @@ export type Database = {
           replacement_for: string | null
           reports_to: string
           requested_by: string
+          requisition_form_url: string | null
           requisition_number: string
           status: string
           temporary_duration: string | null
@@ -300,6 +301,7 @@ export type Database = {
           replacement_for?: string | null
           reports_to: string
           requested_by: string
+          requisition_form_url?: string | null
           requisition_number: string
           status?: string
           temporary_duration?: string | null
@@ -330,6 +332,7 @@ export type Database = {
           replacement_for?: string | null
           reports_to?: string
           requested_by?: string
+          requisition_form_url?: string | null
           requisition_number?: string
           status?: string
           temporary_duration?: string | null
