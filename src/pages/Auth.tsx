@@ -69,6 +69,35 @@ export default function Auth() {
     }
   };
 
+  const handleMicrosoftSignIn = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          scopes: 'email',
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -159,33 +188,55 @@ export default function Auth() {
             </TabsList>
 
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">อีเมล</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">รหัสผ่าน</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+              <div className="space-y-4">
+                <Button 
+                  onClick={handleMicrosoftSignIn} 
+                  className="w-full"
+                  variant="outline"
+                  disabled={loading}
+                >
+                  {loading ? "กำลังเข้าสู่ระบบ..." : "Sign in with Microsoft"}
                 </Button>
-              </form>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      หรือ
+                    </span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email">อีเมล</Label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password">รหัสผ่าน</Label>
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+                  </Button>
+                </form>
+              </div>
             </TabsContent>
 
             <TabsContent value="signup">
