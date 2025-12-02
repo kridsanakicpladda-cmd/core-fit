@@ -128,7 +128,19 @@ All colors MUST be HSL.
     @apply font-semibold;
     color: hsl(var(--navy));
   }
+
+  /* Remove default number input spinners so users type scores manually */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
 }
+
 
 @layer utilities {
   .gradient-hero {
