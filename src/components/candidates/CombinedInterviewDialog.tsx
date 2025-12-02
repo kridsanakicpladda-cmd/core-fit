@@ -531,9 +531,9 @@ export function CombinedInterviewDialog({
                   name="manager_feedback"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ตีนสังกัด First Interview</FormLabel>
+                      <FormLabel>First Interview</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="ใส่ข้อคิดเห็นเพิ่มเติมจากการสัมภาษณ์" 
                           rows={4} 
                           {...field} 
@@ -548,9 +548,9 @@ export function CombinedInterviewDialog({
                   name="is_feedback"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ตีนสังกัด Final Interview</FormLabel>
+                      <FormLabel>Final Interview</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="ใส่ข้อคิดเห็นเพิ่มเติมจากการสัมภาษณ์" 
                           rows={4} 
                           {...field} 
