@@ -450,8 +450,8 @@ export function CombinedInterviewDialog({
                 {/* Table Header */}
                 <div className="grid grid-cols-[1fr_80px_80px] gap-2 bg-yellow-100 p-3 font-semibold text-xs border-b-2 border-black">
                   <div>หัวข้อการประเมินผลการสัมภาษณ์</div>
-                  <div className="text-center">ตีนสังกัด<br/>First Interview</div>
-                  <div className="text-center">ตีนสังกัด<br/>Final Interview</div>
+                  <div className="text-center">First Journey</div>
+                  <div className="text-center">Final Interview</div>
                 </div>
 
                 {/* Evaluation Rows */}
