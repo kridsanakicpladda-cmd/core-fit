@@ -15,11 +15,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, Download } from "lucide-react";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
 import { CombinedInterviewDialog } from "./CombinedInterviewDialog";
 import { TestScoreDialog } from "./TestScoreDialog";
 import { ResumeDialog } from "./ResumeDialog";
+import { exportCandidateEvaluationPDF } from "@/lib/exportCandidateEvaluationPDF";
 
 interface CandidateDetailDialogProps {
   candidate: {
@@ -222,6 +223,41 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
   const handleInterviewEdit = (type: 'hr') => {
     setActiveInterview(type);
+  };
+
+  const handleDownloadEvaluation = () => {
+    // Map candidate data to the format expected by exportCandidateEvaluationPDF
+    const candidateData = {
+      name: candidate.name,
+      email: candidate.email,
+      phone: candidate.phone,
+      position: candidate.position,
+      source: 'Job Application', // Default source if not available
+      aiScore: candidate.score,
+      interviews: {
+        hr: candidate.interviews?.hr ? {
+          date: candidate.interviews.hr.date,
+          passed: candidate.interviews.hr.passed,
+          feedback: candidate.interviews.hr.feedback,
+        } : undefined,
+        manager: candidate.interviews?.manager ? {
+          date: candidate.interviews.manager.date,
+          passed: candidate.interviews.manager.passed,
+          feedback: candidate.interviews.manager.feedback,
+          scores: candidate.interviews.manager.scores,
+          total_score: candidate.interviews.manager.total_score,
+        } : undefined,
+        isTeam: candidate.interviews?.isTeam ? {
+          date: candidate.interviews.isTeam.date,
+          passed: candidate.interviews.isTeam.passed,
+          feedback: candidate.interviews.isTeam.feedback,
+          scores: candidate.interviews.isTeam.scores,
+          total_score: candidate.interviews.isTeam.total_score,
+        } : undefined,
+      },
+    };
+    
+    exportCandidateEvaluationPDF(candidateData);
   };
 
   return (
@@ -626,6 +662,14 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               ดู Resume ฉบับเต็ม
             </Button>
           )}
+          <Button 
+            onClick={handleDownloadEvaluation}
+            variant="default"
+            className="bg-gradient-to-r from-primary to-primary/80"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            ดาวน์โหลดผลประเมิน
+          </Button>
         </DialogFooter>
       </DialogContent>
 
