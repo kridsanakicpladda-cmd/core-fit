@@ -50,9 +50,8 @@ interface CandidateData {
 export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
   const doc = new jsPDF();
   
-  // Add Thai font support
-  doc.addFont("https://fonts.gstatic.com/s/sarabun/v13/DtVmJx26TKEr37c9YHZJmnYI5gnOpg.ttf", "Sarabun", "normal");
-  doc.setFont("Sarabun");
+  // Use default font that supports basic characters
+  doc.setFont("helvetica");
 
   let yPosition = 20;
 
@@ -88,7 +87,7 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
       0: { fontStyle: 'bold', cellWidth: 50 },
       1: { cellWidth: 130 }
     },
-    styles: { font: 'Sarabun', fontSize: 10 },
+    styles: { fontSize: 10 },
   });
 
   yPosition = (doc as any).lastAutoTable.finalY + 15;
@@ -117,7 +116,7 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
         0: { fontStyle: 'bold', cellWidth: 50 },
         1: { cellWidth: 130 }
       },
-      styles: { font: 'Sarabun', fontSize: 10 },
+      styles: { fontSize: 10 },
     });
 
     yPosition = (doc as any).lastAutoTable.finalY + 12;
@@ -163,7 +162,7 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
         1: { cellWidth: 60, halign: 'center' },
         2: { cellWidth: 60, halign: 'center' }
       },
-      styles: { font: 'Sarabun', fontSize: 9 },
+      styles: { fontSize: 9 },
     });
 
     yPosition = (doc as any).lastAutoTable.finalY + 10;
@@ -234,7 +233,6 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
         lineColor: [0, 0, 0]
       },
       styles: { 
-        font: 'Sarabun', 
         fontSize: 8,
         cellPadding: 3
       },
@@ -263,7 +261,7 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
         lineWidth: 0.5,
         lineColor: [0, 0, 0]
       },
-      styles: { font: 'Sarabun' },
+      styles: { },
     });
 
     yPosition = (doc as any).lastAutoTable.finalY + 12;
@@ -285,9 +283,9 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
       doc.setTextColor(0, 0, 0);
 
       if (candidate.interviews?.manager?.feedback) {
-        doc.setFont("Sarabun", "bold");
+        doc.setFont("helvetica", "bold");
         doc.text("First Interview (Manager):", 14, yPosition);
-        doc.setFont("Sarabun", "normal");
+        doc.setFont("helvetica", "normal");
         yPosition += 6;
         const splitManagerFeedback = doc.splitTextToSize(candidate.interviews.manager.feedback, 180);
         doc.text(splitManagerFeedback, 14, yPosition);
@@ -295,9 +293,9 @@ export const exportCandidateEvaluationPDF = (candidate: CandidateData) => {
       }
 
       if (candidate.interviews?.isTeam?.feedback) {
-        doc.setFont("Sarabun", "bold");
+        doc.setFont("helvetica", "bold");
         doc.text("Final Interview (IS):", 14, yPosition);
-        doc.setFont("Sarabun", "normal");
+        doc.setFont("helvetica", "normal");
         yPosition += 6;
         const splitISFeedback = doc.splitTextToSize(candidate.interviews.isTeam.feedback, 180);
         doc.text(splitISFeedback, 14, yPosition);
