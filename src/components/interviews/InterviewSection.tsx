@@ -18,15 +18,7 @@ export function InterviewSection({
   onInterviewClick,
   gradientClass = "from-primary/5 to-transparent"
 }: InterviewSectionProps) {
-  const todayInterviews = interviews.filter(i => {
-    const today = new Date();
-    return i.date.toDateString() === today.toDateString();
-  });
-
-  const upcomingInterviews = interviews.filter(i => {
-    const today = new Date();
-    return i.date > today;
-  });
+  const sortedInterviews = [...interviews].sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
     <div className="space-y-4">
@@ -42,49 +34,16 @@ export function InterviewSection({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="list" className="space-y-4 mt-4">
-          {todayInterviews.length > 0 && (
-            <Card className={`border-primary/20 bg-gradient-to-br ${gradientClass}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-primary animate-pulse-glow" />
-                  สัมภาษณ์วันนี้
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {todayInterviews.map((interview) => (
-                    <InterviewCard
-                      key={interview.id}
-                      interview={interview}
-                      onClick={onInterviewClick}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {upcomingInterviews.length > 0 && (
-            <Card className="hover:shadow-hover transition-all glow-on-hover">
-              <CardHeader>
-                <CardTitle>การสัมภาษณ์ที่กำลังจะมาถึง</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {upcomingInterviews.map((interview) => (
-                    <InterviewCard
-                      key={interview.id}
-                      interview={interview}
-                      onClick={onInterviewClick}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {todayInterviews.length === 0 && upcomingInterviews.length === 0 && (
+        <TabsContent value="list" className="space-y-3 mt-4">
+          {sortedInterviews.length > 0 ? (
+            sortedInterviews.map((interview) => (
+              <InterviewCard
+                key={interview.id}
+                interview={interview}
+                onClick={onInterviewClick}
+              />
+            ))
+          ) : (
             <Card>
               <CardContent className="py-12">
                 <p className="text-center text-muted-foreground">
