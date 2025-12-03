@@ -26,6 +26,7 @@ interface EmailRequest {
   to: string;
   toName: string;
   department: string;
+  senderRole?: string;
   candidates: Candidate[];
   positions: string;
 }
@@ -59,6 +60,8 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function sendEmail(accessToken: string, emailData: EmailRequest, senderEmail: string) {
+  const senderRole = emailData.senderRole || 'HR';
+  
   const candidatesTableRows = emailData.candidates
     .map((c, index) => {
       const rowBg = index % 2 === 0 ? '#f0fdf4' : '#ffffff';
@@ -107,9 +110,10 @@ async function sendEmail(accessToken: string, emailData: EmailRequest, senderEma
                     เรียน <strong style="color: #059669;">${emailData.toName}</strong> (${emailData.department})
                   </p>
                   
-                  <p style="margin: 0 0 30px 0; font-size: 15px; color: #6b7280; line-height: 1.8;">
-                    นำส่ง Resume ของผู้สมัครตำแหน่ง <strong style="color: #059669;">${emailData.positions}</strong> 
-                    และได้โทร Pre Screen เบื้องต้นแล้ว รบกวนพิจารณา Resume ให้ภายในวันพฤหัสบดี
+                  <p style="margin: 0 0 30px 0; font-size: 15px; color: #374151; line-height: 1.8;">
+                    ฝ่าย <strong style="color: #059669;">${senderRole}</strong> ขอส่งโปรไฟล์ผู้สมัครที่ผ่านการ Pre-Screen เบื้องต้นสำหรับตำแหน่ง 
+                    <strong style="color: #059669;">${emailData.positions}</strong> 
+                    เพื่อให้ท่านพิจารณาคัดเลือกผู้สมัครที่สนใจสัมภาษณ์ เพื่อไม่ให้เป็นการเสียเวลา กรุณาส่ง Resume ที่ต้องการนัดสัมภาษณ์กลับมาภายใน 24 ชั่วโมง
                   </p>
                   
                   <!-- Candidates Table -->

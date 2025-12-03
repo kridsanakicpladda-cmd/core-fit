@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addSparkleEffect } from "@/lib/sparkle";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SendToManagerDialogProps {
   open: boolean;
@@ -45,6 +46,15 @@ export function SendToManagerDialog({
   const [isSending, setIsSending] = useState(false);
   const { profiles, isLoading } = useProfiles();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Get current user's role
+  const currentUserProfile = profiles.find((p) => p.id === user?.id);
+  const senderRole = currentUserProfile?.roles.includes("hr_manager") 
+    ? "HR" 
+    : currentUserProfile?.roles.includes("recruiter")
+    ? "HR"
+    : "IS";
 
   // Filter only managers
   const managers = profiles.filter(
@@ -81,6 +91,7 @@ export function SendToManagerDialog({
             to: selectedManager?.email,
             toName: selectedManager?.name,
             department: selectedManager?.department || 'แผนก',
+            senderRole,
             candidates: candidates.map(c => ({
               id: c.id,
               name: c.name,
@@ -158,39 +169,62 @@ export function SendToManagerDialog({
           {selectedManager && (
             <div className="space-y-3">
               <label className="text-sm font-medium">ตัวอย่างอีเมล</label>
-              <div className="border rounded-lg p-4 bg-secondary/10 space-y-3 text-sm">
+              <div className="border rounded-lg p-4 bg-secondary/10 space-y-4 text-sm">
                 <p className="font-medium">
                   เรียน {selectedManager.name} ({selectedManager.department || "แผนก"})
                 </p>
-                <div className="space-y-2 text-muted-foreground">
+                <div className="text-muted-foreground leading-relaxed">
                   <p>
-                    นำส่ง Resume ของผู้สมัครตำแหน่ง <span className="font-medium text-foreground">{positions}</span>{" "}
-                    และได้โทร Pre Screen เบื้องต้นแล้ว
+                    ฝ่าย <span className="font-semibold text-primary">{senderRole}</span> ขอส่งโปรไฟล์ผู้สมัครที่ผ่านการ Pre-Screen เบื้องต้นสำหรับตำแหน่ง{" "}
+                    <span className="font-semibold text-foreground">{positions}</span>{" "}
+                    เพื่อให้ท่านพิจารณาคัดเลือกผู้สมัครที่สนใจสัมภาษณ์ เพื่อไม่ให้เป็นการเสียเวลา กรุณาส่ง Resume ที่ต้องการนัดสัมภาษณ์กลับมาภายใน 24 ชั่วโมง
                   </p>
-                  <p>รบกวนพิจารณา Resume ให้ภายในวันพฤหัสบดี</p>
                 </div>
-                <div className="pt-3 border-t">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    ผู้สมัครที่ส่ง ({candidates.length} คน):
-                  </p>
-                  <ul className="list-disc list-inside text-xs text-muted-foreground space-y-1">
-                    {candidates.slice(0, 5).map((candidate) => (
-                      <li key={candidate.id}>
-                        {candidate.name} - {candidate.position}
-                      </li>
-                    ))}
-                    {candidates.length > 5 && (
-                      <li className="text-primary">และอีก {candidates.length - 5} คน...</li>
-                    )}
-                  </ul>
+                
+                {/* Preview Table */}
+                <div className="pt-3 border-t overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-primary/10">
+                        <th className="border border-border/50 px-2 py-1.5 text-center w-12">ลำดับ</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-left">ชื่อผู้สมัคร</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-left">ตำแหน่งที่สมัคร</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-center w-20">AI Score</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-left">Comment Pre-Screen</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {candidates.slice(0, 5).map((candidate, index) => (
+                        <tr key={candidate.id} className={index % 2 === 0 ? "bg-background" : "bg-muted/30"}>
+                          <td className="border border-border/50 px-2 py-1.5 text-center font-medium">{index + 1}</td>
+                          <td className="border border-border/50 px-2 py-1.5">{candidate.name}</td>
+                          <td className="border border-border/50 px-2 py-1.5">{candidate.position}</td>
+                          <td className="border border-border/50 px-2 py-1.5 text-center">
+                            <span className="inline-block px-2 py-0.5 bg-primary/20 text-primary rounded-full font-medium">
+                              {candidate.score || 0}%
+                            </span>
+                          </td>
+                          <td className="border border-border/50 px-2 py-1.5 text-muted-foreground">
+                            {candidate.preScreenComment || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {candidates.length > 5 && (
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      และอีก {candidates.length - 5} คน...
+                    </p>
+                  )}
                 </div>
+                
                 <div className="pt-3 flex justify-center">
                   <Button
                     variant="outline"
                     size="sm"
                     className="pointer-events-none"
                   >
-                    แจ้งผลพิจารณา
+                    แจ้งผลการพิจารณา
                   </Button>
                 </div>
               </div>
