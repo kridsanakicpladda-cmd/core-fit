@@ -528,25 +528,61 @@ const JobApplication = () => {
         photoUrl = photoData.publicUrl;
       }
 
-      // Insert candidate data
-      const { error: insertError } = await supabase
+      // Insert or update candidate data (upsert on email)
+      const { data: existingCandidate } = await supabase
         .from('candidates')
-        .insert({
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.mobilePhone || null,
-          source: 'Website',
-          resume_url: resumeUrl || null,
-          photo_url: photoUrl || null,
-        });
+        .select('id')
+        .eq('email', formData.email)
+        .maybeSingle();
 
-      if (insertError) {
-        toast({
-          title: "เกิดข้อผิดพลาด",
-          description: "ไม่สามารถบันทึกข้อมูลผู้สมัครได้",
-          variant: "destructive",
-        });
-        return;
+      let candidateId: string;
+
+      if (existingCandidate) {
+        // Update existing candidate
+        const { error: updateError } = await supabase
+          .from('candidates')
+          .update({
+            name: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.mobilePhone || null,
+            resume_url: resumeUrl || null,
+            photo_url: photoUrl || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingCandidate.id);
+
+        if (updateError) {
+          toast({
+            title: "เกิดข้อผิดพลาด",
+            description: "ไม่สามารถอัปเดตข้อมูลผู้สมัครได้",
+            variant: "destructive",
+          });
+          return;
+        }
+        candidateId = existingCandidate.id;
+      } else {
+        // Insert new candidate
+        const { data: newCandidate, error: insertError } = await supabase
+          .from('candidates')
+          .insert({
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.mobilePhone || null,
+            source: 'Website',
+            resume_url: resumeUrl || null,
+            photo_url: photoUrl || null,
+          })
+          .select('id')
+          .single();
+
+        if (insertError) {
+          toast({
+            title: "เกิดข้อผิดพลาด",
+            description: "ไม่สามารถบันทึกข้อมูลผู้สมัครได้",
+            variant: "destructive",
+          });
+          return;
+        }
+        candidateId = newCandidate.id;
       }
 
       // Also add to context for UI update
