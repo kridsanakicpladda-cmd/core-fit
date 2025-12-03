@@ -24,23 +24,30 @@ import { exportCandidateEvaluationPDF } from "@/lib/exportCandidateEvaluationPDF
 
 interface CandidateDetailDialogProps {
   candidate: {
-    id: number;
+    id: number | string;
     name: string;
-    position: string;
-    experience: string;
-    score: number;
-    skills: string[];
-    appliedDate: string;
-    status: string;
+    position?: string;
+    position_title?: string;
+    experience?: string;
+    score?: number;
+    ai_fit_score?: number | null;
+    skills?: string[];
+    appliedDate?: string;
+    applied_at?: string;
+    status?: string;
+    stage?: string;
     pipelineStatus?: string;
-    email: string;
-    phone: string;
+    email?: string;
+    phone?: string | null;
     location?: string;
     education?: string;
     summary?: string;
     previousCompany?: string;
     photoUrl?: string;
+    photo_url?: string | null;
     resumeUrl?: string;
+    resume_url?: string | null;
+    source?: string;
     testScores?: {
       hrTest?: number;
       departmentTest?: number;
@@ -83,9 +90,9 @@ interface CandidateDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
   onDelete: () => void;
-  onInterviewUpdate: (candidateId: number, interviews: any) => void;
-  onTestScoreUpdate: (candidateId: number, testScores: any) => void;
-  onStatusChange?: (candidateId: number, status: string) => void;
+  onInterviewUpdate: (candidateId: number | string, interviews: any) => void;
+  onTestScoreUpdate: (candidateId: number | string, testScores: any) => void;
+  onStatusChange?: (candidateId: number | string, status: string) => void;
 }
 
 const statusColors = {
@@ -229,11 +236,11 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     // Map candidate data to the format expected by exportCandidateEvaluationPDF
     const candidateData = {
       name: candidate.name,
-      email: candidate.email,
-      phone: candidate.phone,
-      position: candidate.position,
-      source: 'Job Application', // Default source if not available
-      aiScore: candidate.score,
+      email: candidate.email || '',
+      phone: candidate.phone || '',
+      position: candidate.position || candidate.position_title || '',
+      source: candidate.source || 'Job Application',
+      aiScore: candidate.score ?? candidate.ai_fit_score ?? 0,
       interviews: {
         hr: candidate.interviews?.hr ? {
           date: candidate.interviews.hr.date,
@@ -268,7 +275,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
             <div className="flex items-center gap-4 flex-1">
               {/* Candidate Photo */}
               <Avatar className="h-20 w-20 border-4 border-primary/20 shadow-lg">
-                <AvatarImage src={candidate.photoUrl} alt={candidate.name} />
+                <AvatarImage src={candidate.photoUrl || candidate.photo_url || undefined} alt={candidate.name} />
                 <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary to-primary/80 text-white">
                   {candidate.name.charAt(0)}
                 </AvatarFallback>
@@ -278,11 +285,11 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               <div className="flex-1">
                 <DialogTitle className="text-2xl mb-2">{candidate.name}</DialogTitle>
                 <div className="flex items-center gap-2">
-                  <Badge className={statusColors[candidate.status as keyof typeof statusColors]}>
-                    {statusLabels[candidate.status as keyof typeof statusLabels]}
+                  <Badge className={statusColors[(candidate.status || candidate.stage || 'screening') as keyof typeof statusColors] || statusColors.screening}>
+                    {statusLabels[(candidate.status || candidate.stage || 'screening') as keyof typeof statusLabels] || (candidate.stage || 'New')}
                   </Badge>
                   <span className="text-sm text-muted-foreground">
-                    สมัครเมื่อ: {candidate.appliedDate}
+                    สมัครเมื่อ: {candidate.appliedDate || candidate.applied_at || 'ไม่ระบุ'}
                   </span>
                 </div>
               </div>
@@ -291,9 +298,9 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
             {/* Score Badge - Moved to top right */}
             <div className="relative flex-shrink-0">
               <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                {candidate.score}
+                {candidate.score ?? candidate.ai_fit_score ?? '-'}
               </div>
-              {candidate.score >= 90 && (
+              {(candidate.score ?? candidate.ai_fit_score ?? 0) >= 90 && (
                 <div className="absolute -top-1 -right-1 h-6 w-6 bg-yellow-400 rounded-full flex items-center justify-center">
                   <Star className="h-3 w-3 text-white fill-white" />
                 </div>
@@ -340,18 +347,24 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           <div>
             <h3 className="text-lg font-semibold mb-3">ข้อมูลติดต่อ</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{candidate.email}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{candidate.phone}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{candidate.location}</span>
-              </div>
+              {candidate.email && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{candidate.email}</span>
+                </div>
+              )}
+              {candidate.phone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{candidate.phone}</span>
+                </div>
+              )}
+              {candidate.location && (
+                <div className="flex items-center gap-3 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{candidate.location}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -364,14 +377,18 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               <div className="flex items-center gap-3 text-sm">
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <span className="font-medium">{candidate.position}</span>
-                  <span className="text-muted-foreground ml-2">• {candidate.experience}</span>
+                  <span className="font-medium">{candidate.position || candidate.position_title || 'ไม่ระบุ'}</span>
+                  {candidate.experience && (
+                    <span className="text-muted-foreground ml-2">• {candidate.experience}</span>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                <span>{candidate.education}</span>
-              </div>
+              {candidate.education && (
+                <div className="flex items-center gap-3 text-sm">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  <span>{candidate.education}</span>
+                </div>
+              )}
               {candidate.previousCompany && (
                 <div className="flex items-center gap-3 text-sm">
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -387,7 +404,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           <div>
             <h3 className="text-lg font-semibold mb-3">ข้อมูลสรุป</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {candidate.summary}
+              {candidate.summary || 'ไม่มีข้อมูล'}
             </p>
           </div>
 
@@ -436,23 +453,25 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           <Separator />
 
           {/* Skills */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">ทักษะ</h3>
-            <div className="flex flex-wrap gap-2">
-              {candidate.skills.map((skill, index) => (
-                <Badge key={index} variant="outline" className="text-sm">
-                  {skill}
-                </Badge>
-              ))}
+          {(candidate.skills && candidate.skills.length > 0) && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">ทักษะ</h3>
+              <div className="flex flex-wrap gap-2">
+                {candidate.skills.map((skill, index) => (
+                  <Badge key={index} variant="outline" className="text-sm">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* AI Fit Score Breakdown */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">AI Fit Score</h3>
               <div className="text-2xl font-bold text-primary">
-                {candidate.score}%
+                {candidate.score ?? candidate.ai_fit_score ?? '-'}%
                 <span className="text-sm text-muted-foreground ml-1">JD Match</span>
               </div>
             </div>
@@ -708,7 +727,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
       <CombinedInterviewDialog
         candidateName={candidate.name}
-        position={candidate.position}
+        position={candidate.position || candidate.position_title || ''}
         managerInterview={candidate.interviews?.manager}
         isInterview={candidate.interviews?.isTeam}
         open={combinedInterviewOpen}
