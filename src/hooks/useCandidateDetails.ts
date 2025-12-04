@@ -1,22 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export interface CandidateDetails {
   id: string;
   candidate_id: string;
-  position: string | null;
-  expected_salary: string | null;
-  title_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  nickname: string | null;
-  present_address: string | null;
-  moo: string | null;
-  district: string | null;
-  sub_district: string | null;
-  province: string | null;
-  zip_code: string | null;
-  mobile_phone: string | null;
   birth_date: string | null;
   age: string | null;
   id_card: string | null;
@@ -33,11 +21,13 @@ export interface CandidateDetails {
   emergency_relation: string | null;
   emergency_address: string | null;
   emergency_phone: string | null;
-  computer_skill: boolean | null;
+  color_blindness: string | null;
+  pregnant: string | null;
   driving_car: boolean | null;
   driving_car_license_no: string | null;
   driving_motorcycle: boolean | null;
   driving_motorcycle_license_no: string | null;
+  contagious_disease: string | null;
   other_skills: string | null;
   training_curriculums: string | null;
   worked_at_icp_before: string | null;
@@ -48,47 +38,34 @@ export interface CandidateDetails {
   criminal_record_details: string | null;
   serious_illness: string | null;
   serious_illness_details: string | null;
-  color_blindness: string | null;
-  pregnant: string | null;
-  contagious_disease: string | null;
+  position: string | null;
+  expected_salary: string | null;
+  title_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  nickname: string | null;
+  present_address: string | null;
+  moo: string | null;
+  district: string | null;
+  sub_district: string | null;
+  province: string | null;
+  zip_code: string | null;
+  mobile_phone: string | null;
   hr_test_score: number | null;
   department_test_score: number | null;
-  educations: Array<{
-    level: string;
-    institution: string;
-    major: string;
-    gpa: string;
-    yearGraduated: string;
-  }> | null;
-  work_experiences: Array<{
-    company: string;
-    position: string;
-    duration: string;
-    salary: string;
-    responsibilities: string;
-    reason: string;
-  }> | null;
-  family_members: Array<{
-    name: string;
-    relationship: string;
-    age: string;
-    occupation: string;
-  }> | null;
-  language_skills: Array<{
-    language: string;
-    spoken: string;
-    written: string;
-    understand: string;
-  }> | null;
+  computer_skill: boolean | null;
+  educations: any[];
+  work_experiences: any[];
+  family_members: any[];
+  language_skills: any[];
   privacy_consent: boolean | null;
-  created_at: string;
-  updated_at: string;
 }
 
 export function useCandidateDetails(candidateId: string | null) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const query = useQuery({
+  const { data: details, isLoading } = useQuery({
     queryKey: ["candidate-details", candidateId],
     queryFn: async () => {
       if (!candidateId) return null;
@@ -99,22 +76,24 @@ export function useCandidateDetails(candidateId: string | null) {
         .eq("candidate_id", candidateId)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching candidate details:", error);
-        return null;
-      }
-
+      if (error) throw error;
       return data as CandidateDetails | null;
     },
     enabled: !!candidateId,
   });
 
+  // Update test scores
   const updateTestScoresMutation = useMutation({
-    mutationFn: async ({ candidateId, hrTestScore, departmentTestScore }: { 
-      candidateId: string; 
-      hrTestScore?: number; 
+    mutationFn: async ({
+      candidateId,
+      hrTestScore,
+      departmentTestScore,
+    }: {
+      candidateId: string;
+      hrTestScore?: number;
       departmentTestScore?: number;
     }) => {
+      // Check if record exists
       const { data: existing } = await supabase
         .from("candidate_details")
         .select("id")
@@ -122,38 +101,69 @@ export function useCandidateDetails(candidateId: string | null) {
         .maybeSingle();
 
       if (existing) {
+        // Update existing
         const { error } = await supabase
           .from("candidate_details")
           .update({
-            hr_test_score: hrTestScore ?? null,
-            department_test_score: departmentTestScore ?? null,
+            hr_test_score: hrTestScore,
+            department_test_score: departmentTestScore,
           })
           .eq("candidate_id", candidateId);
         if (error) throw error;
       } else {
+        // Insert new
         const { error } = await supabase
           .from("candidate_details")
           .insert({
             candidate_id: candidateId,
-            hr_test_score: hrTestScore ?? null,
-            department_test_score: departmentTestScore ?? null,
+            hr_test_score: hrTestScore,
+            department_test_score: departmentTestScore,
           });
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["candidate-details", candidateId] });
+      toast({
+        title: "บันทึกสำเร็จ",
+        description: "บันทึกคะแนนทดสอบเรียบร้อยแล้ว",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
+  // Update Pre-Screen interview
   const updatePreScreenMutation = useMutation({
-    mutationFn: async ({ applicationId, date, passed, feedback }: { 
-      applicationId: string; 
+    mutationFn: async ({
+      applicationId,
+      date,
+      passed,
+      feedback,
+    }: {
+      applicationId: string;
       date: string;
       passed: boolean;
       feedback: string;
     }) => {
-      // Check if there's an existing pre-screen interview
+      // Parse the date
+      let scheduledAt: string | null = null;
+      if (date) {
+        const dateParts = date.split('/');
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
+          scheduledAt = new Date(year, month, day).toISOString();
+        }
+      }
+
+      // Check if pre-screen interview exists
       const { data: existing } = await supabase
         .from("interviews")
         .select("id")
@@ -161,20 +171,13 @@ export function useCandidateDetails(candidateId: string | null) {
         .eq("status", "pre_screen")
         .maybeSingle();
 
-      // Parse date from DD/MM/YYYY to ISO format
-      const dateParts = date.split('/');
-      const isoDate = dateParts.length === 3 
-        ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T09:00:00`
-        : new Date().toISOString();
-
       if (existing) {
         const { error } = await supabase
           .from("interviews")
           .update({
-            scheduled_at: isoDate,
+            scheduled_at: scheduledAt,
             result: passed ? "passed" : "failed",
             notes: feedback,
-            status: "pre_screen",
           })
           .eq("id", existing.id);
         if (error) throw error;
@@ -183,10 +186,10 @@ export function useCandidateDetails(candidateId: string | null) {
           .from("interviews")
           .insert({
             application_id: applicationId,
-            scheduled_at: isoDate,
+            status: "pre_screen",
+            scheduled_at: scheduledAt,
             result: passed ? "passed" : "failed",
             notes: feedback,
-            status: "pre_screen",
           });
         if (error) throw error;
       }
@@ -194,47 +197,288 @@ export function useCandidateDetails(candidateId: string | null) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["candidate-details", candidateId] });
       queryClient.invalidateQueries({ queryKey: ["candidates-data"] });
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+      toast({
+        title: "บันทึกสำเร็จ",
+        description: "บันทึกผล Pre-Screen เรียบร้อยแล้ว",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  // Query for pre-screen interview data
+  // Update First Interview (Manager)
+  const updateFirstInterviewMutation = useMutation({
+    mutationFn: async ({
+      applicationId,
+      date,
+      passed,
+      feedback,
+      scores,
+      totalScore,
+    }: {
+      applicationId: string;
+      date: string;
+      passed: boolean;
+      feedback: string;
+      scores: Record<string, number>;
+      totalScore: number;
+    }) => {
+      let scheduledAt: string | null = null;
+      if (date) {
+        const dateParts = date.split('/');
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
+          scheduledAt = new Date(year, month, day).toISOString();
+        }
+      }
+
+      const notesData = JSON.stringify({
+        type: "first_interview",
+        scores,
+        feedback,
+      });
+
+      // Check if first interview exists
+      const { data: existing } = await supabase
+        .from("interviews")
+        .select("id")
+        .eq("application_id", applicationId)
+        .contains("notes", { type: "first_interview" })
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("interviews")
+          .update({
+            scheduled_at: scheduledAt,
+            result: passed ? "passed" : "failed",
+            notes: notesData,
+            score: totalScore,
+            status: "completed",
+          })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("interviews")
+          .insert({
+            application_id: applicationId,
+            status: "completed",
+            scheduled_at: scheduledAt,
+            result: passed ? "passed" : "failed",
+            notes: notesData,
+            score: totalScore,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidate-details", candidateId] });
+      queryClient.invalidateQueries({ queryKey: ["candidates-data"] });
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+      toast({
+        title: "บันทึกสำเร็จ",
+        description: "บันทึกผล First Interview เรียบร้อยแล้ว",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update Final Interview (IS)
+  const updateFinalInterviewMutation = useMutation({
+    mutationFn: async ({
+      applicationId,
+      date,
+      passed,
+      feedback,
+      scores,
+      totalScore,
+    }: {
+      applicationId: string;
+      date: string;
+      passed: boolean;
+      feedback: string;
+      scores: Record<string, number>;
+      totalScore: number;
+    }) => {
+      let scheduledAt: string | null = null;
+      if (date) {
+        const dateParts = date.split('/');
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
+          scheduledAt = new Date(year, month, day).toISOString();
+        }
+      }
+
+      const notesData = JSON.stringify({
+        type: "final_interview",
+        scores,
+        feedback,
+      });
+
+      // Check if final interview exists
+      const { data: existing } = await supabase
+        .from("interviews")
+        .select("id")
+        .eq("application_id", applicationId)
+        .contains("notes", { type: "final_interview" })
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("interviews")
+          .update({
+            scheduled_at: scheduledAt,
+            result: passed ? "passed" : "failed",
+            notes: notesData,
+            score: totalScore,
+            status: "completed",
+          })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("interviews")
+          .insert({
+            application_id: applicationId,
+            status: "completed",
+            scheduled_at: scheduledAt,
+            result: passed ? "passed" : "failed",
+            notes: notesData,
+            score: totalScore,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidate-details", candidateId] });
+      queryClient.invalidateQueries({ queryKey: ["candidates-data"] });
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+      toast({
+        title: "บันทึกสำเร็จ",
+        description: "บันทึกผล Final Interview เรียบร้อยแล้ว",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Query for pre-screen interview
   const preScreenQuery = useQuery({
     queryKey: ["pre-screen-interview", candidateId],
     queryFn: async () => {
       if (!candidateId) return null;
-      
-      // First get application_id from candidates
-      const { data: applications } = await supabase
+
+      // First get application_id for this candidate
+      const { data: application } = await supabase
         .from("applications")
         .select("id")
         .eq("candidate_id", candidateId)
-        .limit(1);
+        .maybeSingle();
 
-      if (!applications || applications.length === 0) return null;
+      if (!application) return null;
 
       const { data, error } = await supabase
         .from("interviews")
         .select("*")
-        .eq("application_id", applications[0].id)
+        .eq("application_id", application.id)
         .eq("status", "pre_screen")
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching pre-screen interview:", error);
-        return null;
-      }
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!candidateId,
+  });
 
+  // Query for first interview
+  const firstInterviewQuery = useQuery({
+    queryKey: ["first-interview", candidateId],
+    queryFn: async () => {
+      if (!candidateId) return null;
+
+      const { data: application } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("candidate_id", candidateId)
+        .maybeSingle();
+
+      if (!application) return null;
+
+      const { data, error } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("application_id", application.id)
+        .filter("notes", "cs", '{"type":"first_interview"}')
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!candidateId,
+  });
+
+  // Query for final interview
+  const finalInterviewQuery = useQuery({
+    queryKey: ["final-interview", candidateId],
+    queryFn: async () => {
+      if (!candidateId) return null;
+
+      const { data: application } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("candidate_id", candidateId)
+        .maybeSingle();
+
+      if (!application) return null;
+
+      const { data, error } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("application_id", application.id)
+        .filter("notes", "cs", '{"type":"final_interview"}')
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
       return data;
     },
     enabled: !!candidateId,
   });
 
   return {
-    ...query,
+    data: details,
+    isLoading,
     updateTestScores: updateTestScoresMutation.mutate,
     isUpdating: updateTestScoresMutation.isPending,
     updatePreScreen: updatePreScreenMutation.mutate,
     isUpdatingPreScreen: updatePreScreenMutation.isPending,
+    updateFirstInterview: updateFirstInterviewMutation.mutate,
+    isUpdatingFirstInterview: updateFirstInterviewMutation.isPending,
+    updateFinalInterview: updateFinalInterviewMutation.mutate,
+    isUpdatingFinalInterview: updateFinalInterviewMutation.isPending,
     preScreenInterview: preScreenQuery.data,
+    firstInterview: firstInterviewQuery.data,
+    finalInterview: finalInterviewQuery.data,
   };
 }

@@ -132,9 +132,17 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const [selectedPipelineStep, setSelectedPipelineStep] = useState<string | null>(null);
   
   // Fetch candidate details from candidate_details table
-  const { data: candidateDetails, isLoading: detailsLoading, updateTestScores, updatePreScreen, preScreenInterview } = useCandidateDetails(
-    candidate?.id?.toString() || null
-  );
+  const { 
+    data: candidateDetails, 
+    isLoading: detailsLoading, 
+    updateTestScores, 
+    updatePreScreen, 
+    updateFirstInterview,
+    updateFinalInterview,
+    preScreenInterview,
+    firstInterview,
+    finalInterview,
+  } = useCandidateDetails(candidate?.id?.toString() || null);
   
   if (!candidate) return null;
 
@@ -242,6 +250,33 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   };
 
   const handleCombinedInterviewSave = (interviews: any) => {
+    // Save to database
+    if (candidate.application_id) {
+      // Save First Interview (Manager)
+      if (interviews.manager?.date) {
+        updateFirstInterview({
+          applicationId: candidate.application_id,
+          date: interviews.manager.date,
+          passed: interviews.manager.passed,
+          feedback: interviews.manager.feedback,
+          scores: interviews.manager.scores,
+          totalScore: interviews.manager.total_score,
+        });
+      }
+      
+      // Save Final Interview (IS)
+      if (interviews.isTeam?.date) {
+        updateFinalInterview({
+          applicationId: candidate.application_id,
+          date: interviews.isTeam.date,
+          passed: interviews.isTeam.passed,
+          feedback: interviews.isTeam.feedback,
+          scores: interviews.isTeam.scores,
+          totalScore: interviews.isTeam.total_score,
+        });
+      }
+    }
+
     const updatedInterviews = {
       ...candidate.interviews,
       manager: interviews.manager,
@@ -653,18 +688,26 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                     <div className="space-y-2 text-sm">
                       <div>
                         <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
-                        <div>{candidate.interviews?.manager?.date || "-"}</div>
+                        <div>
+                          {firstInterview?.scheduled_at 
+                            ? new Date(firstInterview.scheduled_at).toLocaleDateString('th-TH')
+                            : candidate.interviews?.manager?.date || "-"}
+                        </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">คะแนนรวม</div>
                         <div className="font-semibold text-primary">
-                          {candidate.interviews?.manager?.total_score || "-"} / 70
+                          {firstInterview?.score || candidate.interviews?.manager?.total_score || "-"} / 70
                         </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
                         <div>
-                          {candidate.interviews?.manager?.passed !== undefined ? (
+                          {firstInterview?.result ? (
+                            <Badge variant={firstInterview.result === "passed" ? "default" : "destructive"}>
+                              {firstInterview.result === "passed" ? "ผ่าน" : "ไม่ผ่าน"}
+                            </Badge>
+                          ) : candidate.interviews?.manager?.passed !== undefined ? (
                             <Badge variant={candidate.interviews.manager.passed ? "default" : "destructive"}>
                               {candidate.interviews.manager.passed ? "ผ่าน" : "ไม่ผ่าน"}
                             </Badge>
@@ -673,7 +716,19 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">Comment</div>
-                        <div className="text-xs">{candidate.interviews?.manager?.feedback || "-"}</div>
+                        <div className="text-xs">
+                          {(() => {
+                            if (firstInterview?.notes) {
+                              try {
+                                const data = JSON.parse(firstInterview.notes);
+                                return data.feedback || "-";
+                              } catch {
+                                return firstInterview.notes;
+                              }
+                            }
+                            return candidate.interviews?.manager?.feedback || "-";
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -684,18 +739,26 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                     <div className="space-y-2 text-sm">
                       <div>
                         <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
-                        <div>{candidate.interviews?.isTeam?.date || "-"}</div>
+                        <div>
+                          {finalInterview?.scheduled_at 
+                            ? new Date(finalInterview.scheduled_at).toLocaleDateString('th-TH')
+                            : candidate.interviews?.isTeam?.date || "-"}
+                        </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">คะแนนรวม</div>
                         <div className="font-semibold text-primary">
-                          {candidate.interviews?.isTeam?.total_score || "-"} / 70
+                          {finalInterview?.score || candidate.interviews?.isTeam?.total_score || "-"} / 70
                         </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
                         <div>
-                          {candidate.interviews?.isTeam?.passed !== undefined ? (
+                          {finalInterview?.result ? (
+                            <Badge variant={finalInterview.result === "passed" ? "default" : "destructive"}>
+                              {finalInterview.result === "passed" ? "ผ่าน" : "ไม่ผ่าน"}
+                            </Badge>
+                          ) : candidate.interviews?.isTeam?.passed !== undefined ? (
                             <Badge variant={candidate.interviews.isTeam.passed ? "default" : "destructive"}>
                               {candidate.interviews.isTeam.passed ? "ผ่าน" : "ไม่ผ่าน"}
                             </Badge>
@@ -704,7 +767,19 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">Comment</div>
-                        <div className="text-xs">{candidate.interviews?.isTeam?.feedback || "-"}</div>
+                        <div className="text-xs">
+                          {(() => {
+                            if (finalInterview?.notes) {
+                              try {
+                                const data = JSON.parse(finalInterview.notes);
+                                return data.feedback || "-";
+                              } catch {
+                                return finalInterview.notes;
+                              }
+                            }
+                            return candidate.interviews?.isTeam?.feedback || "-";
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
