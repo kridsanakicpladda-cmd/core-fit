@@ -448,6 +448,7 @@ export type Database = {
           id: string
           jd_file_url: string | null
           job_description_no: string | null
+          job_duties: string | null
           job_grade: string | null
           justification: string
           marital_status: string | null
@@ -479,6 +480,7 @@ export type Database = {
           id?: string
           jd_file_url?: string | null
           job_description_no?: string | null
+          job_duties?: string | null
           job_grade?: string | null
           justification: string
           marital_status?: string | null
@@ -510,6 +512,7 @@ export type Database = {
           id?: string
           jd_file_url?: string | null
           job_description_no?: string | null
+          job_duties?: string | null
           job_grade?: string | null
           justification?: string
           marital_status?: string | null
