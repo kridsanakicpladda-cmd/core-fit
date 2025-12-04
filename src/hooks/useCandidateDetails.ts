@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface CandidateDetails {
@@ -51,6 +51,8 @@ export interface CandidateDetails {
   color_blindness: string | null;
   pregnant: string | null;
   contagious_disease: string | null;
+  hr_test_score: number | null;
+  department_test_score: number | null;
   educations: Array<{
     level: string;
     institution: string;
@@ -84,7 +86,9 @@ export interface CandidateDetails {
 }
 
 export function useCandidateDetails(candidateId: string | null) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["candidate-details", candidateId],
     queryFn: async () => {
       if (!candidateId) return null;
@@ -104,4 +108,47 @@ export function useCandidateDetails(candidateId: string | null) {
     },
     enabled: !!candidateId,
   });
+
+  const updateTestScoresMutation = useMutation({
+    mutationFn: async ({ candidateId, hrTestScore, departmentTestScore }: { 
+      candidateId: string; 
+      hrTestScore?: number; 
+      departmentTestScore?: number;
+    }) => {
+      const { data: existing } = await supabase
+        .from("candidate_details")
+        .select("id")
+        .eq("candidate_id", candidateId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("candidate_details")
+          .update({
+            hr_test_score: hrTestScore ?? null,
+            department_test_score: departmentTestScore ?? null,
+          })
+          .eq("candidate_id", candidateId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("candidate_details")
+          .insert({
+            candidate_id: candidateId,
+            hr_test_score: hrTestScore ?? null,
+            department_test_score: departmentTestScore ?? null,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidate-details", candidateId] });
+    },
+  });
+
+  return {
+    ...query,
+    updateTestScores: updateTestScoresMutation.mutate,
+    isUpdating: updateTestScoresMutation.isPending,
+  };
 }

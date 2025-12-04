@@ -131,7 +131,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const [selectedPipelineStep, setSelectedPipelineStep] = useState<string | null>(null);
   
   // Fetch candidate details from candidate_details table
-  const { data: candidateDetails, isLoading: detailsLoading } = useCandidateDetails(
+  const { data: candidateDetails, isLoading: detailsLoading, updateTestScores } = useCandidateDetails(
     candidate?.id?.toString() || null
   );
   
@@ -212,7 +212,12 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     setShowDeleteAlert(false);
   };
 
-  const handleTestScoreSave = (testScores: any) => {
+  const handleTestScoreSave = (testScores: { hrTest?: number; departmentTest?: number }) => {
+    updateTestScores({
+      candidateId: candidate.id.toString(),
+      hrTestScore: testScores.hrTest,
+      departmentTestScore: testScores.departmentTest,
+    });
     onTestScoreUpdate(candidate.id, testScores);
   };
 
@@ -563,13 +568,13 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               <div className="p-4 border rounded-lg bg-muted/20">
                 <div className="text-sm text-muted-foreground mb-1">แบบทดสอบส่วนกลาง (HR)</div>
                 <div className="text-3xl font-bold text-primary">
-                  {candidate.testScores?.hrTest || "-"}
+                  {candidateDetails?.hr_test_score ?? candidate.testScores?.hrTest ?? "-"}
                 </div>
               </div>
               <div className="p-4 border rounded-lg bg-muted/20">
                 <div className="text-sm text-muted-foreground mb-1">แบบทดสอบเฉพาะแผนก</div>
                 <div className="text-3xl font-bold text-primary">
-                  {candidate.testScores?.departmentTest || "-"}
+                  {candidateDetails?.department_test_score ?? candidate.testScores?.departmentTest ?? "-"}
                 </div>
               </div>
             </div>
@@ -735,7 +740,10 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
       </AlertDialog>
 
       <TestScoreDialog
-        testScores={candidate.testScores}
+        testScores={{
+          hrTest: candidateDetails?.hr_test_score ?? candidate.testScores?.hrTest,
+          departmentTest: candidateDetails?.department_test_score ?? candidate.testScores?.departmentTest,
+        }}
         open={showTestScoreDialog}
         onOpenChange={setShowTestScoreDialog}
         onSave={handleTestScoreSave}

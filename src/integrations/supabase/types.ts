@@ -71,6 +71,7 @@ export type Database = {
           created_at: string
           criminal_record: string | null
           criminal_record_details: string | null
+          department_test_score: number | null
           district: string | null
           driving_car: boolean | null
           driving_car_license_no: string | null
@@ -85,6 +86,7 @@ export type Database = {
           family_members: Json | null
           first_name: string | null
           height: string | null
+          hr_test_score: number | null
           id: string
           id_card: string | null
           language_skills: Json | null
@@ -129,6 +131,7 @@ export type Database = {
           created_at?: string
           criminal_record?: string | null
           criminal_record_details?: string | null
+          department_test_score?: number | null
           district?: string | null
           driving_car?: boolean | null
           driving_car_license_no?: string | null
@@ -143,6 +146,7 @@ export type Database = {
           family_members?: Json | null
           first_name?: string | null
           height?: string | null
+          hr_test_score?: number | null
           id?: string
           id_card?: string | null
           language_skills?: Json | null
@@ -187,6 +191,7 @@ export type Database = {
           created_at?: string
           criminal_record?: string | null
           criminal_record_details?: string | null
+          department_test_score?: number | null
           district?: string | null
           driving_car?: boolean | null
           driving_car_license_no?: string | null
@@ -201,6 +206,7 @@ export type Database = {
           family_members?: Json | null
           first_name?: string | null
           height?: string | null
+          hr_test_score?: number | null
           id?: string
           id_card?: string | null
           language_skills?: Json | null
