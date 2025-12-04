@@ -49,6 +49,7 @@ interface CandidateDetailDialogProps {
     resumeUrl?: string;
     resume_url?: string | null;
     source?: string;
+    application_id?: string | null;
     testScores?: {
       hrTest?: number;
       departmentTest?: number;
@@ -131,7 +132,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const [selectedPipelineStep, setSelectedPipelineStep] = useState<string | null>(null);
   
   // Fetch candidate details from candidate_details table
-  const { data: candidateDetails, isLoading: detailsLoading, updateTestScores } = useCandidateDetails(
+  const { data: candidateDetails, isLoading: detailsLoading, updateTestScores, updatePreScreen, preScreenInterview } = useCandidateDetails(
     candidate?.id?.toString() || null
   );
   
@@ -221,7 +222,17 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
     onTestScoreUpdate(candidate.id, testScores);
   };
 
-  const handleSingleInterviewSave = (interviewData: any) => {
+  const handleSingleInterviewSave = (interviewData: { date: string; passed: boolean; feedback: string }) => {
+    // Save to database if it's HR/Pre-screen interview
+    if (activeInterview === 'hr' && candidate.application_id) {
+      updatePreScreen({
+        applicationId: candidate.application_id,
+        date: interviewData.date,
+        passed: interviewData.passed,
+        feedback: interviewData.feedback,
+      });
+    }
+    
     const updatedInterviews = {
       ...candidate.interviews,
       [activeInterview as string]: interviewData,
@@ -598,12 +609,20 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground mb-1">วันที่สัมภาษณ์</div>
-                    <div>{candidate.interviews?.hr?.date || "-"}</div>
+                    <div>
+                      {preScreenInterview?.scheduled_at 
+                        ? new Date(preScreenInterview.scheduled_at).toLocaleDateString('th-TH')
+                        : candidate.interviews?.hr?.date || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground mb-1">ผลการสัมภาษณ์</div>
                     <div>
-                      {candidate.interviews?.hr?.passed !== undefined ? (
+                      {preScreenInterview?.result ? (
+                        <Badge variant={preScreenInterview.result === "passed" ? "default" : "destructive"}>
+                          {preScreenInterview.result === "passed" ? "ผ่าน" : "ไม่ผ่าน"}
+                        </Badge>
+                      ) : candidate.interviews?.hr?.passed !== undefined ? (
                         <Badge variant={candidate.interviews.hr.passed ? "default" : "destructive"}>
                           {candidate.interviews.hr.passed ? "ผ่าน" : "ไม่ผ่าน"}
                         </Badge>
@@ -612,7 +631,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   </div>
                   <div className="col-span-3">
                     <div className="text-muted-foreground mb-1">Comment</div>
-                    <div>{candidate.interviews?.hr?.feedback || "-"}</div>
+                    <div>{preScreenInterview?.notes || candidate.interviews?.hr?.feedback || "-"}</div>
                   </div>
                 </div>
               </div>
@@ -751,7 +770,13 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
       <SingleInterviewDialog
         title="แก้ไขการสัมภาษณ์โดย HR"
-        interview={candidate.interviews?.hr}
+        interview={preScreenInterview ? {
+          date: preScreenInterview.scheduled_at 
+            ? new Date(preScreenInterview.scheduled_at).toLocaleDateString('en-GB').split('/').join('/')
+            : '',
+          passed: preScreenInterview.result === "passed",
+          feedback: preScreenInterview.notes || '',
+        } : candidate.interviews?.hr}
         open={activeInterview === 'hr'}
         onOpenChange={(open) => !open && setActiveInterview(null)}
         onSave={handleSingleInterviewSave}

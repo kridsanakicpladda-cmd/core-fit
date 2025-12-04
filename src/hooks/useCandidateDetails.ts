@@ -146,9 +146,95 @@ export function useCandidateDetails(candidateId: string | null) {
     },
   });
 
+  const updatePreScreenMutation = useMutation({
+    mutationFn: async ({ applicationId, date, passed, feedback }: { 
+      applicationId: string; 
+      date: string;
+      passed: boolean;
+      feedback: string;
+    }) => {
+      // Check if there's an existing pre-screen interview
+      const { data: existing } = await supabase
+        .from("interviews")
+        .select("id")
+        .eq("application_id", applicationId)
+        .eq("status", "pre_screen")
+        .maybeSingle();
+
+      // Parse date from DD/MM/YYYY to ISO format
+      const dateParts = date.split('/');
+      const isoDate = dateParts.length === 3 
+        ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T09:00:00`
+        : new Date().toISOString();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("interviews")
+          .update({
+            scheduled_at: isoDate,
+            result: passed ? "passed" : "failed",
+            notes: feedback,
+            status: "pre_screen",
+          })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("interviews")
+          .insert({
+            application_id: applicationId,
+            scheduled_at: isoDate,
+            result: passed ? "passed" : "failed",
+            notes: feedback,
+            status: "pre_screen",
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidate-details", candidateId] });
+      queryClient.invalidateQueries({ queryKey: ["candidates-data"] });
+    },
+  });
+
+  // Query for pre-screen interview data
+  const preScreenQuery = useQuery({
+    queryKey: ["pre-screen-interview", candidateId],
+    queryFn: async () => {
+      if (!candidateId) return null;
+      
+      // First get application_id from candidates
+      const { data: applications } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("candidate_id", candidateId)
+        .limit(1);
+
+      if (!applications || applications.length === 0) return null;
+
+      const { data, error } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("application_id", applications[0].id)
+        .eq("status", "pre_screen")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching pre-screen interview:", error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!candidateId,
+  });
+
   return {
     ...query,
     updateTestScores: updateTestScoresMutation.mutate,
     isUpdating: updateTestScoresMutation.isPending,
+    updatePreScreen: updatePreScreenMutation.mutate,
+    isUpdatingPreScreen: updatePreScreenMutation.isPending,
+    preScreenInterview: preScreenQuery.data,
   };
 }
