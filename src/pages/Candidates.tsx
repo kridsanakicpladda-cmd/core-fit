@@ -411,13 +411,14 @@ export default function Candidates() {
         onOpenChange={setIsSendToManagerOpen}
         candidates={selectedCandidates.map(id => {
           const candidate = candidates.find(c => c.id === id);
+          console.log('Selected candidate:', id, candidate);
           return {
-            id: id as any,
-            name: candidate?.name || '',
-            position: candidate?.position_title || '',
-            score: candidate?.ai_fit_score || undefined,
-            resumeFile: candidate?.resume_url || undefined,
-            preScreenComment: candidate?.pre_screen_comment || undefined,
+            id: id,
+            name: candidate?.name ?? '',
+            position: candidate?.position_title ?? 'ไม่ระบุตำแหน่ง',
+            score: candidate?.ai_fit_score ?? 0,
+            resumeFile: candidate?.resume_url ?? undefined,
+            preScreenComment: candidate?.pre_screen_comment ?? '-',
           };
         })}
         onSent={() => {

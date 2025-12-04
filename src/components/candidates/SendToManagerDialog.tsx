@@ -26,12 +26,12 @@ interface SendToManagerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   candidates: Array<{ 
-    id: number; 
+    id: string; 
     name: string; 
     position: string; 
     resumeFile?: string;
-    score?: number;
-    preScreenComment?: string;
+    score?: number | null;
+    preScreenComment?: string | null;
   }>;
   onSent: () => void;
 }
@@ -198,10 +198,10 @@ export function SendToManagerDialog({
                         <tr key={candidate.id} className={index % 2 === 0 ? "bg-background" : "bg-muted/30"}>
                           <td className="border border-border/50 px-2 py-1.5 text-center font-medium">{index + 1}</td>
                           <td className="border border-border/50 px-2 py-1.5">{candidate.name}</td>
-                          <td className="border border-border/50 px-2 py-1.5">{candidate.position}</td>
+                          <td className="border border-border/50 px-2 py-1.5">{candidate.position || 'ไม่ระบุ'}</td>
                           <td className="border border-border/50 px-2 py-1.5 text-center">
                             <span className="inline-block px-2 py-0.5 bg-primary/20 text-primary rounded-full font-medium">
-                              {candidate.score || 0}%
+                              {candidate.score ?? 0}%
                             </span>
                           </td>
                           <td className="border border-border/50 px-2 py-1.5 text-muted-foreground">
