@@ -20,6 +20,8 @@ export interface CandidateData {
   position_title: string | null;
   stage: string | null;
   applied_at: string | null;
+  // Interview data
+  pre_screen_comment: string | null;
 }
 
 export function useCandidatesData() {
@@ -37,9 +39,15 @@ export function useCandidatesData() {
             position_id,
             stage,
             applied_at,
+            notes,
             job_positions (
               id,
               title
+            ),
+            interviews (
+              id,
+              notes,
+              status
             )
           )
         `)
@@ -51,6 +59,8 @@ export function useCandidatesData() {
       return (data || []).map((candidate: any) => {
         const application = candidate.applications?.[0];
         const position = application?.job_positions;
+        // Get the first interview notes as pre-screen comment
+        const preScreenInterview = application?.interviews?.[0];
         
         return {
           id: candidate.id,
@@ -68,6 +78,7 @@ export function useCandidatesData() {
           position_title: position?.title || null,
           stage: application?.stage || "New",
           applied_at: candidate.created_at,
+          pre_screen_comment: application?.notes || preScreenInterview?.notes || null,
         } as CandidateData;
       });
     },

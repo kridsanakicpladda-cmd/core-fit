@@ -416,7 +416,8 @@ export default function Candidates() {
             name: candidate?.name || '',
             position: candidate?.position_title || '',
             score: candidate?.ai_fit_score || undefined,
-            resumeUrl: candidate?.resume_url || undefined,
+            resumeFile: candidate?.resume_url || undefined,
+            preScreenComment: candidate?.pre_screen_comment || undefined,
           };
         })}
         onSent={() => {
