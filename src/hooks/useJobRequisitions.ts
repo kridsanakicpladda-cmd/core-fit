@@ -77,7 +77,7 @@ export const useJobRequisitions = () => {
   });
 
   const createRequisition = useMutation({
-    mutationFn: async (data: Omit<JobRequisition, "id" | "requisition_number" | "created_at" | "updated_at" | "requester" | "status" | "requested_by">) => {
+    mutationFn: async (data: Omit<JobRequisition, "id" | "requisition_number" | "created_at" | "updated_at" | "requester" | "status" | "requested_by"> & { job_duties?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
@@ -85,10 +85,20 @@ export const useJobRequisitions = () => {
       const { data: reqNumber, error: funcError } = await supabase.rpc("generate_requisition_number");
       if (funcError) throw funcError;
 
+      // Clean up empty strings to null for date fields and optional fields
+      const cleanedData = {
+        ...data,
+        replacement_date: data.replacement_date || null,
+        replacement_for: data.replacement_for || null,
+        temporary_duration: data.temporary_duration || null,
+        job_description_no: data.job_description_no || null,
+        job_grade: data.job_grade || null,
+      };
+
       const { data: newReq, error } = await supabase
         .from("job_requisitions")
         .insert({
-          ...data,
+          ...cleanedData,
           requisition_number: reqNumber,
           requested_by: user.id,
           status: "pending",
