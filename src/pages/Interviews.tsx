@@ -1,148 +1,79 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, XCircle, AlertCircle } from "lucide-react";
+import { Plus, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { InterviewFormDialog, Interview } from "@/components/interviews/InterviewFormDialog";
 import { PendingScheduleBox } from "@/components/interviews/PendingScheduleBox";
 import { StatusBox } from "@/components/interviews/StatusBox";
 import { InterviewSection } from "@/components/interviews/InterviewSection";
 import { toast } from "sonner";
 import { addSparkleEffect } from "@/lib/sparkle";
-
-const initialInterviews: Interview[] = [
-  {
-    id: "1",
-    name: "อรุณ สว่างไสว",
-    position: "Senior Developer",
-    date: new Date(),
-    time: "10:00 - 11:00",
-    type: "ออนไลน์",
-    interviewer: "คุณสมชาย",
-    status: "completed",
-    score: 88,
-    interviewRound: "first",
-    schedulingStatus: "scheduled",
-    candidateEmail: "arun@example.com",
-    managerEmail: "manager@example.com",
-  },
-  {
-    id: "2",
-    name: "ธนพล มั่งคั่ง",
-    position: "UX Designer",
-    date: new Date(),
-    time: "14:00 - 15:00",
-    type: "ออนไลน์",
-    interviewer: "คุณสมหญิง",
-    status: "upcoming",
-    interviewRound: "first",
-    schedulingStatus: "scheduled",
-    candidateEmail: "thanapol@example.com",
-    managerEmail: "manager@example.com",
-  },
-  {
-    id: "3",
-    name: "ศิริพร แสงจันทร์",
-    position: "Data Scientist",
-    date: new Date(),
-    time: "15:30 - 16:30",
-    type: "ออนไซต์",
-    interviewer: "คุณประเสริฐ",
-    status: "upcoming",
-    interviewRound: "final",
-    schedulingStatus: "scheduled",
-    candidateEmail: "siriporn@example.com",
-    managerEmail: "manager@example.com",
-  },
-  {
-    id: "4",
-    name: "วิชัย สุขใจ",
-    position: "Product Manager",
-    date: new Date(Date.now() + 86400000),
-    time: "10:00 - 11:00",
-    type: "ออนไลน์",
-    interviewer: "คุณนภา",
-    status: "upcoming",
-    interviewRound: "final",
-    schedulingStatus: "scheduled",
-    candidateEmail: "wichai@example.com",
-    managerEmail: "manager@example.com",
-  },
-  {
-    id: "5",
-    name: "นิภา วรรณา",
-    position: "Frontend Developer",
-    date: new Date(Date.now() + 86400000),
-    time: "13:00 - 14:00",
-    type: "ออนไลน์",
-    interviewer: "คุณวิชัย",
-    status: "upcoming",
-    interviewRound: "first",
-    schedulingStatus: "scheduled",
-    candidateEmail: "nipa@example.com",
-    managerEmail: "manager@example.com",
-  },
-  // Pending candidates
-  {
-    id: "p1",
-    name: "สมชาย ใจดี",
-    position: "Backend Developer",
-    date: new Date(),
-    time: "",
-    type: "ออนไลน์",
-    interviewer: "คุณสมชาย",
-    status: "upcoming",
-    interviewRound: "first",
-    schedulingStatus: "pending",
-    candidateEmail: "somchai@example.com",
-    managerEmail: "manager@example.com",
-    proposedSlots: ["10:00 - 11:00", "14:00 - 15:00"],
-  },
-  {
-    id: "p2",
-    name: "วันดี สุขสันต์",
-    position: "Marketing Manager",
-    date: new Date(),
-    time: "",
-    type: "ออนไซต์",
-    interviewer: "คุณนภา",
-    status: "upcoming",
-    interviewRound: "final",
-    schedulingStatus: "pending",
-    candidateEmail: "wandee@example.com",
-    managerEmail: "manager@example.com",
-    proposedSlots: ["13:00 - 14:00", "15:00 - 16:00"],
-  },
-  // Not interested
-  {
-    id: "n1",
-    name: "ประเสริฐ มีชัย",
-    position: "Sales Executive",
-    date: new Date(),
-    time: "",
-    type: "ออนไลน์",
-    interviewer: "",
-    status: "upcoming",
-    interviewRound: "first",
-    schedulingStatus: "not_interested",
-  },
-  // Rejected
-  {
-    id: "r1",
-    name: "สุดา ปรีดา",
-    position: "HR Coordinator",
-    date: new Date(),
-    time: "",
-    type: "ออนไลน์",
-    interviewer: "",
-    status: "upcoming",
-    interviewRound: "first",
-    schedulingStatus: "rejected",
-  },
-];
+import { useInterviews } from "@/hooks/useInterviews";
 
 export default function Interviews() {
-  const [interviews, setInterviews] = useState<Interview[]>(initialInterviews);
+  const { 
+    interviews: dbInterviews, 
+    isLoading, 
+    scheduleInterview,
+    updateInterview,
+    createInterview,
+  } = useInterviews();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInterview, setEditingInterview] = useState<Interview | undefined>();
+
+  // Transform database interviews to the Interview format
+  const interviews: Interview[] = dbInterviews.map((interview) => {
+    // Parse notes to get proposed slots and time
+    let proposedSlots: string[] | undefined;
+    let scheduledTime = "";
+    let interviewRound: "first" | "final" = "first";
+    let schedulingStatus: "pending" | "scheduled" | "not_interested" | "rejected" = "scheduled";
+
+    if (interview.notes) {
+      try {
+        const notesData = JSON.parse(interview.notes);
+        if (notesData.proposedSlots) {
+          proposedSlots = notesData.proposedSlots.map((slot: any) => slot.time);
+        }
+        if (notesData.scheduledTime) {
+          scheduledTime = notesData.scheduledTime;
+        }
+        if (notesData.type === "final_interview") {
+          interviewRound = "final";
+        }
+      } catch {
+        // Notes is plain text
+      }
+    }
+
+    // Determine scheduling status based on interview status
+    if (interview.status === "pending") {
+      schedulingStatus = "pending";
+    } else if (interview.status === "scheduled" || interview.status === "completed" || interview.status === "pre_screen") {
+      schedulingStatus = "scheduled";
+    } else if (interview.result === "not_interested") {
+      schedulingStatus = "not_interested";
+    } else if (interview.result === "rejected") {
+      schedulingStatus = "rejected";
+    }
+
+    return {
+      id: interview.id,
+      name: interview.candidate_name,
+      position: interview.position_title,
+      date: interview.scheduled_at ? new Date(interview.scheduled_at) : new Date(),
+      time: scheduledTime,
+      type: "ออนไลน์",
+      interviewer: "",
+      status: interview.status === "completed" ? "completed" : "upcoming",
+      score: interview.score || undefined,
+      interviewRound,
+      schedulingStatus,
+      candidateEmail: interview.candidate_email,
+      managerEmail: "",
+      proposedSlots,
+    } as Interview;
+  });
 
   // Filter candidates by status
   const pendingCandidates = interviews.filter(i => i.schedulingStatus === "pending");
@@ -165,35 +96,34 @@ export default function Interviews() {
   );
 
   const handleSchedule = (candidateId: string, timeSlot: string) => {
-    setInterviews(interviews.map(i => 
-      i.id === candidateId
-        ? { 
-            ...i, 
-            schedulingStatus: "scheduled" as const,
-            time: timeSlot,
-            date: new Date() // Set to today or selected date
-          }
-        : i
-    ));
+    const interview = dbInterviews.find(i => i.id === candidateId);
+    if (interview) {
+      const scheduledAt = new Date();
+      // Parse time slot to set scheduled time
+      scheduleInterview({
+        interviewId: candidateId,
+        scheduledAt: scheduledAt.toISOString(),
+        timeSlot,
+      });
+    }
   };
 
   const handleSaveInterview = (interviewData: Omit<Interview, "id">) => {
     if (editingInterview) {
-      setInterviews(interviews.map(i => 
-        i.id === editingInterview.id 
-          ? { ...interviewData, id: editingInterview.id }
-          : i
-      ));
+      const dbInterview = dbInterviews.find(i => i.id === editingInterview.id);
+      if (dbInterview) {
+        updateInterview({
+          interviewId: editingInterview.id,
+          updates: {
+            scheduled_at: interviewData.date.toISOString(),
+            status: interviewData.status === "completed" ? "completed" : "scheduled",
+            score: interviewData.score,
+          },
+        });
+      }
       toast.success("แก้ไขการสัมภาษณ์สำเร็จ");
     } else {
-      const newInterview: Interview = {
-        ...interviewData,
-        id: Date.now().toString(),
-        interviewRound: "first",
-        schedulingStatus: "scheduled",
-      };
-      setInterviews([...interviews, newInterview]);
-      toast.success("เพิ่มการสัมภาษณ์สำเร็จ");
+      toast.success("เพิ่มการสัมภาษณ์สำเร็จ - กรุณาเลือกผู้สมัครจากหน้า Candidates");
     }
     setEditingInterview(undefined);
   };
@@ -208,6 +138,14 @@ export default function Interviews() {
     setEditingInterview(interview);
     setIsFormOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
