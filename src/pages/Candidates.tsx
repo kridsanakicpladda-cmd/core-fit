@@ -11,9 +11,11 @@ import { Search, Filter, Star, UserPlus, Loader2 } from "lucide-react";
 import { CandidateDetailDialog } from "@/components/candidates/CandidateDetailDialog";
 import { CandidateFormDialog } from "@/components/candidates/CandidateFormDialog";
 import { SendToManagerDialog } from "@/components/candidates/SendToManagerDialog";
+import { ManagerCandidateView } from "@/components/candidates/ManagerCandidateView";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useCandidatesData, CandidateData } from "@/hooks/useCandidatesData";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 const stageColors: Record<string, string> = {
   New: "bg-blue-100 text-blue-700 border-blue-200",
@@ -37,6 +39,7 @@ export default function Candidates() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const { candidates, isLoading, updateApplicationStage, formatAppliedDate } = useCandidatesData();
+  const { isManager, isAdmin, isHRManager, isRecruiter, isLoading: rolesLoading } = useUserRoles();
   
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateData | null>(null);
   const [editingCandidate, setEditingCandidate] = useState<CandidateData | null>(null);
@@ -47,6 +50,9 @@ export default function Candidates() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [isSendToManagerOpen, setIsSendToManagerOpen] = useState(false);
+
+  // Show Manager view if user only has manager role (not admin/hr/recruiter)
+  const showManagerView = isManager && !isAdmin && !isHRManager && !isRecruiter;
 
   // Get unique positions for filter
   const uniquePositions = useMemo(() => {
@@ -181,11 +187,23 @@ export default function Candidates() {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || rolesLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  // Show Manager-specific view
+  if (showManagerView) {
+    return (
+      <ManagerCandidateView
+        candidates={candidates}
+        isLoading={isLoading}
+        formatAppliedDate={formatAppliedDate}
+        onStatusChange={handleStatusChange}
+      />
     );
   }
 
