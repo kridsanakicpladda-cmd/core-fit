@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 
+export interface AIFitBreakdown {
+  experience?: number;
+  qualifications?: number;
+  education?: number;
+  skills?: number;
+}
+
 export interface CandidateData {
   id: string;
   name: string;
@@ -11,6 +18,8 @@ export interface CandidateData {
   photo_url: string | null;
   resume_url: string | null;
   ai_fit_score: number | null;
+  ai_fit_breakdown: AIFitBreakdown | null;
+  ai_fit_reasoning: string | null;
   source: string;
   created_at: string;
   updated_at: string;
@@ -41,6 +50,8 @@ export function useCandidatesData() {
             stage,
             applied_at,
             notes,
+            ai_fit_score,
+            ai_fit_reasoning,
             job_positions (
               id,
               title
@@ -68,7 +79,20 @@ export function useCandidatesData() {
         const details = candidate.candidate_details?.[0];
         // Get the first interview notes as pre-screen comment
         const preScreenInterview = application?.interviews?.[0];
-        
+
+        // Parse AI breakdown from application notes
+        let aiBreakdown: AIFitBreakdown | null = null;
+        if (application?.notes) {
+          try {
+            const parsedNotes = JSON.parse(application.notes);
+            if (parsedNotes.breakdown) {
+              aiBreakdown = parsedNotes.breakdown;
+            }
+          } catch {
+            // Notes is not JSON, use as pre-screen comment
+          }
+        }
+
         return {
           id: candidate.id,
           name: candidate.name,
@@ -77,6 +101,8 @@ export function useCandidatesData() {
           photo_url: candidate.photo_url,
           resume_url: candidate.resume_url,
           ai_fit_score: application?.ai_fit_score || candidate.ai_fit_score,
+          ai_fit_breakdown: aiBreakdown,
+          ai_fit_reasoning: application?.ai_fit_reasoning || null,
           source: candidate.source,
           created_at: candidate.created_at,
           updated_at: candidate.updated_at,
@@ -88,7 +114,7 @@ export function useCandidatesData() {
           // Use stage from candidates table first, then from application, default to Pending
           stage: candidate.stage || application?.stage || "Pending",
           applied_at: candidate.created_at,
-          pre_screen_comment: application?.notes || preScreenInterview?.notes || null,
+          pre_screen_comment: aiBreakdown ? null : (application?.notes || preScreenInterview?.notes || null),
         } as CandidateData;
       });
     },

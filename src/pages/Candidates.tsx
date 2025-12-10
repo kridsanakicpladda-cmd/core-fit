@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Star, UserPlus, Loader2 } from "lucide-react";
+import { Search, Filter, Star, UserPlus, Loader2, Sparkles } from "lucide-react";
 import { CandidateDetailDialog } from "@/components/candidates/CandidateDetailDialog";
 import { CandidateFormDialog } from "@/components/candidates/CandidateFormDialog";
 import { SendToManagerDialog } from "@/components/candidates/SendToManagerDialog";
@@ -150,12 +150,35 @@ export default function Candidates() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteCandidate = (candidateId: string) => {
-    toast({
-      title: "ไม่สามารถลบได้",
-      description: "ฟังก์ชันนี้ยังไม่เปิดใช้งาน",
-      variant: "destructive",
-    });
+  const handleDeleteCandidate = async (candidateId: string) => {
+    try {
+      // Delete candidate from database
+      const { error } = await supabase
+        .from('candidates')
+        .delete()
+        .eq('id', candidateId);
+
+      if (error) throw error;
+
+      toast({
+        title: "ลบสำเร็จ",
+        description: "ลบข้อมูลผู้สมัครเรียบร้อยแล้ว",
+      });
+
+      // Close dialog and refresh
+      setIsDetailOpen(false);
+      setSelectedCandidate(null);
+      
+      // Refresh candidates list
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error deleting candidate:', error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message || "ไม่สามารถลบผู้สมัครได้",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleInterviewUpdate = (candidateId: string, interviews: any) => {
@@ -242,6 +265,36 @@ export default function Candidates() {
       prev.includes(candidateId)
         ? prev.filter(id => id !== candidateId)
         : [...prev, candidateId]
+    );
+  };
+
+  const handleGenerateFitScore = async (candidate: CandidateData) => {
+    if (!candidate.job_position_id) {
+      toast({
+        title: "ไม่สามารถคำนวณได้",
+        description: "ผู้สมัครยังไม่ได้สมัครตำแหน่งงาน",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCalculatingScores((prev) => new Set(prev).add(candidate.id));
+
+    calculateFitScore.mutate(
+      {
+        candidateId: candidate.id,
+        applicationId: candidate.application_id,
+        jobPositionId: candidate.job_position_id,
+      },
+      {
+        onSettled: () => {
+          setCalculatingScores((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(candidate.id);
+            return newSet;
+          });
+        },
+      }
     );
   };
 
@@ -394,34 +447,53 @@ export default function Candidates() {
                             {candidate.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="relative group/score">
-                          <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${
-                            candidate.ai_fit_score 
-                              ? getScoreColor(candidate.ai_fit_score)
-                              : calculatingScores.has(candidate.id)
-                              ? 'from-blue-500 to-blue-600 animate-pulse'
-                              : 'from-gray-400 to-gray-500'
-                          } flex items-center justify-center text-white font-bold shadow-lg transition-transform group-hover/score:scale-110`}>
-                            {calculatingScores.has(candidate.id) ? (
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            ) : candidate.ai_fit_score ? (
-                              <span className="text-xl">{candidate.ai_fit_score}</span>
-                            ) : (
-                              <span className="text-xl">-</span>
+                        <div className="flex items-center gap-2">
+                          <div className="relative group/score">
+                            <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${
+                              candidate.ai_fit_score
+                                ? getScoreColor(candidate.ai_fit_score)
+                                : calculatingScores.has(candidate.id)
+                                ? 'from-blue-500 to-blue-600 animate-pulse'
+                                : 'from-gray-400 to-gray-500'
+                            } flex items-center justify-center text-white font-bold shadow-lg transition-transform group-hover/score:scale-110`}>
+                              {calculatingScores.has(candidate.id) ? (
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                              ) : candidate.ai_fit_score ? (
+                                <span className="text-xl">{candidate.ai_fit_score}</span>
+                              ) : (
+                                <span className="text-xl">-</span>
+                              )}
+                            </div>
+                            {candidate.ai_fit_score && candidate.ai_fit_score >= 90 && (
+                              <div className="absolute -top-1 -right-1 h-5 w-5 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+                                <Star className="h-3 w-3 text-white fill-white" />
+                              </div>
+                            )}
+                            {candidate.ai_fit_score && (
+                              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/score:opacity-100 transition-opacity whitespace-nowrap">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  {getScoreLabel(candidate.ai_fit_score)}
+                                </span>
+                              </div>
                             )}
                           </div>
-                          {candidate.ai_fit_score && candidate.ai_fit_score >= 90 && (
-                            <div className="absolute -top-1 -right-1 h-5 w-5 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
-                              <Star className="h-3 w-3 text-white fill-white" />
-                            </div>
-                          )}
-                          {candidate.ai_fit_score && (
-                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/score:opacity-100 transition-opacity whitespace-nowrap">
-                              <span className="text-xs font-medium text-muted-foreground">
-                                {getScoreLabel(candidate.ai_fit_score)}
-                              </span>
-                            </div>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateFitScore(candidate);
+                            }}
+                            disabled={calculatingScores.has(candidate.id)}
+                            title="คำนวณ AI Fit Score ใหม่"
+                          >
+                            {calculatingScores.has(candidate.id) ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 text-primary" />
+                            )}
+                          </Button>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">

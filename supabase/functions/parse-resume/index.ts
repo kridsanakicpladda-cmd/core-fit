@@ -87,7 +87,7 @@ serve(async (req) => {
         'X-Title': 'Resume Parser',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-pro-preview',
+        model: 'google/gemini-2.5-pro-preview-06-05',
         messages: fileBase64 ? [
           {
             role: 'system',

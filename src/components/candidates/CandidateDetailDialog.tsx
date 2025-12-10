@@ -15,14 +15,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, Download, User, Home, AlertCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, Download, User, Sparkles, Loader2 } from "lucide-react";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
 import { CombinedInterviewDialog } from "./CombinedInterviewDialog";
 import { TestScoreDialog } from "./TestScoreDialog";
 import { ResumeDialog } from "./ResumeDialog";
 import { exportCandidateEvaluationPDF } from "@/lib/exportCandidateEvaluationPDF";
 import { useCandidateDetails } from "@/hooks/useCandidateDetails";
+import { useCalculateFitScore } from "@/hooks/useCalculateFitScore";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CandidateDetailDialogProps {
   candidate: {
@@ -51,6 +54,13 @@ interface CandidateDetailDialogProps {
     resume_url?: string | null;
     source?: string;
     application_id?: string | null;
+    job_position_id?: string | null;
+    ai_fit_breakdown?: {
+      experience?: number;
+      qualifications?: number;
+      education?: number;
+      skills?: number;
+    } | null;
     testScores?: {
       hrTest?: number;
       departmentTest?: number;
@@ -124,6 +134,23 @@ const pipelineSteps = [
 
 export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, onDelete, onInterviewUpdate, onTestScoreUpdate, onStatusChange }: CandidateDetailDialogProps) {
   const { addNotification } = useNotifications();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const calculateFitScore = useCalculateFitScore();
+  const [isCalculatingScore, setIsCalculatingScore] = useState(false);
+  const [currentScore, setCurrentScore] = useState<number | null>(null);
+  const [scoreBreakdown, setScoreBreakdown] = useState<{
+    experience?: number;
+    qualifications?: number;
+    education?: number;
+    skills?: number;
+  } | null>(null);
+
+  // Reset state when candidate changes
+  useEffect(() => {
+    setCurrentScore(null);
+    setScoreBreakdown(null);
+  }, [candidate?.id]);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showTestScoreDialog, setShowTestScoreDialog] = useState(false);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
@@ -369,6 +396,80 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
   const handleInterviewEdit = (type: 'hr') => {
     setActiveInterview(type);
+  };
+
+  const handleGenerateAIScore = async () => {
+    setIsCalculatingScore(true);
+
+    try {
+      let jobPositionId = candidate.job_position_id;
+
+      // If no job_position_id but has position_title, try to find matching job position
+      if (!jobPositionId && (candidate.position || candidate.position_title)) {
+        const positionTitle = candidate.position || candidate.position_title;
+        const { data: matchingPosition } = await supabase
+          .from("job_positions")
+          .select("id")
+          .ilike("title", `%${positionTitle}%`)
+          .limit(1)
+          .single();
+
+        if (matchingPosition) {
+          jobPositionId = matchingPosition.id;
+        }
+      }
+
+      if (!jobPositionId) {
+        // Still no job position found, get first available position as fallback
+        const { data: anyPosition } = await supabase
+          .from("job_positions")
+          .select("id")
+          .limit(1)
+          .single();
+
+        if (anyPosition) {
+          jobPositionId = anyPosition.id;
+        } else {
+          toast({
+            title: "ไม่สามารถคำนวณได้",
+            description: "ไม่พบตำแหน่งงานในระบบ กรุณาสร้างตำแหน่งงานก่อน",
+            variant: "destructive",
+          });
+          setIsCalculatingScore(false);
+          return;
+        }
+      }
+
+      calculateFitScore.mutate(
+        {
+          candidateId: candidate.id.toString(),
+          applicationId: candidate.application_id || undefined,
+          jobPositionId: jobPositionId,
+        },
+        {
+          onSuccess: (data) => {
+            // Save the score and breakdown
+            setCurrentScore(data.score);
+            if (data.breakdown) {
+              setScoreBreakdown(data.breakdown);
+            }
+            // Invalidate queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ["candidates-data"] });
+          },
+          onSettled: () => {
+            setIsCalculatingScore(false);
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error in handleGenerateAIScore:", error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถคำนวณคะแนนได้",
+        variant: "destructive",
+      });
+      setIsCalculatingScore(false);
+    }
   };
 
   const handleDownloadEvaluation = () => {
@@ -711,49 +812,97 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           {/* AI Fit Score Breakdown */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">AI Fit Score</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold">AI Fit Score</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateAIScore}
+                  disabled={isCalculatingScore}
+                  className="gap-2"
+                >
+                  {isCalculatingScore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      กำลังคำนวณ...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Generate AI Score
+                    </>
+                  )}
+                </Button>
+              </div>
               <div className="text-2xl font-bold text-primary">
-                {candidate.score ?? candidate.ai_fit_score ?? '-'}%
+                {currentScore ?? candidate.score ?? candidate.ai_fit_score ?? '-'}%
                 <span className="text-sm text-muted-foreground ml-1">Overall Match</span>
               </div>
             </div>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">ประสบการณ์ทำงานที่ตรงกับตำแหน่งงาน (65%)</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-48 bg-secondary rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '85%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium w-12 text-right">85%</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">คุณสมบัติ (10%)</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-48 bg-secondary rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '92%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium w-12 text-right">92%</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">วุฒิการศึกษา (10%)</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-48 bg-secondary rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '90%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium w-12 text-right">90%</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">ทักษะและความสามารถอื่น ๆ (15%)</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-48 bg-secondary rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '88%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium w-12 text-right">88%</span>
-                </div>
-              </div>
+              {(() => {
+                const breakdown = scoreBreakdown || candidate.ai_fit_breakdown;
+                return (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">ประสบการณ์ทำงานที่ตรงกับตำแหน่งงาน (65%)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-48 bg-secondary rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${breakdown?.experience ?? 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium w-12 text-right">
+                          {breakdown?.experience !== undefined ? `${breakdown.experience}%` : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">คุณสมบัติ (10%)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-48 bg-secondary rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${breakdown?.qualifications ?? 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium w-12 text-right">
+                          {breakdown?.qualifications !== undefined ? `${breakdown.qualifications}%` : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">วุฒิการศึกษา (10%)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-48 bg-secondary rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${breakdown?.education ?? 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium w-12 text-right">
+                          {breakdown?.education !== undefined ? `${breakdown.education}%` : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">ทักษะและความสามารถอื่น ๆ (15%)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-48 bg-secondary rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${breakdown?.skills ?? 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium w-12 text-right">
+                          {breakdown?.skills !== undefined ? `${breakdown.skills}%` : '-'}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 

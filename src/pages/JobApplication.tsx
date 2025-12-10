@@ -144,22 +144,38 @@ const JobApplication = () => {
     privacyConsent: false,
   });
 
-  const [availablePositions, setAvailablePositions] = useState<string[]>([
-    "Senior Software Engineer",
-    "Product Manager",
-    "UX/UI Designer",
-    "Data Analyst",
-    "Marketing Manager",
-    "Sales Executive",
-  ]);
+  const [availablePositions, setAvailablePositions] = useState<Array<{id: string; title: string}>>([]);
  
+  // Fetch available positions from database
+  useEffect(() => {
+    const fetchPositions = async () => {
+      const { data, error } = await supabase
+        .from('job_positions')
+        .select('id, title')
+        .eq('status', 'open')
+        .order('title');
+      
+      if (error) {
+        console.error('Error fetching positions:', error);
+        return;
+      }
+      
+      if (data) {
+        setAvailablePositions(data);
+      }
+    };
+    
+    fetchPositions();
+  }, []);
+
   useEffect(() => {
     const state = location.state as { jobId?: string; jobTitle?: string } | null;
     if (state?.jobTitle) {
       setFormData(prev => ({ ...prev, position: state.jobTitle }));
-      setAvailablePositions(prev =>
-        prev.includes(state.jobTitle!) ? prev : [state.jobTitle!, ...prev]
-      );
+      setAvailablePositions(prev => {
+        const exists = prev.some(p => p.title === state.jobTitle);
+        return exists ? prev : [{ id: state.jobId || '', title: state.jobTitle! }, ...prev];
+      });
       toast({
         title: "ตำแหน่งงานถูกเลือกแล้ว",
         description: `คุณกำลังสมัครตำแหน่ง: ${state.jobTitle}`,
@@ -631,16 +647,18 @@ const JobApplication = () => {
             email: formData.email,
             phone: formData.mobilePhone || null,
             source: 'Website',
+            stage: 'Pending',
             resume_url: resumeUrl || null,
             photo_url: photoUrl || null,
-          })
+          } as any)
           .select('id')
           .single();
 
         if (insertError) {
+          console.error('Insert candidate error:', insertError);
           toast({
             title: "เกิดข้อผิดพลาด",
-            description: "ไม่สามารถบันทึกข้อมูลผู้สมัครได้",
+            description: `ไม่สามารถบันทึกข้อมูลผู้สมัครได้: ${insertError.message}`,
             variant: "destructive",
           });
           return;
@@ -901,11 +919,15 @@ const JobApplication = () => {
                         <SelectValue placeholder="เลือกตำแหน่ง..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {availablePositions.map((position) => (
-                          <SelectItem key={position} value={position}>
-                            {position}
-                          </SelectItem>
-                        ))}
+                        {availablePositions
+                          .filter((position, index, self) =>
+                            index === self.findIndex((p) => p.title === position.title)
+                          )
+                          .map((position) => (
+                            <SelectItem key={position.id} value={position.title}>
+                              {position.title}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
