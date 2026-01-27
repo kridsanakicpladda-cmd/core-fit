@@ -103,13 +103,23 @@ async function sendInviteEmail(accessToken: string, inviteData: InviteRequest, s
                   <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                     <tr>
                       <td align="center">
-                        <a href="${applicationUrl}"
-                           style="display: inline-block; padding: 20px 50px; background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%); color: #ffffff; text-decoration: none; border-radius: 60px; font-weight: 700; font-size: 18px; box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45), 0 4px 10px rgba(37, 99, 235, 0.3); border: 3px solid rgba(255,255,255,0.3);">
-                          📝 กรอกใบสมัครเลย
-                        </a>
+                        <table cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
+                          <tr>
+                            <td align="center" style="padding: 16px 40px;">
+                              <a href="${applicationUrl}" style="color: #ffffff; text-decoration: none; font-weight: 700; font-size: 18px; display: block;">
+                                คลิกเพื่อกรอกใบสมัคร
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                     </tr>
                   </table>
+
+                  <!-- Decorative -->
+                  <p style="margin: 20px 0; text-align: center; font-size: 24px;">
+                    💙✨💙
+                  </p>
 
                   <p style="margin: 20px 0 0 0; font-size: 13px; color: #9ca3af; line-height: 1.6; text-align: center;">
                     หากกดปุ่มไม่ได้ <a href="${applicationUrl}" style="color: #3b82f6;">คลิกที่นี่</a>

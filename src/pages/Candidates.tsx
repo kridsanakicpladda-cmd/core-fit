@@ -133,7 +133,8 @@ export default function Candidates() {
     const stage = candidate.stage || "Pending";
 
     if (activeTab === "all") {
-      matchesTab = true;
+      // ALL tab shows only new candidates (Pending status)
+      matchesTab = stage === "Pending";
     } else if (activeTab === "shortlist") {
       matchesTab = stage === "Shortlist";
     } else if (activeTab === "interested") {
@@ -141,7 +142,7 @@ export default function Candidates() {
     } else if (activeTab === "not-interested") {
       matchesTab = stage === "Rejected";
     } else if (activeTab === "pre-screen") {
-      matchesTab = stage === "Screening";
+      matchesTab = stage === "Pre Screen";
     } else if (activeTab === "interview1") {
       // Interview 1 = Interview stage (first round)
       matchesTab = stage === "Interview";
