@@ -7,7 +7,7 @@ const MICROSOFT_CLIENT_SECRET = Deno.env.get('MICROSOFT_CLIENT_SECRET');
 const MICROSOFT_TENANT_ID = Deno.env.get('MICROSOFT_TENANT_ID');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-const APP_URL = Deno.env.get('APP_URL') || 'https://core-fit.lovable.app';
+const APP_URL = Deno.env.get('APP_URL') || 'https://core-fit-two.vercel.app';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
