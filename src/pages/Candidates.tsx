@@ -7,7 +7,17 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Star, UserPlus, Loader2, Sparkles } from "lucide-react";
+import { Search, Filter, Star, UserPlus, Loader2, Sparkles, Users, FileText, Heart } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CandidateDetailDialog } from "@/components/candidates/CandidateDetailDialog";
 import { CandidateFormDialog } from "@/components/candidates/CandidateFormDialog";
 import { SendToManagerDialog } from "@/components/candidates/SendToManagerDialog";
@@ -54,6 +64,8 @@ export default function Candidates() {
   const [editingCandidate, setEditingCandidate] = useState<CandidateData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [interestDialogOpen, setInterestDialogOpen] = useState(false);
+  const [selectedInterestCandidate, setSelectedInterestCandidate] = useState<CandidateData | null>(null);
 
   // Auto-calculate scores for candidates without scores
   useEffect(() => {
@@ -91,6 +103,7 @@ export default function Candidates() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [isSendToManagerOpen, setIsSendToManagerOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'candidates' | 'applicant-resume'>('candidates');
 
   // Show Manager view if user only has manager role (not admin/hr/recruiter)
   const showManagerView = isManager && !isAdmin && !isHRManager && !isRecruiter;
@@ -107,13 +120,18 @@ export default function Candidates() {
     const matchesSearch = candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (candidate.position_title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (candidate.email?.toLowerCase() || '').includes(searchQuery.toLowerCase());
-    
-    const matchesPosition = selectedPositions.length === 0 || 
+
+    const matchesPosition = selectedPositions.length === 0 ||
       (candidate.position_title && selectedPositions.includes(candidate.position_title));
+
+    // Filter by view mode (source)
+    const matchesViewMode = viewMode === 'candidates'
+      ? candidate.source !== 'Quick Apply'
+      : candidate.source === 'Quick Apply';
 
     let matchesTab = true;
     const stage = candidate.stage || "Pending";
-    
+
     if (activeTab === "all") {
       matchesTab = true;
     } else if (activeTab === "shortlist") {
@@ -135,9 +153,13 @@ export default function Candidates() {
     } else if (activeTab === "hired") {
       matchesTab = stage === "Hired";
     }
-    
-    return matchesSearch && matchesPosition && matchesTab;
+
+    return matchesSearch && matchesPosition && matchesTab && matchesViewMode;
   });
+
+  // Count candidates by source
+  const candidatesCount = candidates.filter(c => c.source !== 'Quick Apply').length;
+  const applicantResumeCount = candidates.filter(c => c.source === 'Quick Apply').length;
 
   const handleViewDetails = (candidate: CandidateData) => {
     setSelectedCandidate(candidate);
@@ -298,6 +320,63 @@ export default function Candidates() {
     );
   };
 
+  const handleSendFullApplication = async () => {
+    if (!selectedInterestCandidate) return;
+
+    try {
+      // Check if candidate has email
+      if (!selectedInterestCandidate.email) {
+        toast({
+          title: "ไม่พบอีเมล",
+          description: "ผู้สมัครนี้ไม่มีอีเมลในระบบ ไม่สามารถส่งใบสมัครได้",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call edge function to send invite email
+      const { data, error } = await supabase.functions.invoke('send-application-invite', {
+        body: {
+          candidateId: selectedInterestCandidate.id,
+          candidateName: selectedInterestCandidate.name,
+          candidateEmail: selectedInterestCandidate.email,
+          position: selectedInterestCandidate.position_title || undefined,
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Update candidate stage to Interested locally
+      updateCandidateStage({ candidateId: selectedInterestCandidate.id, stage: 'Interested' });
+
+      toast({
+        title: "ส่งใบสมัครฉบับเต็มแล้ว",
+        description: `ส่งอีเมลเชิญให้ ${selectedInterestCandidate.name} กรอกใบสมัครฉบับเต็มเรียบร้อยแล้ว`,
+      });
+
+      addNotification({
+        type: 'status_change',
+        title: 'ส่งใบสมัครฉบับเต็ม',
+        description: `ส่งอีเมลเชิญให้ ${selectedInterestCandidate.name} กรอกใบสมัครฉบับเต็ม`,
+        candidateName: selectedInterestCandidate.name,
+        oldStatus: selectedInterestCandidate.stage || 'Pending',
+        newStatus: 'Interested',
+      });
+
+      setInterestDialogOpen(false);
+      setSelectedInterestCandidate(null);
+    } catch (error: any) {
+      console.error('Error sending full application:', error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message || "ไม่สามารถส่งใบสมัครฉบับเต็มได้",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleBulkAction = (action: 'send_to_manager' | 'not_interested') => {
     if (action === 'send_to_manager') {
       setIsSendToManagerOpen(true);
@@ -338,18 +417,49 @@ export default function Candidates() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            ผู้สมัคร
-          </h1>
-          <p className="text-muted-foreground">
-            จัดการและติดตามสถานะผู้สมัครทั้งหมด ({candidates.length} คน)
-          </p>
+        <div className="flex items-center gap-4">
+          {/* View Mode Toggle Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'candidates' ? 'default' : 'outline'}
+              onClick={() => setViewMode('candidates')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              ผู้สมัคร
+              <Badge variant="secondary" className="ml-1">
+                {candidatesCount}
+              </Badge>
+            </Button>
+            <Button
+              variant={viewMode === 'applicant-resume' ? 'default' : 'outline'}
+              onClick={() => setViewMode('applicant-resume')}
+              className="gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Applicant Resume
+              <Badge variant="secondary" className="ml-1">
+                {applicantResumeCount}
+              </Badge>
+            </Button>
+          </div>
         </div>
         <Button onClick={handleAddNew}>
           <UserPlus className="h-4 w-4 mr-2" />
           เพิ่มผู้สมัคร
         </Button>
+      </div>
+
+      {/* Page Title */}
+      <div>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          {viewMode === 'candidates' ? 'ผู้สมัคร' : 'Applicant Resume'}
+        </h1>
+        <p className="text-muted-foreground">
+          {viewMode === 'candidates'
+            ? `จัดการและติดตามสถานะผู้สมัครทั้งหมด (${candidatesCount} คน)`
+            : `รายการประวัติที่ฝากไว้ผ่าน Quick Apply (${applicantResumeCount} คน)`}
+        </p>
       </div>
 
       <div className="flex gap-4">
@@ -522,13 +632,26 @@ export default function Candidates() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           className="hover:bg-accent transition-colors"
                           onClick={() => handleViewDetails(candidate)}
                         >
                           ดูรายละเอียด
                         </Button>
+                        {viewMode === 'applicant-resume' && (
+                          <Button
+                            variant="outline"
+                            className="hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-colors gap-2"
+                            onClick={() => {
+                              setSelectedInterestCandidate(candidate);
+                              setInterestDialogOpen(true);
+                            }}
+                          >
+                            <Heart className="h-4 w-4" />
+                            Interest
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -616,6 +739,38 @@ export default function Candidates() {
           setSelectedCandidates([]);
         }}
       />
+
+      {/* Interest Confirmation Dialog */}
+      <AlertDialog open={interestDialogOpen} onOpenChange={setInterestDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-pink-500" />
+              ส่งใบสมัครฉบับเต็มให้ผู้สมัคร
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedInterestCandidate && (
+                <>
+                  คุณต้องการส่งใบสมัครฉบับเต็มให้กับ <strong>{selectedInterestCandidate.name}</strong> หรือไม่?
+                  <br />
+                  <span className="text-muted-foreground">
+                    ระบบจะส่ง email แจ้งให้ผู้สมัครกรอกข้อมูลเพิ่มเติมในใบสมัครฉบับเต็ม
+                  </span>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-pink-500 hover:bg-pink-600"
+              onClick={handleSendFullApplication}
+            >
+              ส่งใบสมัครฉบับเต็ม
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -11,6 +11,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import JobApplication from "./pages/JobApplication";
+import PublicJobApplication from "./pages/PublicJobApplication";
+import QuickApply from "./pages/QuickApply";
 import JobRequisitions from "./pages/JobRequisitions";
 import Candidates from "./pages/Candidates";
 import Interviews from "./pages/Interviews";
@@ -32,8 +34,10 @@ const App = () => (
             <CandidatesProvider>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/apply/:candidateId" element={<PublicJobApplication />} />
                 <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/jobs" element={<ProtectedRoute><DashboardLayout><Jobs /></DashboardLayout></ProtectedRoute>} />
+                <Route path="/quick-apply" element={<ProtectedRoute><DashboardLayout><QuickApply /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/job-application" element={<ProtectedRoute><DashboardLayout><JobApplication /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/job-requisitions" element={<ProtectedRoute><DashboardLayout><JobRequisitions /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/candidates" element={<ProtectedRoute><DashboardLayout><Candidates /></DashboardLayout></ProtectedRoute>} />
