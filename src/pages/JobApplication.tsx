@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,12 +50,15 @@ const JobApplication = () => {
   const { toast } = useToast();
   const { addCandidate } = useCandidates();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoadingCandidate, setIsLoadingCandidate] = useState(false);
+  const [existingCandidateId, setExistingCandidateId] = useState<string | null>(null);
   
   const [educations, setEducations] = useState<Education[]>([
     { level: "high-school", institution: "", major: "", gpa: "", yearGraduated: "" },
@@ -182,6 +185,131 @@ const JobApplication = () => {
       });
     }
   }, [location.state, toast]);
+
+  // Fetch candidate data from URL params (for invited candidates from Quick Apply)
+  useEffect(() => {
+    const candidateId = searchParams.get('candidateId');
+    if (!candidateId) return;
+
+    const fetchCandidateData = async () => {
+      setIsLoadingCandidate(true);
+      try {
+        // Fetch candidate basic info
+        const { data: candidate, error: candidateError } = await supabase
+          .from('candidates')
+          .select('*')
+          .eq('id', candidateId)
+          .single();
+
+        if (candidateError) {
+          console.error('Error fetching candidate:', candidateError);
+          return;
+        }
+
+        // Fetch candidate details
+        const { data: details, error: detailsError } = await supabase
+          .from('candidate_details')
+          .select('*')
+          .eq('candidate_id', candidateId)
+          .maybeSingle();
+
+        if (detailsError) {
+          console.error('Error fetching candidate details:', detailsError);
+        }
+
+        // Store candidate ID for update instead of insert
+        setExistingCandidateId(candidateId);
+
+        // Pre-fill form data from candidate
+        if (candidate) {
+          const nameParts = candidate.name?.split(' ') || [];
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+
+          setFormData(prev => ({
+            ...prev,
+            firstName: details?.first_name || firstName,
+            lastName: details?.last_name || lastName,
+            email: candidate.email || prev.email,
+            mobilePhone: details?.mobile_phone || candidate.phone || prev.mobilePhone,
+            position: details?.position || prev.position,
+            expectedSalary: details?.expected_salary || prev.expectedSalary,
+            // Personal Info
+            titleName: details?.title_name || prev.titleName,
+            nickname: details?.nickname || prev.nickname,
+            presentAddress: details?.present_address || prev.presentAddress,
+            moo: details?.moo || prev.moo,
+            district: details?.district || prev.district,
+            subDistrict: details?.sub_district || prev.subDistrict,
+            province: details?.province || prev.province,
+            zipCode: details?.zip_code || prev.zipCode,
+            birthDate: details?.birth_date || prev.birthDate,
+            age: details?.age || prev.age,
+            idCard: details?.id_card || prev.idCard,
+            sex: details?.sex || prev.sex,
+            bloodType: details?.blood_type || prev.bloodType,
+            religion: details?.religion || prev.religion,
+            height: details?.height || prev.height,
+            weight: details?.weight || prev.weight,
+            // Marital Status
+            maritalStatus: details?.marital_status || prev.maritalStatus,
+            spouseName: details?.spouse_name || prev.spouseName,
+            spouseOccupation: details?.spouse_occupation || prev.spouseOccupation,
+            numberOfChildren: details?.number_of_children || prev.numberOfChildren,
+            // Emergency Contact
+            emergencyName: details?.emergency_name || prev.emergencyName,
+            emergencyRelation: details?.emergency_relation || prev.emergencyRelation,
+            emergencyAddress: details?.emergency_address || prev.emergencyAddress,
+            emergencyPhone: details?.emergency_phone || prev.emergencyPhone,
+            // Skills
+            computerSkill: details?.computer_skill || prev.computerSkill,
+            drivingCar: details?.driving_car || prev.drivingCar,
+            drivingCarLicenseNo: details?.driving_car_license_no || prev.drivingCarLicenseNo,
+            drivingMotorcycle: details?.driving_motorcycle || prev.drivingMotorcycle,
+            drivingMotorcycleLicenseNo: details?.driving_motorcycle_license_no || prev.drivingMotorcycleLicenseNo,
+            otherSkills: details?.other_skills || prev.otherSkills,
+            trainingCurriculums: details?.training_curriculums || prev.trainingCurriculums,
+          }));
+
+          // Pre-fill educations if available
+          if (details?.educations && Array.isArray(details.educations) && details.educations.length > 0) {
+            setEducations(details.educations as Education[]);
+          }
+
+          // Pre-fill work experiences if available
+          if (details?.work_experiences && Array.isArray(details.work_experiences) && details.work_experiences.length > 0) {
+            setWorkExperiences(details.work_experiences as WorkExperience[]);
+          }
+
+          // Pre-fill family members if available
+          if (details?.family_members && Array.isArray(details.family_members) && details.family_members.length > 0) {
+            setFamilyMembers(details.family_members as FamilyMember[]);
+          }
+
+          // Pre-fill language skills if available
+          if (details?.language_skills && Array.isArray(details.language_skills) && details.language_skills.length > 0) {
+            setLanguageSkills(details.language_skills as LanguageSkill[]);
+          }
+
+          // Set photo preview if exists
+          if (candidate.photo_url) {
+            setProfilePhotoPreview(candidate.photo_url);
+          }
+
+          toast({
+            title: "ดึงข้อมูลสำเร็จ",
+            description: "ข้อมูลจากการฝากประวัติถูกกรอกแล้ว กรุณาตรวจสอบและกรอกข้อมูลเพิ่มเติม",
+          });
+        }
+      } catch (error) {
+        console.error('Error loading candidate data:', error);
+      } finally {
+        setIsLoadingCandidate(false);
+      }
+    };
+
+    fetchCandidateData();
+  }, [searchParams, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -607,27 +735,24 @@ const JobApplication = () => {
         photoUrl = photoData.publicUrl;
       }
 
-      // Insert or update candidate data (upsert on email)
-      const { data: existingCandidate } = await supabase
-        .from('candidates')
-        .select('id')
-        .eq('email', formData.email)
-        .maybeSingle();
-
+      // Insert or update candidate data
       let candidateId: string;
 
-      if (existingCandidate) {
-        // Update existing candidate
+      // If we have an existing candidate ID from URL params (invited from Quick Apply)
+      if (existingCandidateId) {
+        // Update existing candidate and change source from Quick Apply to Job Application
         const { error: updateError } = await supabase
           .from('candidates')
           .update({
             name: `${formData.firstName} ${formData.lastName}`,
             phone: formData.mobilePhone || null,
-            resume_url: resumeUrl || null,
-            photo_url: photoUrl || null,
+            source: 'Job Application', // Change source from Quick Apply to Job Application
+            stage: 'Screening', // Move to Screening stage after completing full application
+            resume_url: resumeUrl || undefined,
+            photo_url: photoUrl || undefined,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', existingCandidate.id);
+          .eq('id', existingCandidateId);
 
         if (updateError) {
           toast({
@@ -637,33 +762,64 @@ const JobApplication = () => {
           });
           return;
         }
-        candidateId = existingCandidate.id;
+        candidateId = existingCandidateId;
       } else {
-        // Insert new candidate
-        const { data: newCandidate, error: insertError } = await supabase
+        // Check if candidate exists by email
+        const { data: existingCandidate } = await supabase
           .from('candidates')
-          .insert({
-            name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.email,
-            phone: formData.mobilePhone || null,
-            source: 'Website',
-            stage: 'Pending',
-            resume_url: resumeUrl || null,
-            photo_url: photoUrl || null,
-          } as any)
           .select('id')
-          .single();
+          .eq('email', formData.email)
+          .maybeSingle();
 
-        if (insertError) {
-          console.error('Insert candidate error:', insertError);
-          toast({
-            title: "เกิดข้อผิดพลาด",
-            description: `ไม่สามารถบันทึกข้อมูลผู้สมัครได้: ${insertError.message}`,
-            variant: "destructive",
-          });
-          return;
+        if (existingCandidate) {
+          // Update existing candidate
+          const { error: updateError } = await supabase
+            .from('candidates')
+            .update({
+              name: `${formData.firstName} ${formData.lastName}`,
+              phone: formData.mobilePhone || null,
+              resume_url: resumeUrl || null,
+              photo_url: photoUrl || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingCandidate.id);
+
+          if (updateError) {
+            toast({
+              title: "เกิดข้อผิดพลาด",
+              description: "ไม่สามารถอัปเดตข้อมูลผู้สมัครได้",
+              variant: "destructive",
+            });
+            return;
+          }
+          candidateId = existingCandidate.id;
+        } else {
+          // Insert new candidate
+          const { data: newCandidate, error: insertError } = await supabase
+            .from('candidates')
+            .insert({
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              phone: formData.mobilePhone || null,
+              source: 'Job Application',
+              stage: 'Pending',
+              resume_url: resumeUrl || null,
+              photo_url: photoUrl || null,
+            } as any)
+            .select('id')
+            .single();
+
+          if (insertError) {
+            console.error('Insert candidate error:', insertError);
+            toast({
+              title: "เกิดข้อผิดพลาด",
+              description: `ไม่สามารถบันทึกข้อมูลผู้สมัครได้: ${insertError.message}`,
+              variant: "destructive",
+            });
+            return;
+          }
+          candidateId = newCandidate.id;
         }
-        candidateId = newCandidate.id;
       }
 
       // Save all form details to candidate_details table
@@ -834,9 +990,38 @@ const JobApplication = () => {
     }
   };
 
+  // Show loading state while fetching candidate data
+  if (isLoadingCandidate) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+          <p className="text-lg text-muted-foreground">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 py-8">
       <div className="max-w-5xl mx-auto px-4">
+        {/* Invitation Banner for candidates from Quick Apply */}
+        {existingCandidateId && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-200 rounded-xl animate-fade-in">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-pink-100 rounded-full">
+                <Heart className="w-6 h-6 text-pink-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-pink-700">บริษัทสนใจประวัติของคุณ!</h3>
+                <p className="text-sm text-pink-600">
+                  กรุณากรอกข้อมูลเพิ่มเติมเพื่อให้การสมัครงานเสร็จสมบูรณ์ ข้อมูลบางส่วนถูกดึงมาจากที่คุณกรอกไว้ก่อนหน้านี้
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-3">
