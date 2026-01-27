@@ -438,7 +438,7 @@ const PublicJobApplication = () => {
           email: formData.email,
           phone: formData.mobilePhone,
           source: 'Job Application',
-          stage: 'Screening',
+          stage: 'Pre Screen',
           photo_url: photoUrl,
           resume_url: resumeUrl || undefined,
           updated_at: new Date().toISOString(),
