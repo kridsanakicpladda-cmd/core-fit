@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx supabase --version)",
+      "Bash(npx supabase secrets set:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(npm run dev:*)"
+    ]
+  }
+}

@@ -527,9 +527,18 @@ const PublicJobApplication = () => {
       });
     } catch (error: any) {
       console.error('Submit error:', error);
+
+      // Handle duplicate email error
+      let errorMessage = "ไม่สามารถส่งใบสมัครได้ กรุณาลองใหม่อีกครั้ง";
+      if (error.code === '23505' && error.message?.includes('email')) {
+        errorMessage = "อีเมลนี้ถูกใช้งานแล้ว กรุณาติดต่อฝ่ายทรัพยากรบุคคล";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: error.message || "ไม่สามารถส่งใบสมัครได้ กรุณาลองใหม่อีกครั้ง",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -755,9 +764,11 @@ const PublicJobApplication = () => {
                   <Input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    required
+                    readOnly
+                    className="bg-muted"
+                    title="ไม่สามารถแก้ไขอีเมลได้ เนื่องจากเป็นอีเมลที่ใช้รับคำเชิญ"
                   />
+                  <p className="text-xs text-muted-foreground">ไม่สามารถแก้ไขอีเมลได้</p>
                 </div>
                 <div className="space-y-2">
                   <Label>เบอร์โทรศัพท์ <span className="text-destructive">*</span></Label>
