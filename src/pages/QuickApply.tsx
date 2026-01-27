@@ -200,26 +200,54 @@ const QuickApply = () => {
         }
       }
 
-      // Create candidate record
-      const { data: candidate, error: candidateError } = await supabase
+      // Check if candidate with this email already exists
+      const { data: existingCandidate } = await supabase
         .from('candidates')
-        .insert({
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.mobilePhone,
-          source: 'Quick Apply',
-          stage: 'Pending',
-          resume_url: resumeUrl,
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('email', formData.email)
+        .maybeSingle();
 
-      if (candidateError) throw candidateError;
+      let candidate;
 
-      // Create candidate_details record
+      if (existingCandidate) {
+        // Update existing candidate
+        const { data: updatedCandidate, error: updateError } = await supabase
+          .from('candidates')
+          .update({
+            name: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.mobilePhone,
+            resume_url: resumeUrl || undefined,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingCandidate.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        candidate = updatedCandidate;
+      } else {
+        // Create new candidate record
+        const { data: newCandidate, error: candidateError } = await supabase
+          .from('candidates')
+          .insert({
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.mobilePhone,
+            source: 'Quick Apply',
+            stage: 'Pending',
+            resume_url: resumeUrl,
+          })
+          .select()
+          .single();
+
+        if (candidateError) throw candidateError;
+        candidate = newCandidate;
+      }
+
+      // Upsert candidate_details record
       const { error: detailsError } = await supabase
         .from('candidate_details')
-        .insert({
+        .upsert({
           candidate_id: candidate.id,
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -231,6 +259,8 @@ const QuickApply = () => {
           position: formData.interestedPosition,
           expected_salary: formData.expectedSalary,
           present_address: formData.preferredLocation,
+        }, {
+          onConflict: 'candidate_id'
         });
 
       if (detailsError) {
