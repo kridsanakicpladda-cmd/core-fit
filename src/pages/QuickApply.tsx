@@ -290,9 +290,61 @@ const QuickApply = () => {
 
     } catch (error: any) {
       console.error('Submit error:', error);
+
+      // Handle duplicate email error with friendly message
+      let errorMessage = "ไม่สามารถบันทึกข้อมูลได้";
+      if (error.code === '23505' && error.message?.includes('email')) {
+        errorMessage = "อีเมลนี้ถูกใช้งานแล้ว ระบบจะอัปเดตข้อมูลให้";
+        // Try update instead
+        try {
+          const { data: existingCandidate } = await supabase
+            .from('candidates')
+            .select('id')
+            .eq('email', formData.email)
+            .single();
+
+          if (existingCandidate) {
+            await supabase
+              .from('candidates')
+              .update({
+                name: `${formData.firstName} ${formData.lastName}`,
+                phone: formData.mobilePhone,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingCandidate.id);
+
+            toast({
+              title: "อัปเดตข้อมูลสำเร็จ",
+              description: "อัปเดตข้อมูลของคุณเรียบร้อยแล้ว",
+            });
+
+            // Reset form
+            setFormData({
+              firstName: "",
+              lastName: "",
+              sex: "",
+              weight: "",
+              height: "",
+              age: "",
+              email: "",
+              mobilePhone: "",
+              interestedPosition: "",
+              expectedSalary: "",
+              preferredLocation: "",
+            });
+            setSelectedFile(null);
+            return;
+          }
+        } catch (retryError) {
+          console.error('Retry error:', retryError);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: error.message || "ไม่สามารถบันทึกข้อมูลได้",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

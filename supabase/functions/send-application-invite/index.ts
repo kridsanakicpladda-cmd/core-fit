@@ -75,7 +75,7 @@ async function sendInviteEmail(accessToken: string, inviteData: InviteRequest, s
               <tr>
                 <td style="padding: 40px 30px;">
                   <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">
-                    เรียน <strong style="color: #db2777;">${inviteData.candidateName}</strong>
+                    เรียน คุณ<strong style="color: #db2777;">${inviteData.candidateName}</strong>
                   </p>
 
                   <p style="margin: 0 0 20px 0; font-size: 15px; color: #374151; line-height: 1.8;">
@@ -99,25 +99,20 @@ async function sendInviteEmail(accessToken: string, inviteData: InviteRequest, s
                     กรุณากดปุ่มด้านล่างเพื่อกรอกใบสมัครงานฉบับเต็ม ข้อมูลที่คุณเคยกรอกไว้จะถูกดึงมาแสดงอัตโนมัติ
                   </p>
 
-                  <!-- Cute Action Button -->
+                  <!-- Action Button -->
                   <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                     <tr>
                       <td align="center">
                         <a href="${applicationUrl}"
-                           style="display: inline-block; padding: 20px 50px; background: linear-gradient(135deg, #f472b6 0%, #ec4899 50%, #db2777 100%); color: #ffffff; text-decoration: none; border-radius: 60px; font-weight: 700; font-size: 18px; box-shadow: 0 8px 25px rgba(236, 72, 153, 0.45), 0 4px 10px rgba(219, 39, 119, 0.3); border: 3px solid rgba(255,255,255,0.3);">
-                          💖 กรอกใบสมัครเลย 💖
+                           style="display: inline-block; padding: 20px 50px; background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%); color: #ffffff; text-decoration: none; border-radius: 60px; font-weight: 700; font-size: 18px; box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45), 0 4px 10px rgba(37, 99, 235, 0.3); border: 3px solid rgba(255,255,255,0.3);">
+                          📝 กรอกใบสมัครเลย
                         </a>
                       </td>
                     </tr>
                   </table>
 
-                  <!-- Decorative hearts -->
-                  <p style="margin: 20px 0; text-align: center; font-size: 24px;">
-                    ✨💕✨
-                  </p>
-
                   <p style="margin: 20px 0 0 0; font-size: 13px; color: #9ca3af; line-height: 1.6; text-align: center;">
-                    หากกดปุ่มไม่ได้ <a href="${applicationUrl}" style="color: #ec4899;">คลิกที่นี่</a>
+                    หากกดปุ่มไม่ได้ <a href="${applicationUrl}" style="color: #3b82f6;">คลิกที่นี่</a>
                   </p>
 
                   <p style="margin: 30px 0 0 0; font-size: 15px; color: #374151; line-height: 1.6;">
