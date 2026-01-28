@@ -5,9 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, FileText, User, Loader2, Sparkles, MapPin, Briefcase, Phone, Mail, Ruler, Weight, Calendar } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import PrivacyPolicyDialog from "@/components/PrivacyPolicyDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { addSparkleEffect } from "@/lib/sparkle";
+import logoIcp from "@/assets/logo.png";
+import logoMabin from "@/assets/ม้าบิน (1).png";
+import logoTopone from "@/assets/TOPONE.png";
+import logoKaset from "@/assets/ICK logo_Horizontal&Vertical-01.png";
 
 interface JobPosition {
   id: string;
@@ -58,7 +64,10 @@ const QuickApply = () => {
     interestedPosition: "",
     expectedSalary: "",
     preferredLocation: "",
+    privacyConsent: false,
   });
+
+  const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -167,7 +176,7 @@ const QuickApply = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -285,6 +294,7 @@ const QuickApply = () => {
         interestedPosition: "",
         expectedSalary: "",
         preferredLocation: "",
+        privacyConsent: false,
       });
       setSelectedFile(null);
 
@@ -331,6 +341,7 @@ const QuickApply = () => {
               interestedPosition: "",
               expectedSalary: "",
               preferredLocation: "",
+              privacyConsent: false,
             });
             setSelectedFile(null);
             return;
@@ -353,32 +364,71 @@ const QuickApply = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            แบบฟอร์มสมัครงานกับบริษัทในเครือ ICP
-          </h1>
-          <p className="text-muted-foreground">
-            ฝากประวัติไว้กับเรา ทีมงานจะพิจารณา Resume และติดต่อกลับให้เร็วที่สุด
-          </p>
+    <div className="min-h-screen bg-white">
+      {/* Hero Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+          <div className="text-center">
+            {/* Company Logos */}
+            <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10 mb-6">
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoIcp}
+                  alt="ICP Ladda"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoMabin}
+                  alt="ปุ๋ยตราม้าบิน"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoTopone}
+                  alt="TOP ONE"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoKaset}
+                  alt="Icon Kaset"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+              สมัครงานกับ ICP Group
+            </h1>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              บริษัทในเครือ ICP Group ดำเนินธุรกิจด้านเคมีเกษตร การผลิตปุ๋ยเคมี
+              <br />
+              และการนำเข้าวัตถุดิบแม่ปุ๋ยคุณภาพ ภายใต้มาตรฐาน ISO ระดับสากล
+            </p>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid gap-6">
-          {/* Resume Upload Section */}
-          <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                อัปโหลด Resume
-              </CardTitle>
-              <CardDescription>
-                อัปโหลด Resume ของคุณเพื่อให้ระบบ AI กรอกข้อมูลให้อัตโนมัติ
-              </CardDescription>
-            </CardHeader>
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-6">
+            {/* Resume Upload Section */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-slate-700">
+                  <div className="bg-slate-100 rounded-lg p-2">
+                    <Sparkles className="h-5 w-5 text-slate-600" />
+                  </div>
+                  อัปโหลด Resume
+                </CardTitle>
+                <CardDescription className="text-base">
+                  อัปโหลด Resume ของคุณเพื่อให้ระบบ AI กรอกข้อมูลให้อัตโนมัติ
+                </CardDescription>
+              </CardHeader>
             <CardContent>
               <div
                 className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
@@ -450,20 +500,22 @@ const QuickApply = () => {
                 )}
               </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          {/* Personal Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                ข้อมูลส่วนตัว
-              </CardTitle>
-              <CardDescription>
-                กรอกข้อมูลส่วนตัวของคุณ
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            {/* Personal Information */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-slate-700">
+                  <div className="bg-slate-100 rounded-lg p-2">
+                    <User className="h-5 w-5 text-slate-600" />
+                  </div>
+                  ข้อมูลส่วนตัว
+                </CardTitle>
+                <CardDescription className="text-base">
+                  กรอกข้อมูลส่วนตัวของคุณ
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
               {/* Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -587,20 +639,22 @@ const QuickApply = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          {/* Job Interest */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-primary" />
-                ความสนใจในงาน
-              </CardTitle>
-              <CardDescription>
-                กรอกข้อมูลตำแหน่งงานและเงินเดือนที่คุณสนใจ
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            {/* Job Interest */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-slate-700">
+                  <div className="bg-slate-100 rounded-lg p-2">
+                    <Briefcase className="h-5 w-5 text-slate-600" />
+                  </div>
+                  ความสนใจในงาน
+                </CardTitle>
+                <CardDescription className="text-base">
+                  กรอกข้อมูลตำแหน่งงานและเงินเดือนที่คุณสนใจ
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="interestedPosition">ตำแหน่งที่สนใจ</Label>
@@ -664,32 +718,64 @@ const QuickApply = () => {
                 </Select>
               </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          {/* Submit Button */}
-          <div className="flex justify-end gap-4">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isSubmitting}
-              onClick={addSparkleEffect}
-              className="min-w-[200px] bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังบันทึก...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Quick Apply
-                </>
-              )}
-            </Button>
+            {/* Privacy Consent */}
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="privacy"
+                checked={formData.privacyConsent}
+                onCheckedChange={(checked) => handleInputChange("privacyConsent", checked as boolean)}
+                required
+              />
+              <label
+                htmlFor="privacy"
+                className="text-sm font-normal leading-relaxed cursor-pointer"
+              >
+                ฉันยินยอมให้เก็บข้อมูลและใช้งานตาม{" "}
+                <button
+                  type="button"
+                  onClick={() => setPrivacyDialogOpen(true)}
+                  className="text-primary underline hover:text-primary/80 font-semibold"
+                >
+                  นโยบายความเป็นส่วนตัว
+                </button>{" "}
+                แล้ว <span className="text-destructive">*</span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-center gap-4 pt-4">
+              <Button
+                type="submit"
+                size="lg"
+                disabled={isSubmitting || !formData.privacyConsent}
+                onClick={addSparkleEffect}
+                className="min-w-[250px] h-14 text-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 shadow-lg hover:shadow-xl transition-all"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5 mr-2" />
+                    ส่งใบสมัคร
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+
+      </div>
+
+      {/* Privacy Policy Dialog */}
+      <PrivacyPolicyDialog
+        open={privacyDialogOpen}
+        onOpenChange={setPrivacyDialogOpen}
+      />
     </div>
   );
 };
