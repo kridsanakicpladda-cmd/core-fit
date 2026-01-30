@@ -39,7 +39,8 @@ const App = () => (
                 <Route path="/apply/:candidateId" element={<PublicJobApplication />} />
                 <Route path="/jobs-apply" element={<PublicQuickApply />} />
                 <Route path="/public-jobs" element={<PublicJobs />} />
-                <Route path="/quick-apply" element={<ProtectedRoute><DashboardLayout><QuickApply /></DashboardLayout></ProtectedRoute>} />
+                <Route path="/quick-apply" element={<PublicQuickApply />} />
+                <Route path="/admin/quick-apply" element={<ProtectedRoute><DashboardLayout><QuickApply /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/jobs" element={<ProtectedRoute><DashboardLayout><Jobs /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/job-application" element={<ProtectedRoute><DashboardLayout><JobApplication /></DashboardLayout></ProtectedRoute>} />
