@@ -61,6 +61,7 @@ interface ParsedResume {
   experience: string;
   education: string;
   skills: string[];
+  raw_text?: string; // Full OCR text from resume
 }
 
 serve(async (req) => {
@@ -164,8 +165,12 @@ CRITICAL THAI LANGUAGE RULES:
                     description: 'List of key skills, tools, and competencies mentioned in the resume',
                     items: { type: 'string' },
                   },
+                  raw_text: {
+                    type: 'string',
+                    description: 'Full text content extracted from the resume document via OCR. Include ALL text from the document for AI analysis.',
+                  },
                 },
-                required: ['name', 'email', 'phone', 'position', 'experience', 'education', 'skills'],
+                required: ['name', 'email', 'phone', 'position', 'experience', 'education', 'skills', 'raw_text'],
                 additionalProperties: false,
               },
             },
@@ -200,6 +205,7 @@ CRITICAL THAI LANGUAGE RULES:
           experience: fixThaiText(args.experience) || '',
           education: fixThaiText(args.education) || '',
           skills: Array.isArray(args.skills) ? args.skills.map((s: string) => fixThaiText(s)) : [],
+          raw_text: fixThaiText(args.raw_text) || '',
         };
         console.log('Parsed via tool_call (Thai fixed):', parsedData);
       } else {
@@ -223,6 +229,7 @@ CRITICAL THAI LANGUAGE RULES:
           experience: fixThaiText(rawData.experience) || '',
           education: fixThaiText(rawData.education) || '',
           skills: Array.isArray(rawData.skills) ? rawData.skills.map((s: string) => fixThaiText(s)) : [],
+          raw_text: fixThaiText(rawData.raw_text) || '',
         };
         console.log('Parsed via fallback (Thai fixed):', parsedData);
       }

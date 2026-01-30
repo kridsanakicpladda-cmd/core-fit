@@ -56,11 +56,13 @@ export const useCalculateFitScore = () => {
 
       if (jobError) throw jobError;
 
-      // Try to get resume text if resume_url exists
+      // Get resume text from candidate_details (extracted via OCR)
       let resumeText = "";
-      if (candidate.resume_url) {
-        // Note: In a real implementation, you might want to fetch and parse the PDF
-        // For now, we'll rely on the candidate_details data
+      if (candidateDetails?.resume_raw_text) {
+        // Use full OCR text from resume for AI analysis
+        resumeText = candidateDetails.resume_raw_text;
+      } else if (candidate.resume_url) {
+        // Fallback: just include URL if no raw text available
         resumeText = `Resume URL: ${candidate.resume_url}`;
       }
 

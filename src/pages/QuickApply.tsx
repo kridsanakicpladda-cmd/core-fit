@@ -26,6 +26,7 @@ const QuickApply = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [resumeRawText, setResumeRawText] = useState<string>(''); // Store full resume text from OCR
   const [isParsing, setIsParsing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -151,6 +152,11 @@ const QuickApply = () => {
 
       if (parseResult?.success && parseResult?.data) {
         const parsed = parseResult.data;
+
+        // Store raw text for AI fit score analysis
+        if (parsed.raw_text) {
+          setResumeRawText(parsed.raw_text);
+        }
 
         // Parse name - split first and last name
         let firstName = '';
@@ -288,6 +294,7 @@ const QuickApply = () => {
           position: formData.interestedPosition,
           expected_salary: formData.expectedSalary,
           present_address: formData.preferredLocation,
+          resume_raw_text: resumeRawText || null, // Store full resume text for AI analysis
         }, {
           onConflict: 'candidate_id'
         });
@@ -317,6 +324,7 @@ const QuickApply = () => {
         privacyConsent: false,
       });
       setSelectedFile(null);
+      setResumeRawText(''); // Clear resume text
 
     } catch (error: any) {
       console.error('Submit error:', error);
@@ -364,6 +372,7 @@ const QuickApply = () => {
               privacyConsent: false,
             });
             setSelectedFile(null);
+            setResumeRawText(''); // Clear resume text
             return;
           }
         } catch (retryError) {
@@ -494,7 +503,10 @@ const QuickApply = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setSelectedFile(null)}
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setResumeRawText(''); // Clear resume text when changing file
+                      }}
                     >
                       เลือกไฟล์ใหม่
                     </Button>
