@@ -549,7 +549,7 @@ const PublicJobApplication = () => {
   // Loading state
   if (isLoadingCandidate) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">กำลังโหลดข้อมูล...</p>
@@ -561,7 +561,7 @@ const PublicJobApplication = () => {
   // Candidate not found
   if (candidateNotFound) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center">
             <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
@@ -578,7 +578,7 @@ const PublicJobApplication = () => {
   // Success state
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
@@ -603,11 +603,11 @@ const PublicJobApplication = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
             ใบสมัครงาน - ICP Group
           </h1>
           <p className="text-muted-foreground">
@@ -616,12 +616,12 @@ const PublicJobApplication = () => {
         </div>
 
         {/* Invited Candidate Banner */}
-        <Card className="border-pink-200 bg-gradient-to-r from-pink-50 to-purple-50">
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <Heart className="h-6 w-6 text-pink-500" />
+              <Heart className="h-6 w-6 text-blue-500" />
               <div>
-                <p className="font-semibold text-pink-700">บริษัทสนใจประวัติของคุณ!</p>
+                <p className="font-semibold text-blue-700">บริษัทสนใจประวัติของคุณ!</p>
                 <p className="text-sm text-muted-foreground">
                   ข้อมูลที่คุณเคยกรอกไว้ถูกดึงมาแสดงอัตโนมัติ กรุณาตรวจสอบและกรอกข้อมูลเพิ่มเติม
                 </p>
@@ -1367,7 +1367,7 @@ const PublicJobApplication = () => {
 
               <Button
                 type="submit"
-                className="w-full h-12 text-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
+                className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90"
                 disabled={isSubmitting}
                 onClick={(e) => addSparkleEffect(e as any)}
               >

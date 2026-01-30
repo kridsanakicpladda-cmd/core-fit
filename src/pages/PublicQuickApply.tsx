@@ -22,7 +22,7 @@ interface JobPosition {
   status: string;
 }
 
-const QuickApply = () => {
+const PublicQuickApply = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -61,31 +61,23 @@ const QuickApply = () => {
   useEffect(() => {
     const fetchJobPositions = async () => {
       try {
-        console.log('Fetching job positions...');
         const { data, error } = await supabase
           .from('job_positions')
           .select('id, title, status')
           .eq('status', 'open')
           .order('title');
 
-        console.log('Job positions result:', { data, error });
-        
         if (error) throw error;
         setJobPositions(data || []);
       } catch (error) {
         console.error('Error fetching job positions:', error);
-        toast({
-          title: "ไม่สามารถโหลดตำแหน่งงานได้",
-          description: "กรุณาลองใหม่อีกครั้ง",
-          variant: "destructive",
-        });
       } finally {
         setIsLoadingPositions(false);
       }
     };
 
     fetchJobPositions();
-  }, [toast]);
+  }, []);
 
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
 
@@ -230,11 +222,13 @@ const QuickApply = () => {
       }
 
       // Check if candidate with this email already exists
-      const { data: existingCandidate } = await supabase
+      const { data: existingCandidate, error: checkError } = await supabase
         .from('candidates')
         .select('id')
         .eq('email', formData.email)
         .maybeSingle();
+
+      console.log('Check existing candidate:', { existingCandidate, checkError });
 
       let candidate;
 
@@ -252,10 +246,20 @@ const QuickApply = () => {
           .select()
           .single();
 
+        console.log('Update candidate result:', { updatedCandidate, updateError });
         if (updateError) throw updateError;
         candidate = updatedCandidate;
       } else {
         // Create new candidate record
+        console.log('Inserting new candidate with data:', {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.mobilePhone,
+          source: 'Quick Apply',
+          stage: 'Pending',
+          resume_url: resumeUrl,
+        });
+
         const { data: newCandidate, error: candidateError } = await supabase
           .from('candidates')
           .insert({
@@ -269,29 +273,33 @@ const QuickApply = () => {
           .select()
           .single();
 
+        console.log('Insert candidate result:', { newCandidate, candidateError });
         if (candidateError) throw candidateError;
         candidate = newCandidate;
       }
 
       // Upsert candidate_details record
-      const { error: detailsError } = await supabase
+      console.log('Upserting candidate_details with candidate_id:', candidate.id);
+      const { data: detailsData, error: detailsError } = await supabase
         .from('candidate_details')
         .upsert({
           candidate_id: candidate.id,
           first_name: formData.firstName,
           last_name: formData.lastName,
-          sex: formData.sex,
-          weight: formData.weight,
-          height: formData.height,
-          age: formData.age,
+          sex: formData.sex || null,
+          weight: formData.weight || null,
+          height: formData.height || null,
+          age: formData.age || null,
           mobile_phone: formData.mobilePhone,
-          position: formData.interestedPosition,
-          expected_salary: formData.expectedSalary,
-          present_address: formData.preferredLocation,
+          position: formData.interestedPosition || null,
+          expected_salary: formData.expectedSalary || null,
+          present_address: formData.preferredLocation || null,
         }, {
           onConflict: 'candidate_id'
-        });
+        })
+        .select();
 
+      console.log('Upsert candidate_details result:', { detailsData, detailsError });
       if (detailsError) {
         console.error('Details error:', detailsError);
       }
@@ -384,54 +392,58 @@ const QuickApply = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-white">
       {/* Hero Header */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 sm:p-8">
-        <div className="text-center">
-          {/* Company Logos */}
-          <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10 mb-6">
-            <div className="hover:scale-105 transition-transform">
-              <img
-                src={logoIcp}
-                alt="ICP Ladda"
-                className="h-14 sm:h-16 w-auto object-contain"
-              />
+      <div className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+          <div className="text-center">
+            {/* Company Logos */}
+            <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10 mb-6">
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoIcp}
+                  alt="ICP Ladda"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoMabin}
+                  alt="ปุ๋ยตราม้าบิน"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoTopone}
+                  alt="TOP ONE"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              <div className="hover:scale-105 transition-transform">
+                <img
+                  src={logoKaset}
+                  alt="Icon Kaset"
+                  className="h-14 sm:h-16 w-auto object-contain"
+                />
+              </div>
             </div>
-            <div className="hover:scale-105 transition-transform">
-              <img
-                src={logoMabin}
-                alt="ปุ๋ยตราม้าบิน"
-                className="h-14 sm:h-16 w-auto object-contain"
-              />
-            </div>
-            <div className="hover:scale-105 transition-transform">
-              <img
-                src={logoTopone}
-                alt="TOP ONE"
-                className="h-14 sm:h-16 w-auto object-contain"
-              />
-            </div>
-            <div className="hover:scale-105 transition-transform">
-              <img
-                src={logoKaset}
-                alt="Icon Kaset"
-                className="h-14 sm:h-16 w-auto object-contain"
-              />
-            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              สมัครงานกับ ICP Group
+            </h1>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              บริษัทในเครือ ICP Group ดำเนินธุรกิจด้านเคมีเกษตร การผลิตปุ๋ยเคมี
+              <br />
+              และการนำเข้าวัตถุดิบแม่ปุ๋ยคุณภาพ ภายใต้มาตรฐาน ISO ระดับสากล
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-            สมัครงานกับ ICP Group
-          </h1>
-          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-            บริษัทในเครือ ICP Group ดำเนินธุรกิจด้านเคมีเกษตร การผลิตปุ๋ยเคมี
-            <br />
-            และการนำเข้าวัตถุดิบแม่ปุ๋ยคุณภาพ ภายใต้มาตรฐาน ISO ระดับสากล
-          </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid gap-6">
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-6">
             {/* Resume Upload Section */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader className="pb-4">
@@ -446,7 +458,7 @@ const QuickApply = () => {
                     type="button"
                     variant="outline"
                     size="lg"
-                    onClick={() => window.location.href = '/public-jobs?returnUrl=/quick-apply'}
+                    onClick={() => window.location.href = '/public-jobs?returnUrl=/jobs-apply'}
                     className="group flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0 rounded-xl px-6 py-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
                   >
                     <Briefcase className="h-5 w-5 text-white/90" />
@@ -458,77 +470,77 @@ const QuickApply = () => {
                   อัปโหลด Resume ของคุณเพื่อให้ระบบ AI กรอกข้อมูลให้อัตโนมัติ
                 </CardDescription>
               </CardHeader>
-            <CardContent>
-              <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-                  isDragging
-                    ? "border-primary bg-primary/5 scale-[1.02]"
-                    : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/5"
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                {isParsing ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="relative">
-                      <Loader2 className="h-16 w-16 text-primary animate-spin" />
-                      <Sparkles className="h-6 w-6 text-primary absolute -top-1 -right-1 animate-pulse" />
+              <CardContent>
+                <div
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+                    isDragging
+                      ? "border-primary bg-primary/5 scale-[1.02]"
+                      : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/5"
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {isParsing ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="relative">
+                        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+                        <Sparkles className="h-6 w-6 text-primary absolute -top-1 -right-1 animate-pulse" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">AI กำลังอ่านข้อมูลจาก Resume...</p>
+                        <p className="text-sm text-muted-foreground mt-1">กรุณารอสักครู่</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-lg">AI กำลังอ่านข้อมูลจาก Resume...</p>
-                      <p className="text-sm text-muted-foreground mt-1">กรุณารอสักครู่</p>
+                  ) : selectedFile ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <FileText className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{selectedFile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setSelectedFile(null)}
+                      >
+                        เลือกไฟล์ใหม่
+                      </Button>
                     </div>
-                  </div>
-                ) : selectedFile ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-primary" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <Upload className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">ลากไฟล์มาวางที่นี่</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          หรือคลิกเพื่อเลือกไฟล์ (PDF, DOC, DOCX)
+                        </p>
+                      </div>
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="resume-upload-public"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('resume-upload-public')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        เลือกไฟล์
+                      </Button>
                     </div>
-                    <div>
-                      <p className="font-semibold">{selectedFile.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setSelectedFile(null)}
-                    >
-                      เลือกไฟล์ใหม่
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-lg">ลากไฟล์มาวางที่นี่</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        หรือคลิกเพื่อเลือกไฟล์ (PDF, DOC, DOCX)
-                      </p>
-                    </div>
-                    <Input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="resume-upload"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('resume-upload')?.click()}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      เลือกไฟล์
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
+                  )}
+                </div>
+              </CardContent>
             </Card>
 
             {/* Personal Information */}
@@ -545,129 +557,129 @@ const QuickApply = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-              {/* Name */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">
-                    ชื่อ <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
-                    placeholder="ชื่อ"
-                    required
-                  />
+                {/* Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">
+                      ชื่อ <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                      placeholder="ชื่อ"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">
+                      นามสกุล <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                      placeholder="นามสกุล"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">
-                    นามสกุล <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
-                    placeholder="นามสกุล"
-                    required
-                  />
-                </div>
-              </div>
 
-              {/* Sex, Age */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sex">เพศ</Label>
-                  <Select
-                    value={formData.sex}
-                    onValueChange={(value) => handleInputChange("sex", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="เลือกเพศ" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">ชาย</SelectItem>
-                      <SelectItem value="female">หญิง</SelectItem>
-                      <SelectItem value="not_specified">ไม่ระบุ</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Sex, Age */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sex">เพศ</Label>
+                    <Select
+                      value={formData.sex}
+                      onValueChange={(value) => handleInputChange("sex", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="เลือกเพศ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">ชาย</SelectItem>
+                        <SelectItem value="female">หญิง</SelectItem>
+                        <SelectItem value="not_specified">ไม่ระบุ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="age" className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      อายุ (ปี)
+                    </Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      value={formData.age}
+                      onChange={(e) => handleInputChange("age", e.target.value)}
+                      placeholder="อายุ"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="age" className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    อายุ (ปี)
-                  </Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange("age", e.target.value)}
-                    placeholder="อายุ"
-                  />
-                </div>
-              </div>
 
-              {/* Height, Weight */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="height" className="flex items-center gap-1">
-                    <Ruler className="h-4 w-4" />
-                    ส่วนสูง (ซม.)
-                  </Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    value={formData.height}
-                    onChange={(e) => handleInputChange("height", e.target.value)}
-                    placeholder="ส่วนสูง"
-                  />
+                {/* Height, Weight */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="height" className="flex items-center gap-1">
+                      <Ruler className="h-4 w-4" />
+                      ส่วนสูง (ซม.)
+                    </Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      value={formData.height}
+                      onChange={(e) => handleInputChange("height", e.target.value)}
+                      placeholder="ส่วนสูง"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weight" className="flex items-center gap-1">
+                      <Weight className="h-4 w-4" />
+                      น้ำหนัก (กก.)
+                    </Label>
+                    <Input
+                      id="weight"
+                      type="number"
+                      value={formData.weight}
+                      onChange={(e) => handleInputChange("weight", e.target.value)}
+                      placeholder="น้ำหนัก"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weight" className="flex items-center gap-1">
-                    <Weight className="h-4 w-4" />
-                    น้ำหนัก (กก.)
-                  </Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    value={formData.weight}
-                    onChange={(e) => handleInputChange("weight", e.target.value)}
-                    placeholder="น้ำหนัก"
-                  />
-                </div>
-              </div>
 
-              {/* Contact */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-1">
-                    <Mail className="h-4 w-4" />
-                    อีเมล <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="example@email.com"
-                    required
-                  />
+                {/* Contact */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      อีเมล <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      placeholder="example@email.com"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mobilePhone" className="flex items-center gap-1">
+                      <Phone className="h-4 w-4" />
+                      เบอร์โทรศัพท์ <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="mobilePhone"
+                      type="tel"
+                      value={formData.mobilePhone}
+                      onChange={(e) => handleInputChange("mobilePhone", e.target.value)}
+                      placeholder="08X-XXX-XXXX"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mobilePhone" className="flex items-center gap-1">
-                    <Phone className="h-4 w-4" />
-                    เบอร์โทรศัพท์ <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="mobilePhone"
-                    type="tel"
-                    value={formData.mobilePhone}
-                    onChange={(e) => handleInputChange("mobilePhone", e.target.value)}
-                    placeholder="08X-XXX-XXXX"
-                    required
-                  />
-                </div>
-              </div>
-            </CardContent>
+              </CardContent>
             </Card>
 
             {/* Job Interest */}
@@ -684,69 +696,69 @@ const QuickApply = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="interestedPosition">ตำแหน่งที่สนใจ</Label>
+                    <Select
+                      value={formData.interestedPosition}
+                      onValueChange={(value) => handleInputChange("interestedPosition", value)}
+                      disabled={isLoadingPositions}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingPositions ? "กำลังโหลด..." : "เลือกตำแหน่งที่สนใจ"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {jobPositions.map((position) => (
+                          <SelectItem key={position.id} value={position.title}>
+                            {position.title}
+                          </SelectItem>
+                        ))}
+                        {jobPositions.length === 0 && !isLoadingPositions && (
+                          <SelectItem value="other" disabled>
+                            ไม่มีตำแหน่งที่เปิดรับสมัคร
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expectedSalary">เงินเดือนที่คาดหวัง (บาท)</Label>
+                    <Input
+                      id="expectedSalary"
+                      type="number"
+                      value={formData.expectedSalary}
+                      onChange={(e) => handleInputChange("expectedSalary", e.target.value)}
+                      placeholder="เช่น 30000"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="interestedPosition">ตำแหน่งที่สนใจ</Label>
+                  <Label htmlFor="preferredLocation" className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    สถานที่ปฏิบัติงาน / เขตที่ต้องการ
+                  </Label>
                   <Select
-                    value={formData.interestedPosition}
-                    onValueChange={(value) => handleInputChange("interestedPosition", value)}
-                    disabled={isLoadingPositions}
+                    value={formData.preferredLocation}
+                    onValueChange={(value) => handleInputChange("preferredLocation", value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={isLoadingPositions ? "กำลังโหลด..." : "เลือกตำแหน่งที่สนใจ"} />
+                      <SelectValue placeholder="เลือกสถานที่ปฏิบัติงาน" />
                     </SelectTrigger>
                     <SelectContent>
-                      {jobPositions.map((position) => (
-                        <SelectItem key={position.id} value={position.title}>
-                          {position.title}
-                        </SelectItem>
-                      ))}
-                      {jobPositions.length === 0 && !isLoadingPositions && (
-                        <SelectItem value="other" disabled>
-                          ไม่มีตำแหน่งที่เปิดรับสมัคร
-                        </SelectItem>
-                      )}
+                      <SelectItem value="เขตเหนือ">เขตเหนือ</SelectItem>
+                      <SelectItem value="เขตภาคกลาง">เขตภาคกลาง</SelectItem>
+                      <SelectItem value="เขตใต้">เขตใต้</SelectItem>
+                      <SelectItem value="เขตตะวันออก">เขตตะวันออก</SelectItem>
+                      <SelectItem value="เขตตะวันตก">เขตตะวันตก</SelectItem>
+                      <SelectItem value="สำนักงานสุรวงศ์ (กรุงเทพ)">สำนักงานสุรวงศ์ (กรุงเทพ)</SelectItem>
+                      <SelectItem value="สำนักงานศรีราชา (ชลบุรี)">สำนักงานศรีราชา (ชลบุรี)</SelectItem>
+                      <SelectItem value="โรงงานนครปฐม">โรงงานนครปฐม</SelectItem>
+                      <SelectItem value="โรงงานอยุธยา">โรงงานอยุธยา</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="expectedSalary">เงินเดือนที่คาดหวัง (บาท)</Label>
-                  <Input
-                    id="expectedSalary"
-                    type="number"
-                    value={formData.expectedSalary}
-                    onChange={(e) => handleInputChange("expectedSalary", e.target.value)}
-                    placeholder="เช่น 30000"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="preferredLocation" className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  สถานที่ปฏิบัติงาน / เขตที่ต้องการ
-                </Label>
-                <Select
-                  value={formData.preferredLocation}
-                  onValueChange={(value) => handleInputChange("preferredLocation", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="เลือกสถานที่ปฏิบัติงาน" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="เขตเหนือ">เขตเหนือ</SelectItem>
-                    <SelectItem value="เขตภาคกลาง">เขตภาคกลาง</SelectItem>
-                    <SelectItem value="เขตใต้">เขตใต้</SelectItem>
-                    <SelectItem value="เขตตะวันออก">เขตตะวันออก</SelectItem>
-                    <SelectItem value="เขตตะวันตก">เขตตะวันตก</SelectItem>
-                    <SelectItem value="สำนักงานสุรวงศ์ (กรุงเทพ)">สำนักงานสุรวงศ์ (กรุงเทพ)</SelectItem>
-                    <SelectItem value="สำนักงานศรีราชา (ชลบุรี)">สำนักงานศรีราชา (ชลบุรี)</SelectItem>
-                    <SelectItem value="โรงงานนครปฐม">โรงงานนครปฐม</SelectItem>
-                    <SelectItem value="โรงงานอยุธยา">โรงงานอยุธยา</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
+              </CardContent>
             </Card>
 
             {/* Privacy Consent */}
@@ -797,6 +809,7 @@ const QuickApply = () => {
             </div>
           </div>
         </form>
+      </div>
 
       {/* Privacy Policy Dialog */}
       <PrivacyPolicyDialog
@@ -807,4 +820,4 @@ const QuickApply = () => {
   );
 };
 
-export default QuickApply;
+export default PublicQuickApply;
