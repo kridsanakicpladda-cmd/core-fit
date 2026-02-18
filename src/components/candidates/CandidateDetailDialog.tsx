@@ -731,6 +731,12 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   <span>ชื่อบริษัทที่รู้จัก: {candidateDetails.relatives_at_icp_details}</span>
                 </div>
               )}
+              {candidateDetails?.worked_at_icp_details && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>วันที่สะดวกเริ่มงาน: {new Date(candidateDetails.worked_at_icp_details).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -53,6 +53,7 @@ const PublicQuickApply = () => {
     jobType: "", // ประเภทงาน: นักศึกษาฝึกงาน หรือ พนักงานประจำ
     knowsICPG: "", // รู้จักบริษัทในเครือ ICPG หรือไม่
     knownCompanyName: "", // ชื่อบริษัทที่รู้จัก
+    availableStartDate: "", // วันที่สะดวกเริ่มงาน
     privacyConsent: false,
   });
 
@@ -209,8 +210,32 @@ const PublicQuickApply = () => {
 
     try {
       // Validate required fields
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.mobilePhone) {
-        throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+      const requiredFields = [
+        { field: 'firstName', label: 'ชื่อ' },
+        { field: 'lastName', label: 'นามสกุล' },
+        { field: 'sex', label: 'เพศ' },
+        { field: 'age', label: 'อายุ' },
+        { field: 'height', label: 'ส่วนสูง' },
+        { field: 'weight', label: 'น้ำหนัก' },
+        { field: 'email', label: 'อีเมล' },
+        { field: 'mobilePhone', label: 'เบอร์โทรศัพท์' },
+        { field: 'interestedPosition', label: 'ตำแหน่งที่สนใจ' },
+        { field: 'expectedSalary', label: 'เงินเดือนที่คาดหวัง' },
+        { field: 'jobType', label: 'ประเภทงานที่สนใจ' },
+        { field: 'preferredLocation', label: 'สถานที่ปฏิบัติงาน' },
+        { field: 'workExperience', label: 'ประสบการณ์ฝึกงาน/ทำงาน' },
+        { field: 'knowsICPG', label: 'รู้จักบริษัทในเครือ ICPG' },
+        { field: 'availableStartDate', label: 'วันที่สะดวกเริ่มงาน' },
+      ];
+
+      const missingFields = requiredFields.filter(f => !formData[f.field as keyof typeof formData]);
+      if (missingFields.length > 0) {
+        throw new Error(`กรุณากรอกข้อมูลให้ครบถ้วน: ${missingFields.map(f => f.label).join(', ')}`);
+      }
+
+      // Additional validation: if knows ICPG, company name is required
+      if (formData.knowsICPG === "yes" && !formData.knownCompanyName) {
+        throw new Error('กรุณาระบุชื่อบริษัทที่ท่านรู้จัก');
       }
 
       // Upload resume file if exists
@@ -309,6 +334,7 @@ const PublicQuickApply = () => {
           training_curriculums: formData.jobType === "intern" ? "นักศึกษาฝึกงาน" : formData.jobType === "fulltime" ? "พนักงานประจำ" : null, // ประเภทงาน
           relatives_at_icp: formData.knowsICPG === "yes" ? "รู้จัก" : formData.knowsICPG === "no" ? "ไม่รู้จัก" : null, // รู้จักบริษัทในเครือ ICPG
           relatives_at_icp_details: formData.knownCompanyName || null, // ชื่อบริษัทที่รู้จัก
+          worked_at_icp_details: formData.availableStartDate || null, // วันที่สะดวกเริ่มงาน
           resume_raw_text: resumeRawText || null, // Store full resume text for AI analysis
         }, {
           onConflict: 'candidate_id'
@@ -342,6 +368,7 @@ const PublicQuickApply = () => {
         jobType: "",
         knowsICPG: "",
         knownCompanyName: "",
+        availableStartDate: "",
         privacyConsent: false,
       });
       setSelectedFile(null);
@@ -394,6 +421,7 @@ const PublicQuickApply = () => {
               jobType: "",
               knowsICPG: "",
               knownCompanyName: "",
+              availableStartDate: "",
               privacyConsent: false,
             });
             setSelectedFile(null);
@@ -621,10 +649,11 @@ const PublicQuickApply = () => {
                 {/* Sex, Age */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label htmlFor="sex" className="text-sm">เพศ</Label>
+                    <Label htmlFor="sex" className="text-sm">เพศ <span className="text-destructive">*</span></Label>
                     <Select
                       value={formData.sex}
                       onValueChange={(value) => handleInputChange("sex", value)}
+                      required
                     >
                       <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder="เลือกเพศ" />
@@ -639,7 +668,7 @@ const PublicQuickApply = () => {
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label htmlFor="age" className="flex items-center gap-1 text-sm">
                       <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      อายุ (ปี)
+                      อายุ (ปี) <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="age"
@@ -648,6 +677,7 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("age", e.target.value)}
                       placeholder="อายุ"
                       className="h-10 sm:h-11"
+                      required
                     />
                   </div>
                 </div>
@@ -657,7 +687,7 @@ const PublicQuickApply = () => {
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label htmlFor="height" className="flex items-center gap-1 text-sm">
                       <Ruler className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      ส่วนสูง (ซม.)
+                      ส่วนสูง (ซม.) <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="height"
@@ -666,12 +696,13 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("height", e.target.value)}
                       placeholder="ส่วนสูง"
                       className="h-10 sm:h-11"
+                      required
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label htmlFor="weight" className="flex items-center gap-1 text-sm">
                       <Weight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      น้ำหนัก (กก.)
+                      น้ำหนัก (กก.) <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="weight"
@@ -680,6 +711,7 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("weight", e.target.value)}
                       placeholder="น้ำหนัก"
                       className="h-10 sm:h-11"
+                      required
                     />
                   </div>
                 </div>
@@ -736,11 +768,12 @@ const PublicQuickApply = () => {
               <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label htmlFor="interestedPosition" className="text-sm">ตำแหน่งที่สนใจ</Label>
+                    <Label htmlFor="interestedPosition" className="text-sm">ตำแหน่งที่สนใจ <span className="text-destructive">*</span></Label>
                     <Select
                       value={formData.interestedPosition}
                       onValueChange={(value) => handleInputChange("interestedPosition", value)}
                       disabled={isLoadingPositions}
+                      required
                     >
                       <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder={isLoadingPositions ? "กำลังโหลด..." : "เลือกตำแหน่งที่สนใจ"} />
@@ -760,7 +793,7 @@ const PublicQuickApply = () => {
                     </Select>
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label htmlFor="expectedSalary" className="text-sm">เงินเดือนที่คาดหวัง (บาท)</Label>
+                    <Label htmlFor="expectedSalary" className="text-sm">เงินเดือนที่คาดหวัง (บาท) <span className="text-destructive">*</span></Label>
                     <Input
                       id="expectedSalary"
                       type="number"
@@ -768,16 +801,18 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("expectedSalary", e.target.value)}
                       placeholder="เช่น 30000"
                       className="h-10 sm:h-11"
+                      required
                     />
                   </div>
                 </div>
 
                 {/* Job Type Selection */}
                 <div className="space-y-1.5 sm:space-y-2">
-                  <Label className="text-sm">ประเภทงานที่สนใจ</Label>
+                  <Label className="text-sm">ประเภทงานที่สนใจ <span className="text-destructive">*</span></Label>
                   <Select
                     value={formData.jobType}
                     onValueChange={(value) => handleInputChange("jobType", value)}
+                    required
                   >
                     <SelectTrigger className="h-10 sm:h-11">
                       <SelectValue placeholder="เลือกประเภทงาน" />
@@ -792,11 +827,12 @@ const PublicQuickApply = () => {
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label htmlFor="preferredLocation" className="flex items-center gap-1 text-sm">
                     <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    สถานที่ปฏิบัติงาน / เขตที่ต้องการ
+                    สถานที่ปฏิบัติงาน / เขตที่ต้องการ <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.preferredLocation}
                     onValueChange={(value) => handleInputChange("preferredLocation", value)}
+                    required
                   >
                     <SelectTrigger className="h-10 sm:h-11">
                       <SelectValue placeholder="เลือกสถานที่ปฏิบัติงาน" />
@@ -819,7 +855,7 @@ const PublicQuickApply = () => {
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label htmlFor="workExperience" className="flex items-center gap-1 text-sm">
                     <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    ประสบการณ์ฝึกงาน/ทำงาน
+                    ประสบการณ์ฝึกงาน/ทำงาน <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     id="workExperience"
@@ -827,13 +863,14 @@ const PublicQuickApply = () => {
                     onChange={(e) => handleInputChange("workExperience", e.target.value)}
                     placeholder="กรุณาระบุประสบการณ์การทำงาน เช่น ตำแหน่ง บริษัท ระยะเวลา หน้าที่รับผิดชอบ"
                     className="min-h-[100px] resize-none"
+                    required
                   />
                 </div>
 
                 {/* ICPG Knowledge Question */}
                 <div className="space-y-3 sm:space-y-4">
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label className="text-sm">ท่านรู้จักบริษัทในเครือ ICPG มาก่อนหรือไม่</Label>
+                    <Label className="text-sm">ท่านรู้จักบริษัทในเครือ ICPG มาก่อนหรือไม่ <span className="text-destructive">*</span></Label>
                     <Select
                       value={formData.knowsICPG}
                       onValueChange={(value) => {
@@ -843,6 +880,7 @@ const PublicQuickApply = () => {
                           handleInputChange("knownCompanyName", "");
                         }
                       }}
+                      required
                     >
                       <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder="เลือกคำตอบ" />
@@ -858,7 +896,7 @@ const PublicQuickApply = () => {
                   {formData.knowsICPG === "yes" && (
                     <div className="space-y-1.5 sm:space-y-2 pl-4 border-l-2 border-blue-200">
                       <Label htmlFor="knownCompanyName" className="text-sm">
-                        ระบุชื่อบริษัทที่ท่านรู้จัก
+                        ระบุชื่อบริษัทที่ท่านรู้จัก <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="knownCompanyName"
@@ -866,9 +904,26 @@ const PublicQuickApply = () => {
                         onChange={(e) => handleInputChange("knownCompanyName", e.target.value)}
                         placeholder="เช่น ICP Ladda, ม้าบิน, Top One, Icon Kaset"
                         className="h-10 sm:h-11"
+                        required
                       />
                     </div>
                   )}
+                </div>
+
+                {/* Available Start Date */}
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="availableStartDate" className="flex items-center gap-1 text-sm">
+                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    วันที่สะดวกเริ่มงาน <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="availableStartDate"
+                    type="date"
+                    required
+                    value={formData.availableStartDate}
+                    onChange={(e) => handleInputChange("availableStartDate", e.target.value)}
+                    className="h-10 sm:h-11"
+                  />
                 </div>
               </CardContent>
             </Card>
