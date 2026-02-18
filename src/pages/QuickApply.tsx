@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, User, Loader2, Sparkles, MapPin, Briefcase, Phone, Mail, Ruler, Weight, Calendar, ExternalLink } from "lucide-react";
+import { Upload, FileText, User, Loader2, Sparkles, MapPin, Briefcase, Phone, Mail, Ruler, Weight, Calendar, ExternalLink, ClipboardList } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import PrivacyPolicyDialog from "@/components/PrivacyPolicyDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ const QuickApply = () => {
     interestedPosition: positionFromUrl,
     expectedSalary: "",
     preferredLocation: "",
+    workExperience: "",
     privacyConsent: false,
   });
 
@@ -175,6 +177,7 @@ const QuickApply = () => {
           email: parsed.email || prev.email,
           mobilePhone: parsed.phone || prev.mobilePhone,
           interestedPosition: parsed.position || prev.interestedPosition,
+          workExperience: parsed.experience || prev.workExperience,
           expectedSalary: prev.expectedSalary,
           sex: prev.sex,
           age: prev.age,
@@ -211,6 +214,8 @@ const QuickApply = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('Form data being submitted:', formData);
+      
       // Validate required fields
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.mobilePhone) {
         throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
@@ -280,6 +285,8 @@ const QuickApply = () => {
       }
 
       // Upsert candidate_details record
+      console.log('Saving candidate_details with work_experience:', formData.workExperience);
+      
       const { error: detailsError } = await supabase
         .from('candidate_details')
         .upsert({
@@ -294,6 +301,7 @@ const QuickApply = () => {
           position: formData.interestedPosition,
           expected_salary: formData.expectedSalary,
           present_address: formData.preferredLocation,
+          other_skills: formData.workExperience || null, // ประสบการณ์ฝึกงาน/ทำงาน
           resume_raw_text: resumeRawText || null, // Store full resume text for AI analysis
         }, {
           onConflict: 'candidate_id'
@@ -301,6 +309,8 @@ const QuickApply = () => {
 
       if (detailsError) {
         console.error('Details error:', detailsError);
+      } else {
+        console.log('Candidate details saved successfully');
       }
 
       toast({
@@ -321,6 +331,7 @@ const QuickApply = () => {
         interestedPosition: "",
         expectedSalary: "",
         preferredLocation: "",
+        workExperience: "",
         privacyConsent: false,
       });
       setSelectedFile(null);
@@ -734,6 +745,21 @@ const QuickApply = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="workExperience" className="flex items-center gap-1">
+                  <Briefcase className="h-4 w-4" />
+                  ประสบการณ์ฝึกงาน/ทำงาน
+                </Label>
+                <textarea
+                  id="workExperience"
+                  value={formData.workExperience}
+                  onChange={(e) => handleInputChange("workExperience", e.target.value)}
+                  placeholder="เช่น ฝึกงานที่บริษัท ABC เป็นเวลา 3 เดือน, ทำงานที่บริษัท XYZ ตำแหน่ง... เป็นเวลา 2 ปี"
+                  rows={4}
+                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="preferredLocation" className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   สถานที่ปฏิบัติงาน / เขตที่ต้องการ
@@ -757,6 +783,21 @@ const QuickApply = () => {
                     <SelectItem value="โรงงานอยุธยา">โรงงานอยุธยา</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Work Experience */}
+              <div className="space-y-2">
+                <Label htmlFor="workExperience" className="flex items-center gap-1">
+                  <ClipboardList className="h-4 w-4" />
+                  ประสบการณ์ฝึกงาน/ทำงาน
+                </Label>
+                <Textarea
+                  id="workExperience"
+                  value={formData.workExperience}
+                  onChange={(e) => handleInputChange("workExperience", e.target.value)}
+                  placeholder="กรุณาระบุประสบการณ์การทำงาน เช่น ตำแหน่ง บริษัท ระยะเวลา หน้าที่รับผิดชอบ"
+                  className="min-h-[100px] resize-none"
+                />
               </div>
             </CardContent>
             </Card>

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, User, Loader2, Sparkles, MapPin, Briefcase, Phone, Mail, Ruler, Weight, Calendar, ExternalLink } from "lucide-react";
+import { Upload, FileText, User, Loader2, Sparkles, MapPin, Briefcase, Phone, Mail, Ruler, Weight, Calendar, ExternalLink, ClipboardList } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import PrivacyPolicyDialog from "@/components/PrivacyPolicyDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ const PublicQuickApply = () => {
     interestedPosition: positionFromUrl,
     expectedSalary: "",
     preferredLocation: "",
+    workExperience: "", // ประสบการณ์ฝึกงาน/ทำงาน
     privacyConsent: false,
   });
 
@@ -300,6 +302,7 @@ const PublicQuickApply = () => {
           position: formData.interestedPosition || null,
           expected_salary: formData.expectedSalary || null,
           present_address: formData.preferredLocation || null,
+          other_skills: formData.workExperience || null, // ประสบการณ์ฝึกงาน/ทำงาน
           resume_raw_text: resumeRawText || null, // Store full resume text for AI analysis
         }, {
           onConflict: 'candidate_id'
@@ -329,6 +332,7 @@ const PublicQuickApply = () => {
         interestedPosition: "",
         expectedSalary: "",
         preferredLocation: "",
+        workExperience: "",
         privacyConsent: false,
       });
       setSelectedFile(null);
@@ -377,6 +381,7 @@ const PublicQuickApply = () => {
               interestedPosition: "",
               expectedSalary: "",
               preferredLocation: "",
+              workExperience: "",
               privacyConsent: false,
             });
             setSelectedFile(null);
@@ -779,6 +784,21 @@ const PublicQuickApply = () => {
                       <SelectItem value="โรงงานอยุธยา">โรงงานอยุธยา</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Work Experience */}
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="workExperience" className="flex items-center gap-1 text-sm">
+                    <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    ประสบการณ์ฝึกงาน/ทำงาน
+                  </Label>
+                  <Textarea
+                    id="workExperience"
+                    value={formData.workExperience}
+                    onChange={(e) => handleInputChange("workExperience", e.target.value)}
+                    placeholder="กรุณาระบุประสบการณ์การทำงาน เช่น ตำแหน่ง บริษัท ระยะเวลา หน้าที่รับผิดชอบ"
+                    className="min-h-[100px] resize-none"
+                  />
                 </div>
               </CardContent>
             </Card>
