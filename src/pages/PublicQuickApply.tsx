@@ -404,45 +404,46 @@ const PublicQuickApply = () => {
     <div className="min-h-screen bg-white">
       {/* Hero Header */}
       <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
           <div className="text-center">
             {/* Company Logos */}
-            <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10 mb-6">
+            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6 md:gap-10 mb-4 sm:mb-6">
               <div className="hover:scale-105 transition-transform">
                 <img
                   src={logoIcp}
                   alt="ICP Ladda"
-                  className="h-14 sm:h-16 w-auto object-contain"
+                  className="h-10 sm:h-14 md:h-16 w-auto object-contain"
                 />
               </div>
               <div className="hover:scale-105 transition-transform">
                 <img
                   src={logoMabin}
                   alt="ปุ๋ยตราม้าบิน"
-                  className="h-14 sm:h-16 w-auto object-contain"
+                  className="h-10 sm:h-14 md:h-16 w-auto object-contain"
                 />
               </div>
               <div className="hover:scale-105 transition-transform">
                 <img
                   src={logoTopone}
                   alt="TOP ONE"
-                  className="h-14 sm:h-16 w-auto object-contain"
+                  className="h-10 sm:h-14 md:h-16 w-auto object-contain"
                 />
               </div>
               <div className="hover:scale-105 transition-transform">
                 <img
                   src={logoKaset}
                   alt="Icon Kaset"
-                  className="h-14 sm:h-16 w-auto object-contain"
+                  className="h-10 sm:h-14 md:h-16 w-auto object-contain"
                 />
               </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               สมัครงานกับ ICP Group
             </h1>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
               บริษัทในเครือ ICP Group ดำเนินธุรกิจด้านเคมีเกษตร การผลิตปุ๋ยเคมี
-              <br />
+              <span className="hidden sm:inline"><br /></span>
+              <span className="sm:hidden"> </span>
               และการนำเข้าวัตถุดิบแม่ปุ๋ยคุณภาพ ภายใต้มาตรฐาน ISO ระดับสากล
             </p>
           </div>
@@ -450,38 +451,38 @@ const PublicQuickApply = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-6">
+          <div className="grid gap-4 sm:gap-6">
             {/* Resume Upload Section */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-slate-700">
-                    <div className="bg-slate-100 rounded-lg p-2">
-                      <Sparkles className="h-5 w-5 text-slate-600" />
+              <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="flex items-center gap-2 text-slate-700 text-base sm:text-lg">
+                    <div className="bg-slate-100 rounded-lg p-1.5 sm:p-2">
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                     </div>
                     อัปโหลด Resume
                   </CardTitle>
                   <Button
                     type="button"
                     variant="outline"
-                    size="lg"
+                    size="default"
                     onClick={() => window.location.href = '/public-jobs?returnUrl=/jobs-apply'}
-                    className="group flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0 rounded-xl px-6 py-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                    className="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0 rounded-xl px-4 sm:px-6 py-2.5 sm:py-3 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 w-full sm:w-auto"
                   >
-                    <Briefcase className="h-5 w-5 text-white/90" />
-                    <span className="font-bold text-[15px]">ตำแหน่งงานที่เปิดรับ</span>
-                    <ExternalLink className="h-4 w-4 text-white/70 group-hover:translate-x-0.5 transition-transform" />
+                    <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-white/90" />
+                    <span className="font-bold text-sm sm:text-[15px]">ตำแหน่งงานที่เปิดรับ</span>
+                    <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white/70 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </div>
-                <CardDescription className="text-base">
+                <CardDescription className="text-sm sm:text-base mt-2">
                   อัปโหลด Resume ของคุณเพื่อให้ระบบ AI กรอกข้อมูลให้อัตโนมัติ
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 sm:px-6">
                 <div
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+                  className={`border-2 border-dashed rounded-xl p-4 sm:p-8 text-center transition-all duration-300 ${
                     isDragging
                       ? "border-primary bg-primary/5 scale-[1.02]"
                       : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/5"
@@ -491,30 +492,31 @@ const PublicQuickApply = () => {
                   onDrop={handleDrop}
                 >
                   {isParsing ? (
-                    <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
                       <div className="relative">
-                        <Loader2 className="h-16 w-16 text-primary animate-spin" />
-                        <Sparkles className="h-6 w-6 text-primary absolute -top-1 -right-1 animate-pulse" />
+                        <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-primary animate-spin" />
+                        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary absolute -top-1 -right-1 animate-pulse" />
                       </div>
                       <div>
-                        <p className="font-semibold text-lg">AI กำลังอ่านข้อมูลจาก Resume...</p>
-                        <p className="text-sm text-muted-foreground mt-1">กรุณารอสักครู่</p>
+                        <p className="font-semibold text-base sm:text-lg">AI กำลังอ่านข้อมูลจาก Resume...</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">กรุณารอสักครู่</p>
                       </div>
                     </div>
                   ) : selectedFile ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <FileText className="h-8 w-8 text-primary" />
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
+                      <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold">{selectedFile.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-semibold text-sm sm:text-base break-all px-2">{selectedFile.name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
                       <Button
                         type="button"
                         variant="outline"
+                        size="sm"
                         onClick={() => {
                           setSelectedFile(null);
                           setResumeRawText(''); // Clear resume text when changing file
@@ -524,13 +526,13 @@ const PublicQuickApply = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                        <Upload className="h-8 w-8 text-primary" />
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
+                      <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold text-lg">ลากไฟล์มาวางที่นี่</p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="font-semibold text-base sm:text-lg">ลากไฟล์มาวางที่นี่</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                           หรือคลิกเพื่อเลือกไฟล์ (PDF, DOC, DOCX)
                         </p>
                       </div>
@@ -557,22 +559,22 @@ const PublicQuickApply = () => {
 
             {/* Personal Information */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-slate-700">
-                  <div className="bg-slate-100 rounded-lg p-2">
-                    <User className="h-5 w-5 text-slate-600" />
+              <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+                <CardTitle className="flex items-center gap-2 text-slate-700 text-base sm:text-lg">
+                  <div className="bg-slate-100 rounded-lg p-1.5 sm:p-2">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                   </div>
                   ข้อมูลส่วนตัว
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-sm sm:text-base">
                   กรอกข้อมูลส่วนตัวของคุณ
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
                 {/* Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="firstName" className="text-sm">
                       ชื่อ <span className="text-destructive">*</span>
                     </Label>
                     <Input
@@ -581,10 +583,11 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
                       placeholder="ชื่อ"
                       required
+                      className="h-10 sm:h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="lastName" className="text-sm">
                       นามสกุล <span className="text-destructive">*</span>
                     </Label>
                     <Input
@@ -593,19 +596,20 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
                       placeholder="นามสกุล"
                       required
+                      className="h-10 sm:h-11"
                     />
                   </div>
                 </div>
 
                 {/* Sex, Age */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sex">เพศ</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="sex" className="text-sm">เพศ</Label>
                     <Select
                       value={formData.sex}
                       onValueChange={(value) => handleInputChange("sex", value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder="เลือกเพศ" />
                       </SelectTrigger>
                       <SelectContent>
@@ -615,9 +619,9 @@ const PublicQuickApply = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="age" className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="age" className="flex items-center gap-1 text-sm">
+                      <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       อายุ (ปี)
                     </Label>
                     <Input
@@ -626,15 +630,16 @@ const PublicQuickApply = () => {
                       value={formData.age}
                       onChange={(e) => handleInputChange("age", e.target.value)}
                       placeholder="อายุ"
+                      className="h-10 sm:h-11"
                     />
                   </div>
                 </div>
 
                 {/* Height, Weight */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="height" className="flex items-center gap-1">
-                      <Ruler className="h-4 w-4" />
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="height" className="flex items-center gap-1 text-sm">
+                      <Ruler className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       ส่วนสูง (ซม.)
                     </Label>
                     <Input
@@ -643,11 +648,12 @@ const PublicQuickApply = () => {
                       value={formData.height}
                       onChange={(e) => handleInputChange("height", e.target.value)}
                       placeholder="ส่วนสูง"
+                      className="h-10 sm:h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weight" className="flex items-center gap-1">
-                      <Weight className="h-4 w-4" />
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="weight" className="flex items-center gap-1 text-sm">
+                      <Weight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       น้ำหนัก (กก.)
                     </Label>
                     <Input
@@ -656,15 +662,16 @@ const PublicQuickApply = () => {
                       value={formData.weight}
                       onChange={(e) => handleInputChange("weight", e.target.value)}
                       placeholder="น้ำหนัก"
+                      className="h-10 sm:h-11"
                     />
                   </div>
                 </div>
 
                 {/* Contact */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-1">
-                      <Mail className="h-4 w-4" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-1 text-sm">
+                      <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       อีเมล <span className="text-destructive">*</span>
                     </Label>
                     <Input
@@ -674,11 +681,12 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       placeholder="example@email.com"
                       required
+                      className="h-10 sm:h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mobilePhone" className="flex items-center gap-1">
-                      <Phone className="h-4 w-4" />
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="mobilePhone" className="flex items-center gap-1 text-sm">
+                      <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       เบอร์โทรศัพท์ <span className="text-destructive">*</span>
                     </Label>
                     <Input
@@ -688,6 +696,7 @@ const PublicQuickApply = () => {
                       onChange={(e) => handleInputChange("mobilePhone", e.target.value)}
                       placeholder="08X-XXX-XXXX"
                       required
+                      className="h-10 sm:h-11"
                     />
                   </div>
                 </div>
@@ -696,27 +705,27 @@ const PublicQuickApply = () => {
 
             {/* Job Interest */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-slate-700">
-                  <div className="bg-slate-100 rounded-lg p-2">
-                    <Briefcase className="h-5 w-5 text-slate-600" />
+              <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+                <CardTitle className="flex items-center gap-2 text-slate-700 text-base sm:text-lg">
+                  <div className="bg-slate-100 rounded-lg p-1.5 sm:p-2">
+                    <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                   </div>
                   ความสนใจในงาน
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-sm sm:text-base">
                   กรอกข้อมูลตำแหน่งงานและเงินเดือนที่คุณสนใจ
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="interestedPosition">ตำแหน่งที่สนใจ</Label>
+              <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="interestedPosition" className="text-sm">ตำแหน่งที่สนใจ</Label>
                     <Select
                       value={formData.interestedPosition}
                       onValueChange={(value) => handleInputChange("interestedPosition", value)}
                       disabled={isLoadingPositions}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder={isLoadingPositions ? "กำลังโหลด..." : "เลือกตำแหน่งที่สนใจ"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -733,28 +742,29 @@ const PublicQuickApply = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expectedSalary">เงินเดือนที่คาดหวัง (บาท)</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="expectedSalary" className="text-sm">เงินเดือนที่คาดหวัง (บาท)</Label>
                     <Input
                       id="expectedSalary"
                       type="number"
                       value={formData.expectedSalary}
                       onChange={(e) => handleInputChange("expectedSalary", e.target.value)}
                       placeholder="เช่น 30000"
+                      className="h-10 sm:h-11"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="preferredLocation" className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="preferredLocation" className="flex items-center gap-1 text-sm">
+                    <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     สถานที่ปฏิบัติงาน / เขตที่ต้องการ
                   </Label>
                   <Select
                     value={formData.preferredLocation}
                     onValueChange={(value) => handleInputChange("preferredLocation", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11">
                       <SelectValue placeholder="เลือกสถานที่ปฏิบัติงาน" />
                     </SelectTrigger>
                     <SelectContent>
@@ -774,16 +784,17 @@ const PublicQuickApply = () => {
             </Card>
 
             {/* Privacy Consent */}
-            <div className="flex items-start space-x-3">
+            <div className="flex items-start space-x-2.5 sm:space-x-3 px-1">
               <Checkbox
                 id="privacy"
                 checked={formData.privacyConsent}
                 onCheckedChange={(checked) => handleInputChange("privacyConsent", checked as boolean)}
                 required
+                className="mt-0.5"
               />
               <label
                 htmlFor="privacy"
-                className="text-sm font-normal leading-relaxed cursor-pointer"
+                className="text-xs sm:text-sm font-normal leading-relaxed cursor-pointer"
               >
                 ฉันยินยอมให้เก็บข้อมูลและใช้งานตาม{" "}
                 <button
@@ -798,22 +809,22 @@ const PublicQuickApply = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-center gap-4 pt-4">
+            <div className="flex justify-center gap-4 pt-2 sm:pt-4 pb-4 sm:pb-0">
               <Button
                 type="submit"
                 size="lg"
                 disabled={isSubmitting || !formData.privacyConsent}
                 onClick={addSparkleEffect}
-                className="min-w-[250px] h-14 text-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 shadow-lg hover:shadow-xl transition-all"
+                className="w-full sm:w-auto sm:min-w-[250px] h-12 sm:h-14 text-base sm:text-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 shadow-lg hover:shadow-xl transition-all"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" />
                     กำลังบันทึก...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-5 w-5 mr-2" />
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     ส่งใบสมัคร
                   </>
                 )}
