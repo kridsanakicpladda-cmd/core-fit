@@ -682,13 +682,30 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
           <Separator />
 
+          {/* Work Experience from Quick Apply */}
+          {candidateDetails?.work_experience && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-primary" />
+                ประสบการณ์ฝึกงาน/ทำงาน
+              </h3>
+              <div className="p-4 border rounded-lg bg-muted/20">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {candidateDetails.work_experience}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Employment Record */}
           {candidateDetails?.employment_records && candidateDetails.employment_records.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-primary" />
-                ประวัติการทำงาน
-              </h3>
+            <>
+              <Separator />
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-primary" />
+                  ประวัติการทำงาน (รายละเอียด)
+                </h3>
               <div className="space-y-4">
                 {candidateDetails.employment_records.map((record: any, index: number) => (
                   <div key={index} className="p-4 border rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
@@ -739,6 +756,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                 ))}
               </div>
             </div>
+            </>
           )}
 
           <Separator />

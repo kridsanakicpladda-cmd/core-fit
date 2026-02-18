@@ -59,6 +59,7 @@ export interface CandidateDetails {
   family_members: any[];
   language_skills: any[];
   privacy_consent: boolean | null;
+  work_experience: string | null;
 }
 
 export function useCandidateDetails(candidateId: string | null) {

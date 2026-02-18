@@ -50,6 +50,9 @@ const PublicQuickApply = () => {
     expectedSalary: "",
     preferredLocation: "",
     workExperience: "", // ประสบการณ์ฝึกงาน/ทำงาน
+    jobType: "", // ประเภทงาน: นักศึกษาฝึกงาน หรือ พนักงานประจำ
+    knowsICPG: "", // รู้จักบริษัทในเครือ ICPG หรือไม่
+    knownCompanyName: "", // ชื่อบริษัทที่รู้จัก
     privacyConsent: false,
   });
 
@@ -303,6 +306,9 @@ const PublicQuickApply = () => {
           expected_salary: formData.expectedSalary || null,
           present_address: formData.preferredLocation || null,
           other_skills: formData.workExperience || null, // ประสบการณ์ฝึกงาน/ทำงาน
+          training_curriculums: formData.jobType === "intern" ? "นักศึกษาฝึกงาน" : formData.jobType === "fulltime" ? "พนักงานประจำ" : null, // ประเภทงาน
+          relatives_at_icp: formData.knowsICPG === "yes" ? "รู้จัก" : formData.knowsICPG === "no" ? "ไม่รู้จัก" : null, // รู้จักบริษัทในเครือ ICPG
+          relatives_at_icp_details: formData.knownCompanyName || null, // ชื่อบริษัทที่รู้จัก
           resume_raw_text: resumeRawText || null, // Store full resume text for AI analysis
         }, {
           onConflict: 'candidate_id'
@@ -333,6 +339,9 @@ const PublicQuickApply = () => {
         expectedSalary: "",
         preferredLocation: "",
         workExperience: "",
+        jobType: "",
+        knowsICPG: "",
+        knownCompanyName: "",
         privacyConsent: false,
       });
       setSelectedFile(null);
@@ -382,6 +391,9 @@ const PublicQuickApply = () => {
               expectedSalary: "",
               preferredLocation: "",
               workExperience: "",
+              jobType: "",
+              knowsICPG: "",
+              knownCompanyName: "",
               privacyConsent: false,
             });
             setSelectedFile(null);
@@ -760,6 +772,23 @@ const PublicQuickApply = () => {
                   </div>
                 </div>
 
+                {/* Job Type Selection */}
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-sm">ประเภทงานที่สนใจ</Label>
+                  <Select
+                    value={formData.jobType}
+                    onValueChange={(value) => handleInputChange("jobType", value)}
+                  >
+                    <SelectTrigger className="h-10 sm:h-11">
+                      <SelectValue placeholder="เลือกประเภทงาน" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="intern">นักศึกษาฝึกงาน</SelectItem>
+                      <SelectItem value="fulltime">พนักงานประจำ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label htmlFor="preferredLocation" className="flex items-center gap-1 text-sm">
                     <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -799,6 +828,47 @@ const PublicQuickApply = () => {
                     placeholder="กรุณาระบุประสบการณ์การทำงาน เช่น ตำแหน่ง บริษัท ระยะเวลา หน้าที่รับผิดชอบ"
                     className="min-h-[100px] resize-none"
                   />
+                </div>
+
+                {/* ICPG Knowledge Question */}
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-sm">ท่านรู้จักบริษัทในเครือ ICPG มาก่อนหรือไม่</Label>
+                    <Select
+                      value={formData.knowsICPG}
+                      onValueChange={(value) => {
+                        handleInputChange("knowsICPG", value);
+                        // Clear company name if selecting "ไม่เคย"
+                        if (value === "no") {
+                          handleInputChange("knownCompanyName", "");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-10 sm:h-11">
+                        <SelectValue placeholder="เลือกคำตอบ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">รู้จัก</SelectItem>
+                        <SelectItem value="no">ไม่รู้จัก</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Show company name input only if "เคย" is selected */}
+                  {formData.knowsICPG === "yes" && (
+                    <div className="space-y-1.5 sm:space-y-2 pl-4 border-l-2 border-blue-200">
+                      <Label htmlFor="knownCompanyName" className="text-sm">
+                        ระบุชื่อบริษัทที่ท่านรู้จัก
+                      </Label>
+                      <Input
+                        id="knownCompanyName"
+                        value={formData.knownCompanyName}
+                        onChange={(e) => handleInputChange("knownCompanyName", e.target.value)}
+                        placeholder="เช่น ICP Ladda, ม้าบิน, Top One, Icon Kaset"
+                        className="h-10 sm:h-11"
+                      />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
