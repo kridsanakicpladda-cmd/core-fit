@@ -624,6 +624,42 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
             </div>
           </div>
 
+          {/* Personal Information from Quick Apply */}
+          {(candidateDetails?.sex || candidateDetails?.weight || candidateDetails?.height || candidateDetails?.age) && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="text-lg font-semibold mb-3">ข้อมูลส่วนตัว</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {candidateDetails?.sex && (
+                    <div className="p-3 border rounded-lg bg-muted/20 text-center">
+                      <div className="text-xs text-muted-foreground mb-1">เพศ</div>
+                      <div className="font-medium">{candidateDetails.sex}</div>
+                    </div>
+                  )}
+                  {candidateDetails?.age && (
+                    <div className="p-3 border rounded-lg bg-muted/20 text-center">
+                      <div className="text-xs text-muted-foreground mb-1">อายุ</div>
+                      <div className="font-medium">{candidateDetails.age} ปี</div>
+                    </div>
+                  )}
+                  {candidateDetails?.weight && (
+                    <div className="p-3 border rounded-lg bg-muted/20 text-center">
+                      <div className="text-xs text-muted-foreground mb-1">น้ำหนัก</div>
+                      <div className="font-medium">{candidateDetails.weight} กก.</div>
+                    </div>
+                  )}
+                  {candidateDetails?.height && (
+                    <div className="p-3 border rounded-lg bg-muted/20 text-center">
+                      <div className="text-xs text-muted-foreground mb-1">ส่วนสูง</div>
+                      <div className="font-medium">{candidateDetails.height} ซม.</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           <Separator />
 
           {/* Resume File */}
@@ -665,10 +701,10 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   )}
                 </div>
               </div>
-              {(candidate.education || candidateDetails?.training_curriculums) && (
+              {candidate.education && (
                 <div className="flex items-start gap-3 text-sm">
                   <GraduationCap className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <span className="whitespace-pre-wrap">{candidateDetails?.training_curriculums || candidate.education}</span>
+                  <span className="whitespace-pre-wrap">{candidate.education}</span>
                 </div>
               )}
               {candidate.previousCompany && (
@@ -677,13 +713,31 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
                   <span>บริษัทเดิม: {candidate.previousCompany}</span>
                 </div>
               )}
+              {candidateDetails?.training_curriculums && (
+                <div className="flex items-center gap-3 text-sm">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>ประเภทงาน: {candidateDetails.training_curriculums}</span>
+                </div>
+              )}
+              {candidateDetails?.relatives_at_icp && (
+                <div className="flex items-center gap-3 text-sm">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>รู้จักบริษัทในเครือ ICPG: {candidateDetails.relatives_at_icp}</span>
+                </div>
+              )}
+              {candidateDetails?.relatives_at_icp_details && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <span>ชื่อบริษัทที่รู้จัก: {candidateDetails.relatives_at_icp_details}</span>
+                </div>
+              )}
             </div>
           </div>
 
           <Separator />
 
-          {/* Work Experience from Quick Apply */}
-          {candidateDetails?.work_experience && (
+          {/* Work Experience from Quick Apply (stored in other_skills) */}
+          {(candidateDetails?.other_skills || candidateDetails?.work_experience) && (
             <div>
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-primary" />
@@ -691,7 +745,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
               </h3>
               <div className="p-4 border rounded-lg bg-muted/20">
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {candidateDetails.work_experience}
+                  {candidateDetails?.other_skills || candidateDetails?.work_experience}
                 </p>
               </div>
             </div>
@@ -762,12 +816,14 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
           <Separator />
 
           {/* Summary / Skills */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">ข้อมูลสรุป / ทักษะ</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {candidateDetails?.other_skills || candidate.summary || 'ไม่มีข้อมูล'}
-            </p>
-          </div>
+          {candidate.summary && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">ข้อมูลสรุป / ทักษะ</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {candidate.summary}
+              </p>
+            </div>
+          )}
 
           <Separator />
 

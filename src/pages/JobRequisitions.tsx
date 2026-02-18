@@ -316,14 +316,14 @@ const JobRequisitions = () => {
       ].filter(Boolean).join('');
 
       const qualifications = [
-        formData.gender && formData.gender !== 'ไม่ระบุ' ? `- เพศ: ${formData.gender}` : '',
-        formData.max_age ? `- อายุไม่เกิน: ${formData.max_age} ปี` : '',
-        formData.min_education ? `- การศึกษา: ${formData.min_education}` : '',
-        formData.field_of_study ? `- สาขา: ${formData.field_of_study}` : '',
-        formData.min_experience ? `- ประสบการณ์: ${formData.min_experience}` : '',
-        formData.experience_in ? `- ประสบการณ์ด้าน: ${formData.experience_in}` : '',
-        formData.marital_status && formData.marital_status !== 'ไม่ระบุ' ? `- สถานะสมรส: ${formData.marital_status}` : '',
-        formData.other_skills ? `- ทักษะอื่นๆ: ${formData.other_skills}` : ''
+        formData.gender && formData.gender !== 'ไม่ระบุ' ? `เพศ: ${formData.gender}` : '',
+        formData.max_age ? `อายุไม่เกิน: ${formData.max_age} ปี` : '',
+        formData.min_education ? `การศึกษา: ${formData.min_education}` : '',
+        formData.field_of_study ? `สาขา: ${formData.field_of_study}` : '',
+        formData.min_experience ? `ประสบการณ์: ${formData.min_experience}` : '',
+        formData.experience_in ? `ประสบการณ์ด้าน: ${formData.experience_in}` : '',
+        formData.marital_status && formData.marital_status !== 'ไม่ระบุ' ? `สถานะสมรส: ${formData.marital_status}` : '',
+        formData.other_skills ? `ทักษะอื่นๆ: ${formData.other_skills}` : ''
       ].filter(Boolean).join('\n');
 
       const { error: jobError } = await supabase.from('job_positions').insert({
