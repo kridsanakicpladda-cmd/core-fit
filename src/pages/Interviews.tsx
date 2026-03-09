@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { InterviewFormDialog, Interview } from "@/components/interviews/InterviewFormDialog";
-import { PendingScheduleBox } from "@/components/interviews/PendingScheduleBox";
+
 import { StatusBox } from "@/components/interviews/StatusBox";
 import { InterviewSection } from "@/components/interviews/InterviewSection";
 import { toast } from "sonner";
@@ -10,10 +10,9 @@ import { addSparkleEffect } from "@/lib/sparkle";
 import { useInterviews } from "@/hooks/useInterviews";
 
 export default function Interviews() {
-  const { 
-    interviews: dbInterviews, 
-    isLoading, 
-    scheduleInterview,
+  const {
+    interviews: dbInterviews,
+    isLoading,
     updateInterview,
     createInterview,
   } = useInterviews();
@@ -76,7 +75,6 @@ export default function Interviews() {
   });
 
   // Filter candidates by status
-  const pendingCandidates = interviews.filter(i => i.schedulingStatus === "pending");
   const notInterestedCandidates = interviews.filter(i => i.schedulingStatus === "not_interested");
   const rejectedCandidates = interviews.filter(i => i.schedulingStatus === "rejected");
 
@@ -87,26 +85,6 @@ export default function Interviews() {
   const finalInterviews = interviews.filter(
     i => i.schedulingStatus === "scheduled" && i.interviewRound === "final"
   );
-
-  // Track booked time slots to prevent double-booking
-  const bookedSlots = new Set<string>(
-    interviews
-      .filter(i => i.schedulingStatus === "scheduled" && i.time)
-      .map(i => i.time)
-  );
-
-  const handleSchedule = (candidateId: string, timeSlot: string) => {
-    const interview = dbInterviews.find(i => i.id === candidateId);
-    if (interview) {
-      const scheduledAt = new Date();
-      // Parse time slot to set scheduled time
-      scheduleInterview({
-        interviewId: candidateId,
-        scheduledAt: scheduledAt.toISOString(),
-        timeSlot,
-      });
-    }
-  };
 
   const handleSaveInterview = (interviewData: Omit<Interview, "id">) => {
     if (editingInterview) {
@@ -164,14 +142,8 @@ export default function Interviews() {
       </div>
 
       {/* Compact Status Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <PendingScheduleBox 
-          candidates={pendingCandidates}
-          bookedSlots={bookedSlots}
-          onSchedule={handleSchedule}
-          compact
-        />
-        <StatusBox 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <StatusBox
           title="ไม่สนใจ"
           candidates={notInterestedCandidates}
           icon={XCircle}
@@ -179,7 +151,7 @@ export default function Interviews() {
           bgClass="bg-orange-500/10"
           compact
         />
-        <StatusBox 
+        <StatusBox
           title="ปฏิเสธการสัมภาษณ์"
           candidates={rejectedCandidates}
           icon={AlertCircle}

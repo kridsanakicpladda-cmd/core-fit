@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { HeadlineStats, Efficiency, Quality, StageStats, Position, SourceCost, Candidate, MoM } from '@/types/reports';
+import { HeadlineStats, Efficiency, Quality, StageStats, Position, SourceCost, Candidate } from '@/types/reports';
 
 export function useReportsData() {
   // Fetch all data needed for reports
@@ -11,7 +11,7 @@ export function useReportsData() {
         .from('job_positions')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     }
@@ -24,7 +24,7 @@ export function useReportsData() {
         .from('candidates')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     }
@@ -41,7 +41,7 @@ export function useReportsData() {
           position:job_positions(*)
         `)
         .order('applied_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     }
@@ -61,7 +61,7 @@ export function useReportsData() {
           )
         `)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     }
@@ -74,7 +74,7 @@ export function useReportsData() {
         .from('recruitment_costs')
         .select('*')
         .order('period_start', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     }
@@ -82,7 +82,13 @@ export function useReportsData() {
 
   const isLoading = positionsLoading || candidatesLoading || applicationsLoading || interviewsLoading || costsLoading;
 
-  // Calculate headline stats
+  // Helper: calculate MoM by comparing current month vs previous month
+  const calcMoM = (currentVal: number, previousVal: number): number => {
+    if (previousVal === 0) return currentVal > 0 ? 1 : 0;
+    return (currentVal - previousVal) / previousVal;
+  };
+
+  // Calculate headline stats with real MoM
   const getHeadlineStats = (): HeadlineStats => {
     if (!applications || !positions || !interviews) {
       return {
@@ -97,6 +103,18 @@ export function useReportsData() {
       };
     }
 
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0); // last day of prev month
+
+    const thisMonthApps = applications.filter(a => new Date(a.applied_at) >= thisMonthStart);
+    const lastMonthApps = applications.filter(a => {
+      const d = new Date(a.applied_at);
+      return d >= lastMonthStart && d <= lastMonthEnd;
+    });
+
+    // Current totals
     const totalApplicants = applications.length;
     const openRoles = positions.filter(p => p.status === 'open').length;
     const totalJobs = positions.length;
@@ -108,16 +126,27 @@ export function useReportsData() {
     const vacancyRate = totalJobs > 0 ? openRoles / totalJobs : 0;
     const applicantsPerOpening = openRoles > 0 ? totalApplicants / openRoles : 0;
 
-    // Mock MoM data (in real app, compare with last month's data)
+    // MoM: this month new apps vs last month new apps
+    const thisMonthScreening = thisMonthApps.filter(a => ['Screening', 'Interview', 'Offer', 'Hired'].includes(a.stage)).length;
+    const lastMonthScreening = lastMonthApps.filter(a => ['Screening', 'Interview', 'Offer', 'Hired'].includes(a.stage)).length;
+    const thisMonthInterviewed = thisMonthApps.filter(a => ['Interview', 'Offer', 'Hired'].includes(a.stage)).length;
+    const lastMonthInterviewed = lastMonthApps.filter(a => ['Interview', 'Offer', 'Hired'].includes(a.stage)).length;
+    const thisMonthHired = thisMonthApps.filter(a => a.stage === 'Hired').length;
+    const lastMonthHired = lastMonthApps.filter(a => a.stage === 'Hired').length;
+    const thisMonthOffers = thisMonthApps.filter(a => ['Offer', 'Hired'].includes(a.stage)).length;
+    const lastMonthOffers = lastMonthApps.filter(a => ['Offer', 'Hired'].includes(a.stage)).length;
+    const thisMonthHiringRate = thisMonthOffers > 0 ? thisMonthHired / thisMonthOffers : 0;
+    const lastMonthHiringRate = lastMonthOffers > 0 ? lastMonthHired / lastMonthOffers : 0;
+
     return {
-      applicants: { current: totalApplicants, mom: 0.125 },
-      openRoles: { current: openRoles, mom: 0.052 },
-      hiringRate: { current: hiringRate, mom: 0.031 },
-      screeningPassed: { current: screeningPassed, mom: 0.089 },
-      interviewed: { current: interviewed, mom: -0.042 },
-      hired: { current: hired, mom: 0.15 },
-      vacancyRate: { current: vacancyRate, mom: 0.03 },
-      applicantsPerOpening: { current: applicantsPerOpening, mom: 0.08 }
+      applicants: { current: totalApplicants, mom: calcMoM(thisMonthApps.length, lastMonthApps.length) },
+      openRoles: { current: openRoles, mom: 0 },
+      hiringRate: { current: hiringRate, mom: calcMoM(thisMonthHiringRate, lastMonthHiringRate) },
+      screeningPassed: { current: screeningPassed, mom: calcMoM(thisMonthScreening, lastMonthScreening) },
+      interviewed: { current: interviewed, mom: calcMoM(thisMonthInterviewed, lastMonthInterviewed) },
+      hired: { current: hired, mom: calcMoM(thisMonthHired, lastMonthHired) },
+      vacancyRate: { current: vacancyRate, mom: 0 },
+      applicantsPerOpening: { current: applicantsPerOpening, mom: calcMoM(thisMonthApps.length, lastMonthApps.length) }
     };
   };
 
@@ -137,7 +166,7 @@ export function useReportsData() {
       const updated = new Date(app.updated_at);
       return Math.floor((updated.getTime() - applied.getTime()) / (1000 * 60 * 60 * 24));
     });
-    const timeToHireAvg = timeToHire.length > 0 
+    const timeToHireAvg = timeToHire.length > 0
       ? Math.round(timeToHire.reduce((a, b) => a + b, 0) / timeToHire.length)
       : 0;
 
@@ -175,8 +204,11 @@ export function useReportsData() {
       ? passedInterviews / completedInterviews.length
       : 0;
 
-    // Mock HR satisfaction (in real app, this would come from feedback)
-    const hrSatisfaction = 4.5;
+    // Calculate HR satisfaction from average interview scores (0-70 → 0-5 scale)
+    const interviewsWithScores = interviews.filter(i => i.score !== null && i.score > 0);
+    const hrSatisfaction = interviewsWithScores.length > 0
+      ? Math.round((interviewsWithScores.reduce((sum, i) => sum + (i.score || 0), 0) / interviewsWithScores.length / 70) * 5 * 10) / 10
+      : 0;
 
     return {
       aiFitScoreAvg,
@@ -214,7 +246,7 @@ export function useReportsData() {
 
     return positions.map(pos => {
       const posApps = applications.filter(a => a.position_id === pos.id);
-      const posInterviews = interviews.filter(i => 
+      const posInterviews = interviews.filter(i =>
         posApps.some(app => app.id === i.application_id)
       );
       const completedInterviews = posInterviews.filter(i => i.status === 'completed' && i.result);
@@ -232,15 +264,22 @@ export function useReportsData() {
     });
   };
 
-  // Get source costs
+  // Get source costs — use real sources from candidates
   const getSourcesCost = (): SourceCost[] => {
     if (!candidates || !applications || !costs) return [];
 
-    const sources = ['LinkedIn', 'Website', 'Referral', 'Job Board', 'Other'];
-    
+    // Get unique sources from actual candidate data
+    const sourceSet = new Set<string>();
+    candidates.forEach(c => {
+      if (c.source) sourceSet.add(c.source);
+    });
+    const sources = Array.from(sourceSet).sort();
+
+    if (sources.length === 0) return [];
+
     return sources.map(source => {
       const sourceCandidates = candidates.filter(c => c.source === source);
-      const sourceApps = applications.filter(a => 
+      const sourceApps = applications.filter(a =>
         sourceCandidates.some(c => c.id === a.candidate_id)
       );
       const hires = sourceApps.filter(a => a.stage === 'Hired').length;
@@ -264,6 +303,12 @@ export function useReportsData() {
       const candidate = candidates.find(c => c.id === app.candidate_id);
       const position = positions.find(p => p.id === app.position_id);
 
+      // Find interview score for this application
+      const appInterviews = interviews?.filter(i => i.application_id === app.id) || [];
+      const latestScore = appInterviews
+        .filter(i => i.score !== null)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.score;
+
       return {
         id: app.id,
         name: candidate?.name || 'Unknown',
@@ -272,7 +317,7 @@ export function useReportsData() {
         department: position?.department || 'Unknown',
         stage: app.stage as Candidate['stage'],
         aiFitScore: candidate?.ai_fit_score || undefined,
-        interviewScore: undefined, // Would need to calculate from interviews
+        interviewScore: latestScore || undefined,
         updatedAt: app.updated_at
       };
     });
@@ -284,11 +329,11 @@ export function useReportsData() {
 
     const days = 30;
     const today = new Date();
-    
+
     return Array.from({ length: days }, (_, i) => {
       const date = new Date(today);
       date.setDate(date.getDate() - (days - i - 1));
-      
+
       const dayApps = applications.filter(app => {
         const appDate = new Date(app.applied_at);
         return appDate.toDateString() === date.toDateString();
@@ -329,60 +374,6 @@ export function useReportsData() {
     });
   };
 
-  // Get turnover data (mock for now)
-  const getTurnoverData = () => {
-    const departments = ['วิศวกรรม', 'ผลิตภัณฑ์', 'ออกแบบ', 'การตลาด'];
-    return {
-      firstMonth: {
-        trend: Array.from({ length: 12 }, (_, i) => ({
-          period: `เดือน ${i + 1}`,
-          rate: 0.05 + Math.random() * 0.1
-        })),
-        byDepartment: departments.map(dept => ({
-          department: dept,
-          rate: 0.05 + Math.random() * 0.1
-        }))
-      },
-      firstYear: {
-        trend: Array.from({ length: 12 }, (_, i) => ({
-          period: `เดือน ${i + 1}`,
-          rate: 0.15 + Math.random() * 0.15
-        })),
-        byDepartment: departments.map(dept => ({
-          department: dept,
-          rate: 0.15 + Math.random() * 0.15
-        }))
-      }
-    };
-  };
-
-  // Get satisfaction data (mock for now)
-  const getSatisfactionData = () => {
-    return {
-      hiringManager: 4.2,
-      candidateJob: 4.5,
-      hiringManagerTrend: Array.from({ length: 12 }, (_, i) => ({
-        period: `เดือน ${i + 1}`,
-        score: 3.8 + Math.random() * 0.8
-      })),
-      candidateJobTrend: Array.from({ length: 12 }, (_, i) => ({
-        period: `เดือน ${i + 1}`,
-        score: 4.0 + Math.random() * 0.8
-      }))
-    };
-  };
-
-  // Get cost breakdown (mock for now)
-  const getCostBreakdown = () => {
-    return {
-      onboarding: 15000,
-      training: 25000,
-      supervision: 10000,
-      otj: 20000,
-      laborProportion: 30000
-    };
-  };
-
   return {
     isLoading,
     headlineStats: getHeadlineStats(),
@@ -394,8 +385,5 @@ export function useReportsData() {
     candidates: getCandidatesForDisplay(),
     trendData: getTrendData(),
     yieldRatios: getYieldRatios(),
-    turnoverData: getTurnoverData(),
-    satisfactionData: getSatisfactionData(),
-    costBreakdown: getCostBreakdown()
   };
 }

@@ -14,7 +14,7 @@ import { useCandidatesData } from "@/hooks/useCandidatesData";
 
 export default function Dashboard() {
   // Fetch real data from database
-  const { data: jobPositions = [], isLoading: isLoadingJobs } = useJobPositions();
+  const { positions: jobPositions, isLoading: isLoadingJobs } = useJobPositions();
   const { candidates, isLoading: isLoadingCandidates } = useCandidatesData();
 
   // Filter only open positions
@@ -32,17 +32,17 @@ export default function Dashboard() {
           title: job.title,
           department: job.department || 'ไม่ระบุ',
           location: job.location || 'กรุงเทพฯ',
-          type: job.type || 'Full-time',
+          type: job.employment_type || 'Full-time',
           applicants: applicantCount,
           postedDate: job.created_at ? new Date(job.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : 'ไม่ระบุ',
           status: job.status as 'open' | 'closed',
           avgScore: 0,
-          salaryRange: job.salary_range || 'ตามตกลง',
-          numberOfPositions: job.number_of_positions?.toString() || '1',
+          salaryRange: job.salary_min && job.salary_max ? `฿${job.salary_min.toLocaleString()} - ฿${job.salary_max.toLocaleString()}` : 'ตามตกลง',
+          numberOfPositions: `${job.required_count || 1}`,
           jobGrade: job.job_grade || '-',
           description: job.description || '',
-          requirements: job.requirements || [],
-          responsibilities: job.responsibilities || [],
+          requirements: job.requirements ? job.requirements.split('\n').filter(Boolean) : [],
+          responsibilities: job.responsibilities ? job.responsibilities.split('\n').filter(Boolean) : [],
           interviewStats: { total: applicantCount, passed: 0, failed: 0 }
         };
       });

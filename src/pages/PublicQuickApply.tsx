@@ -346,6 +346,22 @@ const PublicQuickApply = () => {
         console.error('Details error:', detailsError);
       }
 
+      // Create applications record to link candidate to job position
+      const selectedPosition = jobPositions.find(p => p.title === formData.interestedPosition);
+      if (selectedPosition && candidate) {
+        const { error: appError } = await supabase
+          .from('applications')
+          .upsert({
+            candidate_id: candidate.id,
+            position_id: selectedPosition.id,
+            stage: 'New',
+          }, { onConflict: 'candidate_id,position_id' });
+
+        if (appError) {
+          console.error('Error creating application:', appError);
+        }
+      }
+
       toast({
         title: "ส่งประวัติสำเร็จ",
         description: "ขอบคุณที่สนใจร่วมงานกับเรา เราจะพิจารณาประวัติของคุณและติดต่อกลับโดยเร็ว",

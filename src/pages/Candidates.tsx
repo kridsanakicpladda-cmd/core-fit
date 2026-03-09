@@ -28,6 +28,7 @@ import { useCandidatesData, CandidateData } from "@/hooks/useCandidatesData";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { useCalculateFitScore } from "@/hooks/useCalculateFitScore";
 import { getScoreColor, getScoreLabel } from "@/lib/calculateJobFitScore";
+import { useHiringLogic } from "@/hooks/useHiringLogic";
 import { supabase } from "@/integrations/supabase/client";
 
 const stageColors: Record<string, string> = {
@@ -58,6 +59,7 @@ export default function Candidates() {
   const { candidates, isLoading, updateApplicationStage, updateCandidateStage, formatAppliedDate } = useCandidatesData();
   const { isManager, isAdmin, isHRManager, isRecruiter, isLoading: rolesLoading } = useUserRoles();
   const calculateFitScore = useCalculateFitScore();
+  const { checkAndUpdateJobStatus } = useHiringLogic();
   const [calculatingScores, setCalculatingScores] = useState<Set<string>>(new Set());
   
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateData | null>(null);
@@ -105,6 +107,12 @@ export default function Candidates() {
   const [isSendToManagerOpen, setIsSendToManagerOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'candidates' | 'applicant-resume'>('candidates');
 
+  // Reset tab to "all" when switching view mode
+  const handleViewModeChange = (mode: 'candidates' | 'applicant-resume') => {
+    setViewMode(mode);
+    setActiveTab("all");
+  };
+
   // Show Manager view if user only has manager role (not admin/hr/recruiter)
   const showManagerView = isManager && !isAdmin && !isHRManager && !isRecruiter;
 
@@ -143,11 +151,7 @@ export default function Candidates() {
       matchesTab = stage === "Rejected";
     } else if (activeTab === "pre-screen") {
       matchesTab = stage === "Pre Screen";
-    } else if (activeTab === "interview1") {
-      // Interview 1 = Interview stage (first round)
-      matchesTab = stage === "Interview";
-    } else if (activeTab === "interview2") {
-      // Interview 2 = Interview stage (second round) - can be differentiated by interview count if needed
+    } else if (activeTab === "interview") {
       matchesTab = stage === "Interview";
     } else if (activeTab === "offer") {
       matchesTab = stage === "Offer";
@@ -161,6 +165,33 @@ export default function Candidates() {
   // Count candidates by source
   const candidatesCount = candidates.filter(c => c.source !== 'Quick Apply').length;
   const applicantResumeCount = candidates.filter(c => c.source === 'Quick Apply').length;
+
+  // Count candidates per tab (filtered by current viewMode and search/position filters)
+  const tabCounts = useMemo(() => {
+    const filtered = candidates.filter(c => {
+      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.position_title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (c.email?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+      const matchesPosition = selectedPositions.length === 0 ||
+        (c.position_title && selectedPositions.includes(c.position_title));
+      const matchesViewMode = viewMode === 'candidates'
+        ? c.source !== 'Quick Apply'
+        : c.source === 'Quick Apply';
+      return matchesSearch && matchesPosition && matchesViewMode;
+    });
+
+    const stage = (c: CandidateData) => c.stage || "Pending";
+    return {
+      all: filtered.filter(c => stage(c) === "Pending").length,
+      shortlist: filtered.filter(c => stage(c) === "Shortlist").length,
+      interested: filtered.filter(c => stage(c) === "Interested").length,
+      "not-interested": filtered.filter(c => stage(c) === "Rejected").length,
+      "pre-screen": filtered.filter(c => stage(c) === "Pre Screen").length,
+      interview: filtered.filter(c => stage(c) === "Interview").length,
+      offer: filtered.filter(c => stage(c) === "Offer").length,
+      hired: filtered.filter(c => stage(c) === "Hired").length,
+    };
+  }, [candidates, searchQuery, selectedPositions, viewMode]);
 
   const handleViewDetails = (candidate: CandidateData) => {
     setSelectedCandidate(candidate);
@@ -248,14 +279,21 @@ export default function Candidates() {
       return;
     }
 
+    const oldStage = candidate.stage || "Pending";
+
     // Update stage in candidates table directly
     updateCandidateStage({ candidateId: candidateIdStr, stage });
-    
+
     // Also update application stage if application exists
     if (candidate.application_id) {
       updateApplicationStage({ applicationId: candidate.application_id, stage });
     }
-    
+
+    // Auto-close/reopen job position based on hired count
+    if (candidate.position_id && (stage === "Hired" || oldStage === "Hired")) {
+      checkAndUpdateJobStatus(candidate.position_id, stage, oldStage);
+    }
+
     addNotification({
       type: 'status_change',
       title: 'เปลี่ยนสถานะผู้สมัคร',
@@ -423,7 +461,7 @@ export default function Candidates() {
           <div className="flex gap-2">
             <Button
               variant={viewMode === 'candidates' ? 'default' : 'outline'}
-              onClick={() => setViewMode('candidates')}
+              onClick={() => handleViewModeChange('candidates')}
               className="gap-2"
             >
               <Users className="h-4 w-4" />
@@ -434,7 +472,7 @@ export default function Candidates() {
             </Button>
             <Button
               variant={viewMode === 'applicant-resume' ? 'default' : 'outline'}
-              onClick={() => setViewMode('applicant-resume')}
+              onClick={() => handleViewModeChange('applicant-resume')}
               className="gap-2"
             >
               <FileText className="h-4 w-4" />
@@ -521,16 +559,36 @@ export default function Candidates() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="all">ALL</TabsTrigger>
-          <TabsTrigger value="shortlist">Shortlist</TabsTrigger>
-          <TabsTrigger value="interested">Interested</TabsTrigger>
-          <TabsTrigger value="not-interested">Not Interested</TabsTrigger>
-          <TabsTrigger value="pre-screen">Pre Screen</TabsTrigger>
-          <TabsTrigger value="interview1">Interview 1</TabsTrigger>
-          <TabsTrigger value="interview2">Interview 2</TabsTrigger>
-          <TabsTrigger value="offer">Offer</TabsTrigger>
-          <TabsTrigger value="hired">Hired</TabsTrigger>
+        <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
+          {(viewMode === 'applicant-resume'
+            ? [
+                { value: "all", label: "ALL" },
+                { value: "interested", label: "Interested" },
+                { value: "not-interested", label: "Not Interested" },
+              ]
+            : [
+                { value: "all", label: "ALL" },
+                { value: "shortlist", label: "Shortlist" },
+                { value: "interested", label: "Interested" },
+                { value: "not-interested", label: "Not Interested" },
+                { value: "pre-screen", label: "Pre Screen" },
+                { value: "interview", label: "Interview" },
+                { value: "offer", label: "Offer" },
+                { value: "hired", label: "Hired" },
+              ]
+          ).map((tab) => {
+            const count = tabCounts[tab.value as keyof typeof tabCounts];
+            return (
+              <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5">
+                {tab.label}
+                {count > 0 && (
+                  <Badge variant={activeTab === tab.value ? "default" : "secondary"} className="h-5 min-w-[20px] px-1.5 text-xs">
+                    {count}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
@@ -640,7 +698,7 @@ export default function Candidates() {
                         >
                           ดูรายละเอียด
                         </Button>
-                        {viewMode === 'applicant-resume' && (
+                        {viewMode === 'applicant-resume' && (candidate.stage || 'Pending') === 'Pending' && (
                           <Button
                             variant="outline"
                             className="hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-colors gap-2"

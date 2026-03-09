@@ -24,8 +24,10 @@ export function RecruitmentFunnel({ data, onStageClick }: RecruitmentFunnelProps
       
       <div className="space-y-6">
         {stages.map((stage, index) => {
-          const percentage = (stage.value / maxValue) * 100;
-          const conversionRate = index > 0 ? ((stage.value / stages[index - 1].value) * 100).toFixed(1) : '100.0';
+          const percentage = maxValue > 0 ? (stage.value / maxValue) * 100 : 0;
+          const conversionRate = index > 0 && stages[index - 1].value > 0
+            ? ((stage.value / stages[index - 1].value) * 100).toFixed(1)
+            : '0.0';
           
           return (
             <div key={stage.key} className="space-y-2">
@@ -58,7 +60,7 @@ export function RecruitmentFunnel({ data, onStageClick }: RecruitmentFunnelProps
       
       <div className="mt-6 p-4 bg-muted rounded-lg">
         <p className="text-sm text-muted-foreground">
-          อัตราความสำเร็จโดยรวม: <span className="font-bold text-foreground">{((data.hired / data.applicants) * 100).toFixed(1)}%</span>
+          อัตราความสำเร็จโดยรวม: <span className="font-bold text-foreground">{data.applicants > 0 ? ((data.hired / data.applicants) * 100).toFixed(1) : '0.0'}%</span>
         </p>
       </div>
     </Card>

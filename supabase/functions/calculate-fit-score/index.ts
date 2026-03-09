@@ -239,7 +239,7 @@ ${languageSummary}
 ${otherSkills}
 
 ### Resume/ประวัติเพิ่มเติม:
-${candidateData.resume_text || 'ไม่มีข้อมูลเพิ่มเติม'}
+${resumeText || 'ไม่มีข้อมูลเพิ่มเติม'}
 
 ---
 

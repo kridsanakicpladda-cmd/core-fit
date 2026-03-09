@@ -6,16 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Clock, Briefcase, Search, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { MapPin, Clock, Briefcase, Search, Loader2, UserCheck } from "lucide-react";
 import { JobDetailDialog } from "@/components/jobs/JobDetailDialog";
 import { JobEditDialog } from "@/components/jobs/JobEditDialog";
 import { useJobPositions } from "@/hooks/useJobPositions";
+import { useHiredCountByPosition } from "@/hooks/useHiredCountByPosition";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
 export default function Jobs() {
   const navigate = useNavigate();
   const { positions, isLoading, updatePosition, deletePosition } = useJobPositions();
+  const { data: hiredCounts = {} } = useHiredCountByPosition();
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -105,15 +108,17 @@ export default function Jobs() {
       description: job.description || "ไม่มีรายละเอียด",
       responsibilities: job.responsibilities ? job.responsibilities.split('\n').filter(Boolean) : [],
       requirements: job.requirements ? job.requirements.split('\n').filter(Boolean) : [],
-      applicants: 0, // This would need to come from applications table
-      avgScore: 0, // This would need to be calculated from interviews
+      rawRequiredCount: job.required_count,
+      hiredCount: hiredCounts[job.id] || 0,
+      applicants: 0,
+      avgScore: 0,
       interviewStats: {
         total: 0,
         passed: 0,
         failed: 0
       }
     }));
-  }, [filteredJobs]);
+  }, [filteredJobs, hiredCounts]);
 
   // Update selectedJob when positions change (after edit)
   useEffect(() => {
@@ -271,6 +276,21 @@ export default function Jobs() {
                   <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-3 hover:scale-105 transition-transform duration-300">
                     <p className="text-xs text-muted-foreground font-medium mb-1">จำนวนอัตรา</p>
                     <p className="font-semibold">{job.numberOfPositions}</p>
+                    {job.rawRequiredCount && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <UserCheck className="h-3 w-3" />
+                            จ้างแล้ว
+                          </span>
+                          <span className="font-medium">{job.hiredCount}/{job.rawRequiredCount}</span>
+                        </div>
+                        <Progress
+                          value={Math.min((job.hiredCount / job.rawRequiredCount) * 100, 100)}
+                          className="h-1.5"
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg p-3 hover:scale-105 transition-transform duration-300">
                     <p className="text-xs text-muted-foreground font-medium mb-1">ประกาศเมื่อ</p>

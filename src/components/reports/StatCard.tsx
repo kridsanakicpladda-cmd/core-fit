@@ -50,17 +50,6 @@ export function StatCard({ title, value, mom, icon, tooltip, onClick }: StatCard
           </div>
         </div>
       </div>
-      
-      {/* Mini sparkline placeholder */}
-      <div className="mt-4 h-8 flex items-end gap-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex-1 bg-primary/20 rounded-sm"
-            style={{ height: `${Math.random() * 100}%` }}
-          />
-        ))}
-      </div>
     </Card>
   );
 }

@@ -156,7 +156,7 @@ const PublicJobApplication = () => {
       const { data, error } = await supabase
         .from('job_positions')
         .select('id, title')
-        .eq('status', 'Open')
+        .eq('status', 'open')
         .order('title');
 
       if (error) {
@@ -518,6 +518,22 @@ const PublicJobApplication = () => {
 
       if (detailsError) {
         console.error('Details error:', detailsError);
+      }
+
+      // Create applications record to link candidate to job position
+      const selectedPosition = availablePositions.find(p => p.title === formData.position);
+      if (selectedPosition && candidateId) {
+        const { error: appError } = await supabase
+          .from('applications')
+          .upsert({
+            candidate_id: candidateId,
+            position_id: selectedPosition.id,
+            stage: 'New',
+          }, { onConflict: 'candidate_id,position_id' });
+
+        if (appError) {
+          console.error('Error creating application:', appError);
+        }
       }
 
       setIsSubmitted(true);

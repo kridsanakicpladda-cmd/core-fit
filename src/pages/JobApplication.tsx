@@ -55,6 +55,7 @@ const JobApplication = () => {
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [resumeRawText, setResumeRawText] = useState<string>('');
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoadingCandidate, setIsLoadingCandidate] = useState(false);
@@ -311,15 +312,50 @@ const JobApplication = () => {
     fetchCandidateData();
   }, [searchParams, toast]);
 
+  const handleParseResume = async (file: File) => {
+    setIsParsing(true);
+    try {
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const { data: parseResult, error: parseError } = await supabase.functions.invoke(
+        'parse-resume',
+        { body: { fileBase64 } }
+      );
+
+      if (parseError) throw new Error('ไม่สามารถอ่านข้อมูลจาก Resume ได้');
+
+      if (parseResult?.success && parseResult?.data) {
+        const parsed = parseResult.data;
+        if (parsed.raw_text) {
+          setResumeRawText(parsed.raw_text);
+        }
+        toast({
+          title: "อ่าน Resume สำเร็จ",
+          description: "ข้อมูล Resume ถูกบันทึกสำหรับการวิเคราะห์ AI",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error parsing resume:', error);
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.type === 'application/pdf') {
         setSelectedFile(file);
-        toast({
-          title: "ไฟล์ถูกเลือกแล้ว",
-          description: file.name,
-        });
+        handleParseResume(file);
       } else {
         toast({
           title: "รองรับเฉพาะไฟล์ PDF",
@@ -357,6 +393,7 @@ const JobApplication = () => {
       const file = files[0];
       if (file.type === 'application/pdf') {
         setSelectedFile(file);
+        handleParseResume(file);
         addSparkleEffect(e as any);
         toast({
           title: "ไฟล์ถูกเลือกแล้ว",
@@ -877,6 +914,7 @@ const JobApplication = () => {
         family_members: JSON.parse(JSON.stringify(familyMembers)),
         language_skills: JSON.parse(JSON.stringify(languageSkills)),
         privacy_consent: formData.privacyConsent,
+        resume_raw_text: resumeRawText || null,
       };
 
       // Check if details already exist for this candidate
@@ -904,6 +942,22 @@ const JobApplication = () => {
 
         if (detailsError) {
           console.error('Error inserting candidate details:', detailsError);
+        }
+      }
+
+      // Create applications record to link candidate to job position
+      const selectedPosition = availablePositions.find(p => p.title === formData.position);
+      if (selectedPosition) {
+        const { error: appError } = await supabase
+          .from('applications')
+          .upsert({
+            candidate_id: candidateId,
+            position_id: selectedPosition.id,
+            stage: existingCandidateId ? 'Screening' : 'New',
+          }, { onConflict: 'candidate_id,position_id' });
+
+        if (appError) {
+          console.error('Error creating application:', appError);
         }
       }
 

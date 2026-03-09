@@ -14,11 +14,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { MapPin, Briefcase, DollarSign, Users, CheckCircle, XCircle, Clock, Edit, Trash2, UserSearch, FileText } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { MapPin, Briefcase, DollarSign, Users, CheckCircle, Edit, Trash2, FileText, UserCheck } from "lucide-react";
+import { useHiredCandidates } from "@/hooks/useHiredCandidates";
 
 interface JobDetailDialogProps {
   job: {
-    id: number;
+    id: number | string;
     title: string;
     department: string;
     location: string;
@@ -50,8 +53,15 @@ interface JobDetailDialogProps {
 export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onViewCandidates }: JobDetailDialogProps) {
   const navigate = useNavigate();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  
+
+  const positionId = job && typeof job.id === "string" ? job.id : null;
+  const { data: hiredCandidates = [], isLoading: hiredLoading } = useHiredCandidates(positionId);
+
   if (!job) return null;
+
+  const requiredCount = parseInt(job.numberOfPositions) || null;
+  const hiredCount = hiredCandidates.length;
+  const progressPercent = requiredCount ? Math.min((hiredCount / requiredCount) * 100, 100) : 0;
 
   const handleDeleteClick = () => {
     setShowDeleteAlert(true);
@@ -82,7 +92,7 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onV
                 <Badge variant="outline" className="font-normal">
                   {job.type}
                 </Badge>
-                <Badge 
+                <Badge
                   variant={job.status === "open" ? "default" : "secondary"}
                   className="font-normal"
                 >
@@ -119,6 +129,20 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onV
                 <h3 className="font-semibold text-lg">จำนวนอัตรา</h3>
               </div>
               <p className="text-2xl font-bold text-blue-600">{job.numberOfPositions}</p>
+              {requiredCount && (
+                <div className="mt-2">
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-muted-foreground">จ้างแล้ว</span>
+                    <span className="font-medium">{hiredCount}/{requiredCount}</span>
+                  </div>
+                  <Progress value={progressPercent} className="h-2" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {hiredCount >= requiredCount
+                      ? "รับครบตามจำนวนแล้ว"
+                      : `เหลืออีก ${requiredCount - hiredCount} อัตรา`}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -129,8 +153,8 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onV
             <h3 className="font-semibold text-lg mb-3">รายละเอียดงาน</h3>
             <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
               {job.description
-                .replace(/\*\*เหตุผลในการเปิดรับ:\*\*[\s\S]*$/, '') // Remove justification section
-                .replace(/\*\*หน้าที่และความรับผิดชอบ:\*\*/g, '') // Remove responsibilities header
+                .replace(/\*\*เหตุผลในการเปิดรับ:\*\*[\s\S]*$/, '')
+                .replace(/\*\*หน้าที่และความรับผิดชอบ:\*\*/g, '')
                 .trim()}
             </p>
           </div>
@@ -148,6 +172,49 @@ export function JobDetailDialog({ job, open, onOpenChange, onEdit, onDelete, onV
                 </li>
               ))}
             </ul>
+          </div>
+
+          <Separator />
+
+          {/* Hired Candidates Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-emerald-600" />
+                ผู้ที่ได้รับการจ้างงาน
+              </h3>
+              {requiredCount && (
+                <Badge variant={hiredCount >= requiredCount ? "default" : "secondary"}>
+                  {hiredCount} / {requiredCount} อัตรา
+                </Badge>
+              )}
+            </div>
+
+            {hiredLoading ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">กำลังโหลด...</p>
+            ) : hiredCandidates.length > 0 ? (
+              <div className="space-y-3">
+                {hiredCandidates.map((candidate) => (
+                  <div key={candidate.id} className="flex items-center gap-3 p-3 border rounded-lg bg-emerald-50/50">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={candidate.photo_url || undefined} />
+                      <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                        {candidate.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{candidate.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{candidate.email}</div>
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 shrink-0">
+                      Hired
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">ยังไม่มีผู้ที่ได้รับการจ้างงาน</p>
+            )}
           </div>
 
           {/* Footer Info */}

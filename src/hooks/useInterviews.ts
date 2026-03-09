@@ -100,44 +100,6 @@ export function useInterviews() {
     },
   });
 
-  const scheduleInterviewMutation = useMutation({
-    mutationFn: async ({
-      interviewId,
-      scheduledAt,
-      timeSlot,
-    }: {
-      interviewId: string;
-      scheduledAt: string;
-      timeSlot: string;
-    }) => {
-      const { error } = await supabase
-        .from("interviews")
-        .update({
-          scheduled_at: scheduledAt,
-          status: "scheduled",
-          notes: JSON.stringify({ scheduledTime: timeSlot }),
-        })
-        .eq("id", interviewId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["interviews"] });
-      queryClient.invalidateQueries({ queryKey: ["candidates-data"] });
-      toast({
-        title: "นัดสัมภาษณ์สำเร็จ",
-        description: "บันทึกเวลานัดสัมภาษณ์เรียบร้อยแล้ว",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const updateInterviewMutation = useMutation({
     mutationFn: async ({
       interviewId,
@@ -234,7 +196,6 @@ export function useInterviews() {
     isLoading,
     error,
     refetch,
-    scheduleInterview: scheduleInterviewMutation.mutate,
     updateInterview: updateInterviewMutation.mutate,
     createInterview: createInterviewMutation.mutate,
   };
