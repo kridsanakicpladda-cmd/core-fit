@@ -30,6 +30,13 @@ export interface CandidateData {
   position_title: string | null;
   stage: string | null;
   applied_at: string | null;
+  rejected_at_stage: string | null;
+  // Candidate details
+  age: string | null;
+  height: string | null;
+  weight: string | null;
+  expected_salary: string | null;
+  present_address: string | null;
   // Interview data
   pre_screen_comment: string | null;
 }
@@ -65,7 +72,12 @@ export function useCandidatesData() {
           candidate_details (
             position,
             other_skills,
-            training_curriculums
+            training_curriculums,
+            age,
+            height,
+            weight,
+            expected_salary,
+            present_address
           )
         `)
         .order("created_at", { ascending: false });
@@ -111,9 +123,16 @@ export function useCandidatesData() {
           job_position_id: application?.position_id || null,
           // Use position from candidate_details first, then from job_positions
           position_title: details?.position || position?.title || null,
-          // Use stage from candidates table first, then from application, default to Pending
-          stage: candidate.stage || application?.stage || "Pending",
+          // Use stage from candidates table first, then from application, default to Short CV
+          stage: candidate.stage || application?.stage || "Short CV",
           applied_at: candidate.created_at,
+          rejected_at_stage: candidate.rejected_at_stage || null,
+          // Candidate details
+          age: details?.age || null,
+          height: details?.height || null,
+          weight: details?.weight || null,
+          expected_salary: details?.expected_salary || null,
+          present_address: details?.present_address || null,
           pre_screen_comment: aiBreakdown ? null : (application?.notes || preScreenInterview?.notes || null),
         } as CandidateData;
       });

@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Star, UserPlus, Loader2, Sparkles, Users, FileText, Heart } from "lucide-react";
+import { Search, Filter, Star, UserPlus, Loader2, Sparkles, Users, Heart, Building2, CalendarDays, Ruler, Weight, DollarSign } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,26 +32,40 @@ import { useHiringLogic } from "@/hooks/useHiringLogic";
 import { supabase } from "@/integrations/supabase/client";
 
 const stageColors: Record<string, string> = {
-  Pending: "bg-slate-100 text-slate-700 border-slate-200",
-  Interested: "bg-blue-100 text-blue-700 border-blue-200",
-  Shortlist: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Screening: "bg-orange-100 text-orange-700 border-orange-200",
-  Interview: "bg-purple-100 text-purple-700 border-purple-200",
-  Offer: "bg-green-100 text-green-700 border-green-200",
-  Hired: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  Rejected: "bg-gray-100 text-gray-700 border-gray-200",
+  "Short CV": "bg-slate-100 text-slate-700 border-slate-200",
+  "Pending": "bg-amber-100 text-amber-700 border-amber-200",
+  "Full CV": "bg-blue-100 text-blue-700 border-blue-200",
+  "Manager-Review": "bg-indigo-100 text-indigo-700 border-indigo-200",
+  "Interview-Scheduled": "bg-violet-100 text-violet-700 border-violet-200",
+  "Main Interview": "bg-purple-100 text-purple-700 border-purple-200",
+  "Interview-Scheduled(Final)": "bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200",
+  "Final Interview": "bg-pink-100 text-pink-700 border-pink-200",
+  "Compare Candidate": "bg-orange-100 text-orange-700 border-orange-200",
+  "Offer": "bg-green-100 text-green-700 border-green-200",
+  "Hire": "bg-emerald-100 text-emerald-700 border-emerald-200",
+  "Reject": "bg-red-100 text-red-700 border-red-200",
 };
 
 const stageLabels: Record<string, string> = {
-  Pending: "Pending",
-  Interested: "Interested",
-  Shortlist: "Shortlist",
-  Screening: "Screening",
-  Interview: "Interview",
-  Offer: "Offer",
-  Hired: "Hired",
-  Rejected: "Rejected",
+  "Short CV": "Short CV",
+  "Pending": "Pending",
+  "Full CV": "Full CV",
+  "Manager-Review": "Manager Review",
+  "Interview-Scheduled": "Interview Scheduled",
+  "Main Interview": "Main Interview",
+  "Interview-Scheduled(Final)": "Final Scheduled",
+  "Final Interview": "Final Interview",
+  "Compare Candidate": "Compare",
+  "Offer": "Offer",
+  "Hire": "Hired",
+  "Reject": "Rejected",
 };
+
+const stageOrder = [
+  "Short CV", "Pending", "Full CV", "Manager-Review",
+  "Interview-Scheduled", "Main Interview", "Interview-Scheduled(Final)",
+  "Final Interview", "Compare Candidate", "Offer", "Hire", "Reject",
+];
 
 export default function Candidates() {
   const { toast } = useToast();
@@ -105,13 +119,7 @@ export default function Candidates() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [isSendToManagerOpen, setIsSendToManagerOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'candidates' | 'applicant-resume'>('candidates');
-
-  // Reset tab to "all" when switching view mode
-  const handleViewModeChange = (mode: 'candidates' | 'applicant-resume') => {
-    setViewMode(mode);
-    setActiveTab("all");
-  };
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
 
   // Show Manager view if user only has manager role (not admin/hr/recruiter)
   const showManagerView = isManager && !isAdmin && !isHRManager && !isRecruiter;
@@ -124,6 +132,14 @@ export default function Candidates() {
     return Array.from(new Set(positions)).sort();
   }, [candidates]);
 
+  // Get unique sources (companies) for filter
+  const uniqueSources = useMemo(() => {
+    const sources = candidates
+      .map(c => c.source)
+      .filter((s): s is string => !!s);
+    return Array.from(new Set(sources)).sort();
+  }, [candidates]);
+
   const filteredCandidates = candidates.filter(candidate => {
     const matchesSearch = candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (candidate.position_title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
@@ -132,41 +148,24 @@ export default function Candidates() {
     const matchesPosition = selectedPositions.length === 0 ||
       (candidate.position_title && selectedPositions.includes(candidate.position_title));
 
-    // Filter by view mode (source)
-    const matchesViewMode = viewMode === 'candidates'
-      ? candidate.source !== 'Quick Apply'
-      : candidate.source === 'Quick Apply';
+    const matchesSource = selectedSources.length === 0 ||
+      selectedSources.includes(candidate.source);
 
     let matchesTab = true;
-    const stage = candidate.stage || "Pending";
+    const stage = candidate.stage || "Short CV";
 
     if (activeTab === "all") {
-      // ALL tab shows only new candidates (Pending status)
-      matchesTab = stage === "Pending";
-    } else if (activeTab === "shortlist") {
-      matchesTab = stage === "Shortlist";
-    } else if (activeTab === "interested") {
-      matchesTab = stage === "Interested";
-    } else if (activeTab === "not-interested") {
-      matchesTab = stage === "Rejected";
-    } else if (activeTab === "pre-screen") {
-      matchesTab = stage === "Pre Screen";
-    } else if (activeTab === "interview") {
-      matchesTab = stage === "Interview";
-    } else if (activeTab === "offer") {
-      matchesTab = stage === "Offer";
-    } else if (activeTab === "hired") {
-      matchesTab = stage === "Hired";
+      matchesTab = true; // Show all candidates
+    } else if (activeTab === "reject") {
+      matchesTab = stage === "Reject";
+    } else {
+      matchesTab = stage === activeTab;
     }
 
-    return matchesSearch && matchesPosition && matchesTab && matchesViewMode;
+    return matchesSearch && matchesPosition && matchesSource && matchesTab;
   });
 
-  // Count candidates by source
-  const candidatesCount = candidates.filter(c => c.source !== 'Quick Apply').length;
-  const applicantResumeCount = candidates.filter(c => c.source === 'Quick Apply').length;
-
-  // Count candidates per tab (filtered by current viewMode and search/position filters)
+  // Count candidates per tab
   const tabCounts = useMemo(() => {
     const filtered = candidates.filter(c => {
       const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -174,24 +173,20 @@ export default function Candidates() {
         (c.email?.toLowerCase() || '').includes(searchQuery.toLowerCase());
       const matchesPosition = selectedPositions.length === 0 ||
         (c.position_title && selectedPositions.includes(c.position_title));
-      const matchesViewMode = viewMode === 'candidates'
-        ? c.source !== 'Quick Apply'
-        : c.source === 'Quick Apply';
-      return matchesSearch && matchesPosition && matchesViewMode;
+      const matchesSource = selectedSources.length === 0 ||
+        selectedSources.includes(c.source);
+      return matchesSearch && matchesPosition && matchesSource;
     });
 
-    const stage = (c: CandidateData) => c.stage || "Pending";
-    return {
-      all: filtered.filter(c => stage(c) === "Pending").length,
-      shortlist: filtered.filter(c => stage(c) === "Shortlist").length,
-      interested: filtered.filter(c => stage(c) === "Interested").length,
-      "not-interested": filtered.filter(c => stage(c) === "Rejected").length,
-      "pre-screen": filtered.filter(c => stage(c) === "Pre Screen").length,
-      interview: filtered.filter(c => stage(c) === "Interview").length,
-      offer: filtered.filter(c => stage(c) === "Offer").length,
-      hired: filtered.filter(c => stage(c) === "Hired").length,
+    const stage = (c: CandidateData) => c.stage || "Short CV";
+    const counts: Record<string, number> = {
+      all: filtered.length,
     };
-  }, [candidates, searchQuery, selectedPositions, viewMode]);
+    stageOrder.forEach(s => {
+      counts[s] = filtered.filter(c => stage(c) === s).length;
+    });
+    return counts;
+  }, [candidates, searchQuery, selectedPositions, selectedSources]);
 
   const handleViewDetails = (candidate: CandidateData) => {
     setSelectedCandidate(candidate);
@@ -279,7 +274,16 @@ export default function Candidates() {
       return;
     }
 
-    const oldStage = candidate.stage || "Pending";
+    const oldStage = candidate.stage || "Short CV";
+
+    // If rejecting, track which stage the rejection happened at
+    if (stage === "Reject") {
+      supabase
+        .from("candidates")
+        .update({ rejected_at_stage: oldStage })
+        .eq("id", candidateIdStr)
+        .then();
+    }
 
     // Update stage in candidates table directly
     updateCandidateStage({ candidateId: candidateIdStr, stage });
@@ -290,7 +294,7 @@ export default function Candidates() {
     }
 
     // Auto-close/reopen job position based on hired count
-    if (candidate.position_id && (stage === "Hired" || oldStage === "Hired")) {
+    if (candidate.position_id && (stage === "Hire" || oldStage === "Hire")) {
       checkAndUpdateJobStatus(candidate.position_id, stage, oldStage);
     }
 
@@ -317,8 +321,17 @@ export default function Candidates() {
     );
   };
 
+  const toggleSource = (source: string) => {
+    setSelectedSources(prev =>
+      prev.includes(source)
+        ? prev.filter(s => s !== source)
+        : [...prev, source]
+    );
+  };
+
   const clearFilters = () => {
     setSelectedPositions([]);
+    setSelectedSources([]);
   };
 
   const toggleCandidateSelection = (candidateId: string) => {
@@ -387,8 +400,8 @@ export default function Candidates() {
         throw error;
       }
 
-      // Update candidate stage to Interested locally
-      updateCandidateStage({ candidateId: selectedInterestCandidate.id, stage: 'Interested' });
+      // Update candidate stage to Pending (waiting for full application)
+      updateCandidateStage({ candidateId: selectedInterestCandidate.id, stage: 'Pending' });
 
       toast({
         title: "ส่งใบสมัครฉบับเต็มแล้ว",
@@ -400,8 +413,8 @@ export default function Candidates() {
         title: 'ส่งใบสมัครฉบับเต็ม',
         description: `ส่งอีเมลเชิญให้ ${selectedInterestCandidate.name} กรอกใบสมัครฉบับเต็ม`,
         candidateName: selectedInterestCandidate.name,
-        oldStatus: selectedInterestCandidate.stage || 'Pending',
-        newStatus: 'Interested',
+        oldStatus: selectedInterestCandidate.stage || 'Short CV',
+        newStatus: 'Pending',
       });
 
       setInterestDialogOpen(false);
@@ -423,7 +436,7 @@ export default function Candidates() {
     }
 
     selectedCandidates.forEach(candidateId => {
-      handleStatusChange(candidateId, 'Rejected');
+      handleStatusChange(candidateId, 'Reject');
     });
     
     setSelectedCandidates([]);
@@ -456,32 +469,13 @@ export default function Candidates() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {/* View Mode Toggle Buttons */}
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'candidates' ? 'default' : 'outline'}
-              onClick={() => handleViewModeChange('candidates')}
-              className="gap-2"
-            >
-              <Users className="h-4 w-4" />
-              ผู้สมัคร
-              <Badge variant="secondary" className="ml-1">
-                {candidatesCount}
-              </Badge>
-            </Button>
-            <Button
-              variant={viewMode === 'applicant-resume' ? 'default' : 'outline'}
-              onClick={() => handleViewModeChange('applicant-resume')}
-              className="gap-2"
-            >
-              <FileText className="h-4 w-4" />
-              Applicant Resume
-              <Badge variant="secondary" className="ml-1">
-                {applicantResumeCount}
-              </Badge>
-            </Button>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            ผู้สมัคร
+          </h1>
+          <p className="text-muted-foreground">
+            จัดการและติดตามสถานะผู้สมัครทั้งหมด ({candidates.length} คน)
+          </p>
         </div>
         <Button onClick={handleAddNew}>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -489,23 +483,11 @@ export default function Candidates() {
         </Button>
       </div>
 
-      {/* Page Title */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          {viewMode === 'candidates' ? 'ผู้สมัคร' : 'Applicant Resume'}
-        </h1>
-        <p className="text-muted-foreground">
-          {viewMode === 'candidates'
-            ? `จัดการและติดตามสถานะผู้สมัครทั้งหมด (${candidatesCount} คน)`
-            : `รายการประวัติที่ฝากไว้ผ่าน Quick Apply (${applicantResumeCount} คน)`}
-        </p>
-      </div>
-
       <div className="flex gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="ค้นหาผู้สมัคร..." 
+          <Input
+            placeholder="ค้นหาผู้สมัคร..."
             className="pl-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -516,9 +498,9 @@ export default function Candidates() {
             <Button variant="outline" className="gap-2">
               <Filter className="h-4 w-4" />
               ตัวกรอง
-              {selectedPositions.length > 0 && (
+              {(selectedPositions.length + selectedSources.length) > 0 && (
                 <Badge variant="secondary" className="ml-2 rounded-full px-2">
-                  {selectedPositions.length}
+                  {selectedPositions.length + selectedSources.length}
                 </Badge>
               )}
             </Button>
@@ -526,32 +508,51 @@ export default function Candidates() {
           <PopoverContent className="w-80" align="end">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">กรองตามตำแหน่ง</h4>
-                {selectedPositions.length > 0 && (
+                <h4 className="font-medium">ตัวกรอง</h4>
+                {(selectedPositions.length + selectedSources.length) > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters}>
                     ล้างทั้งหมด
                   </Button>
                 )}
               </div>
-              <div className="space-y-3">
-                {uniquePositions.map((position) => (
-                  <div key={position} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={position}
-                      checked={selectedPositions.includes(position)}
-                      onCheckedChange={() => togglePosition(position)}
-                    />
-                    <label
-                      htmlFor={position}
-                      className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {position}
-                    </label>
-                  </div>
-                ))}
-                {uniquePositions.length === 0 && (
-                  <p className="text-sm text-muted-foreground">ไม่มีตำแหน่ง</p>
-                )}
+              {/* Position Filter */}
+              <div>
+                <h5 className="text-sm font-medium mb-2">ตำแหน่ง</h5>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {uniquePositions.map((position) => (
+                    <div key={position} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`pos-${position}`}
+                        checked={selectedPositions.includes(position)}
+                        onCheckedChange={() => togglePosition(position)}
+                      />
+                      <label htmlFor={`pos-${position}`} className="text-sm cursor-pointer">
+                        {position}
+                      </label>
+                    </div>
+                  ))}
+                  {uniquePositions.length === 0 && (
+                    <p className="text-sm text-muted-foreground">ไม่มีตำแหน่ง</p>
+                  )}
+                </div>
+              </div>
+              {/* Source/Company Filter */}
+              <div>
+                <h5 className="text-sm font-medium mb-2">แหล่งที่มา</h5>
+                <div className="space-y-2">
+                  {uniqueSources.map((source) => (
+                    <div key={source} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`src-${source}`}
+                        checked={selectedSources.includes(source)}
+                        onCheckedChange={() => toggleSource(source)}
+                      />
+                      <label htmlFor={`src-${source}`} className="text-sm cursor-pointer">
+                        {source}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </PopoverContent>
@@ -560,26 +561,13 @@ export default function Candidates() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
-          {(viewMode === 'applicant-resume'
-            ? [
-                { value: "all", label: "ALL" },
-                { value: "interested", label: "Interested" },
-                { value: "not-interested", label: "Not Interested" },
-              ]
-            : [
-                { value: "all", label: "ALL" },
-                { value: "shortlist", label: "Shortlist" },
-                { value: "interested", label: "Interested" },
-                { value: "not-interested", label: "Not Interested" },
-                { value: "pre-screen", label: "Pre Screen" },
-                { value: "interview", label: "Interview" },
-                { value: "offer", label: "Offer" },
-                { value: "hired", label: "Hired" },
-              ]
-          ).map((tab) => {
-            const count = tabCounts[tab.value as keyof typeof tabCounts];
+          {[
+            { value: "all", label: "ALL" },
+            ...stageOrder.map(s => ({ value: s, label: stageLabels[s] || s })),
+          ].map((tab) => {
+            const count = tabCounts[tab.value] || 0;
             return (
-              <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5">
+              <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 text-xs">
                 {tab.label}
                 {count > 0 && (
                   <Badge variant={activeTab === tab.value ? "default" : "secondary"} className="h-5 min-w-[20px] px-1.5 text-xs">
@@ -592,7 +580,7 @@ export default function Candidates() {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {filteredCandidates.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
@@ -602,112 +590,123 @@ export default function Candidates() {
             ) : (
               filteredCandidates.map((candidate) => (
                 <Card key={candidate.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1">
-                        <Checkbox
-                          checked={selectedCandidates.includes(candidate.id)}
-                          onCheckedChange={() => toggleCandidateSelection(candidate.id)}
-                          className="mt-1"
-                        />
-                        <Avatar className="h-14 w-14 border-2 border-primary/40 shadow-sm">
-                          <AvatarImage src={candidate.photo_url || undefined} alt={candidate.name} />
-                          <AvatarFallback>
-                            {candidate.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex items-center gap-2">
-                          <div className="relative group/score">
-                            <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${
-                              candidate.ai_fit_score
-                                ? getScoreColor(candidate.ai_fit_score)
-                                : calculatingScores.has(candidate.id)
-                                ? 'from-blue-500 to-blue-600 animate-pulse'
-                                : 'from-gray-400 to-gray-500'
-                            } flex items-center justify-center text-white font-bold shadow-lg transition-transform group-hover/score:scale-110`}>
-                              {calculatingScores.has(candidate.id) ? (
-                                <Loader2 className="h-6 w-6 animate-spin" />
-                              ) : candidate.ai_fit_score ? (
-                                <span className="text-xl">{candidate.ai_fit_score}</span>
-                              ) : (
-                                <span className="text-xl">-</span>
-                              )}
-                            </div>
-                            {candidate.ai_fit_score && candidate.ai_fit_score >= 90 && (
-                              <div className="absolute -top-1 -right-1 h-5 w-5 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
-                                <Star className="h-3 w-3 text-white fill-white" />
-                              </div>
-                            )}
-                            {candidate.ai_fit_score && (
-                              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/score:opacity-100 transition-opacity whitespace-nowrap">
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  {getScoreLabel(candidate.ai_fit_score)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full hover:bg-primary/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleGenerateFitScore(candidate);
-                            }}
-                            disabled={calculatingScores.has(candidate.id)}
-                            title="คำนวณ AI Fit Score ใหม่"
-                          >
-                            {calculatingScores.has(candidate.id) ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Sparkles className="h-4 w-4 text-primary" />
-                            )}
-                          </Button>
+                  <CardContent className="py-4">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedCandidates.includes(candidate.id)}
+                        onCheckedChange={() => toggleCandidateSelection(candidate.id)}
+                      />
+                      <Avatar className="h-11 w-11 border-2 border-primary/40 shadow-sm flex-shrink-0">
+                        <AvatarImage src={candidate.photo_url || undefined} alt={candidate.name} />
+                        <AvatarFallback className="text-sm">
+                          {candidate.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* AI Score */}
+                      <div className="relative group/score flex-shrink-0">
+                        <div className={`h-11 w-11 rounded-lg bg-gradient-to-br ${
+                          candidate.ai_fit_score
+                            ? getScoreColor(candidate.ai_fit_score)
+                            : calculatingScores.has(candidate.id)
+                            ? 'from-blue-500 to-blue-600 animate-pulse'
+                            : 'from-gray-400 to-gray-500'
+                        } flex items-center justify-center text-white font-bold shadow-sm`}>
+                          {calculatingScores.has(candidate.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : candidate.ai_fit_score ? (
+                            <span className="text-base">{candidate.ai_fit_score}</span>
+                          ) : (
+                            <span className="text-base">-</span>
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                              {candidate.name}
-                            </h3>
-                            <Badge className={stageColors[candidate.stage || "New"] || stageColors.New}>
-                              {stageLabels[candidate.stage || "New"] || candidate.stage || "New"}
-                            </Badge>
+                        {candidate.ai_fit_score && candidate.ai_fit_score >= 90 && (
+                          <div className="absolute -top-1 -right-1 h-4 w-4 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+                            <Star className="h-2.5 w-2.5 text-white fill-white" />
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                            <span className="font-medium text-foreground">{candidate.position_title || "ไม่ระบุตำแหน่ง"}</span>
-                            <span>•</span>
-                            <span>สมัครเมื่อ: {formatAppliedDate(candidate.applied_at)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="text-xs font-normal">
-                              {candidate.source}
-                            </Badge>
-                            {candidate.email && (
-                              <Badge variant="outline" className="text-xs font-normal">
-                                {candidate.email}
-                              </Badge>
-                            )}
-                          </div>
+                        )}
+                      </div>
+                      {/* Main Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+                            {candidate.name}
+                          </h3>
+                          <Badge className={`text-[10px] ${stageColors[candidate.stage || "Short CV"] || stageColors["Short CV"]}`}>
+                            {stageLabels[candidate.stage || "Short CV"] || candidate.stage || "Short CV"}
+                          </Badge>
+                          {candidate.stage === "Reject" && candidate.rejected_at_stage && (
+                            <span className="text-[10px] text-red-500">(จาก {stageLabels[candidate.rejected_at_stage] || candidate.rejected_at_stage})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">{candidate.position_title || "ไม่ระบุตำแหน่ง"}</span>
+                          <span>|</span>
+                          <Badge variant="outline" className="text-[10px] h-5 font-normal">
+                            {candidate.source}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      {/* Data Columns */}
+                      <div className="hidden lg:flex items-center gap-4 text-xs text-muted-foreground flex-shrink-0">
+                        <div className="text-center w-12" title="อายุ">
+                          <div className="text-[10px] text-muted-foreground/60">อายุ</div>
+                          <div className="font-medium text-foreground">{candidate.age || '-'}</div>
+                        </div>
+                        <div className="text-center w-16" title="เงินเดือน">
+                          <div className="text-[10px] text-muted-foreground/60">เงินเดือน</div>
+                          <div className="font-medium text-foreground">{candidate.expected_salary ? `${Number(candidate.expected_salary).toLocaleString()}` : '-'}</div>
+                        </div>
+                        <div className="text-center w-12" title="ส่วนสูง">
+                          <div className="text-[10px] text-muted-foreground/60">ส่วนสูง</div>
+                          <div className="font-medium text-foreground">{candidate.height || '-'}</div>
+                        </div>
+                        <div className="text-center w-12" title="น้ำหนัก">
+                          <div className="text-[10px] text-muted-foreground/60">น้ำหนัก</div>
+                          <div className="font-medium text-foreground">{candidate.weight || '-'}</div>
+                        </div>
+                        <div className="text-center w-24" title="วันที่สมัคร">
+                          <div className="text-[10px] text-muted-foreground/60">วันที่สมัคร</div>
+                          <div className="font-medium text-foreground">{candidate.applied_at ? new Date(candidate.applied_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</div>
+                        </div>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full hover:bg-primary/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGenerateFitScore(candidate);
+                          }}
+                          disabled={calculatingScores.has(candidate.id)}
+                          title="คำนวณ AI Fit Score ใหม่"
+                        >
+                          {calculatingScores.has(candidate.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4 text-primary" />
+                          )}
+                        </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           className="hover:bg-accent transition-colors"
                           onClick={() => handleViewDetails(candidate)}
                         >
                           ดูรายละเอียด
                         </Button>
-                        {viewMode === 'applicant-resume' && (candidate.stage || 'Pending') === 'Pending' && (
+                        {(candidate.stage || 'Short CV') === 'Short CV' && (
                           <Button
                             variant="outline"
-                            className="hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-colors gap-2"
+                            size="sm"
+                            className="hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-colors gap-1"
                             onClick={() => {
                               setSelectedInterestCandidate(candidate);
                               setInterestDialogOpen(true);
                             }}
                           >
-                            <Heart className="h-4 w-4" />
+                            <Heart className="h-3.5 w-3.5" />
                             Interest
                           </Button>
                         )}
@@ -789,11 +788,13 @@ export default function Candidates() {
             score: candidate?.ai_fit_score ?? 0,
             resumeFile: candidate?.resume_url ?? undefined,
             preScreenComment: candidate?.pre_screen_comment ?? '-',
+            age: candidate?.age ?? null,
+            expectedSalary: candidate?.expected_salary ?? null,
           };
         })}
         onSent={() => {
           selectedCandidates.forEach(candidateId => {
-            handleStatusChange(candidateId, 'Interview');
+            handleStatusChange(candidateId, 'Manager-Review');
           });
           setSelectedCandidates([]);
         }}

@@ -18,6 +18,7 @@ import PublicJobs from "./pages/PublicJobs";
 import JobRequisitions from "./pages/JobRequisitions";
 import Candidates from "./pages/Candidates";
 import Interviews from "./pages/Interviews";
+import InterviewRoom from "./pages/InterviewRoom";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/job-requisitions" element={<ProtectedRoute><DashboardLayout><JobRequisitions /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/candidates" element={<ProtectedRoute><DashboardLayout><Candidates /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/interviews" element={<ProtectedRoute><DashboardLayout><Interviews /></DashboardLayout></ProtectedRoute>} />
+                <Route path="/interview-room/:applicationId" element={<ProtectedRoute><DashboardLayout><InterviewRoom /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><DashboardLayout><Reports /></DashboardLayout></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

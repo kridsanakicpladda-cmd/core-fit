@@ -58,6 +58,7 @@ export default function Interviews() {
 
     return {
       id: interview.id,
+      applicationId: interview.application_id,
       name: interview.candidate_name,
       position: interview.position_title,
       date: interview.scheduled_at ? new Date(interview.scheduled_at) : new Date(),

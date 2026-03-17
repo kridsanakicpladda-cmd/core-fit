@@ -46,6 +46,7 @@ const QuickApply = () => {
     age: "",
     email: "",
     mobilePhone: "",
+    currentAddress: "", // ที่อยู่ปัจจุบัน
     interestedPosition: positionFromUrl,
     expectedSalary: "",
     preferredLocation: "",
@@ -230,6 +231,7 @@ const QuickApply = () => {
         { field: 'weight', label: 'น้ำหนัก' },
         { field: 'email', label: 'อีเมล' },
         { field: 'mobilePhone', label: 'เบอร์โทรศัพท์' },
+        { field: 'currentAddress', label: 'ที่อยู่ปัจจุบัน' },
         { field: 'interestedPosition', label: 'ตำแหน่งที่สนใจ' },
         { field: 'expectedSalary', label: 'เงินเดือนที่คาดหวัง' },
         { field: 'jobType', label: 'ประเภทงานที่สนใจ' },
@@ -328,7 +330,7 @@ const QuickApply = () => {
           mobile_phone: formData.mobilePhone,
           position: formData.interestedPosition,
           expected_salary: formData.expectedSalary,
-          present_address: formData.preferredLocation,
+          present_address: formData.currentAddress || formData.preferredLocation,
           other_skills: formData.workExperience || null, // ประสบการณ์ฝึกงาน/ทำงาน
           training_curriculums: formData.jobType === "intern" ? "นักศึกษาฝึกงาน" : formData.jobType === "fulltime" ? "พนักงานประจำ" : null, // ประเภทงาน
           relatives_at_icp: formData.knowsICPG === "yes" ? "รู้จัก" : formData.knowsICPG === "no" ? "ไม่รู้จัก" : null, // รู้จักบริษัทในเครือ ICPG
@@ -376,6 +378,7 @@ const QuickApply = () => {
         age: "",
         email: "",
         mobilePhone: "",
+        currentAddress: "",
         interestedPosition: "",
         expectedSalary: "",
         preferredLocation: "",
@@ -750,6 +753,22 @@ const QuickApply = () => {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Current Address */}
+              <div className="space-y-2">
+                <Label htmlFor="currentAddress" className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  ที่อยู่ปัจจุบัน <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="currentAddress"
+                  value={formData.currentAddress}
+                  onChange={(e) => handleInputChange("currentAddress", e.target.value)}
+                  placeholder="บ้านเลขที่ ซอย ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"
+                  className="min-h-[80px] resize-none"
+                  required
+                />
               </div>
             </CardContent>
             </Card>

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, MapPin, Users, Video } from "lucide-react";
+import { Clock, MapPin, Users, Video, DoorOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Interview } from "./InterviewFormDialog";
 import { addSparkleEffect } from "@/lib/sparkle";
 
@@ -10,6 +11,8 @@ interface InterviewCardProps {
 }
 
 export function InterviewCard({ interview, onClick }: InterviewCardProps) {
+  const navigate = useNavigate();
+
   return (
     <div
       className="flex items-center justify-between p-4 rounded-xl bg-card hover:shadow-md transition-all group border border-border/50 cursor-pointer glow-on-hover"
@@ -59,8 +62,22 @@ export function InterviewCard({ interview, onClick }: InterviewCardProps) {
             <Badge className="bg-primary/10 text-primary border-primary/20">
               กำลังจะถึง
             </Badge>
-            <Button 
-              size="sm" 
+            {interview.applicationId && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/interview-room/${interview.applicationId}`);
+                }}
+              >
+                <DoorOpen className="h-4 w-4" />
+                เข้าห้องสัมภาษณ์
+              </Button>
+            )}
+            <Button
+              size="sm"
               className="shadow-sm hover:shadow-glow transition-all hover:scale-105"
               onClick={(e) => {
                 e.stopPropagation();

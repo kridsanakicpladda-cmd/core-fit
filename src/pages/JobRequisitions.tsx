@@ -9,19 +9,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Clock, CheckCircle, XCircle, Download, Upload, Briefcase, Users, FileText, Award, CalendarDays, Loader2, Sparkles } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Download, Upload, Briefcase, Users, FileText, Award, CalendarDays, Loader2, Sparkles, Eye, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useJobRequisitions, JobRequisition } from "@/hooks/useJobRequisitions";
 import { RequisitionDetailDialog } from "@/components/requisitions/RequisitionDetailDialog";
 import { exportRequisitionsPDF } from "@/lib/exportRequisitionsPDF";
+import { generateRequisitionFormPDF } from "@/lib/generateRequisitionFormPDF";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { addSparkleEffect } from "@/lib/sparkle";
+import { useAuth } from "@/contexts/AuthContext";
 import * as pdfjsLib from "pdfjs-dist";
+
+const DRAFT_KEY = "requisition-draft";
 
 const JobRequisitions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { profileName } = useAuth();
   const [selectedRequisition, setSelectedRequisition] = useState<JobRequisition | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [canApprove, setCanApprove] = useState(false);
@@ -29,27 +34,10 @@ const JobRequisitions = () => {
   const [requisitionFormFile, setRequisitionFormFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [parsingJD, setParsingJD] = useState(false);
+  const [previewingPDF, setPreviewingPDF] = useState(false);
   const { requisitions, isLoading, createRequisition } = useJobRequisitions();
 
-  const [currentPositions, setCurrentPositions] = useState([
-    { position: "", count: "" },
-    { position: "", count: "" },
-  ]);
-
-  useEffect(() => {
-    const checkRole = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      const userRoles = roles?.map((r) => r.role) || [];
-      setCanApprove(userRoles.includes("admin") || userRoles.includes("hr_manager"));
-    };
-    checkRole();
-  }, []);
-
-  const [formData, setFormData] = useState({
+  const defaultFormData = {
     department: "",
     position: "",
     quantity: "1",
@@ -73,9 +61,53 @@ const JobRequisitions = () => {
     other_skills: "",
     marital_status: "",
     experience_in: "",
-  });
+  };
 
-  const departments = ["Engineering", "Marketing", "Sales", "Human Resources", "Finance", "Operations"];
+  const [currentPositions, setCurrentPositions] = useState([
+    { position: "", count: "" },
+    { position: "", count: "" },
+  ]);
+
+  const [formData, setFormData] = useState(defaultFormData);
+
+  // Load draft on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (draft.formData) setFormData({ ...defaultFormData, ...draft.formData });
+        if (draft.currentPositions) setCurrentPositions(draft.currentPositions);
+        toast({ title: "โหลดแบบร่างแล้ว", description: "ข้อมูลที่บันทึกไว้ถูกนำกลับมาแล้ว" });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      const userRoles = roles?.map((r) => r.role) || [];
+      setCanApprove(userRoles.includes("admin") || userRoles.includes("hr_manager"));
+    };
+    checkRole();
+  }, []);
+
+  const departments = [
+    "Management",
+    "Accounting & Finance",
+    "Inspiration",
+    "Marketing(DIS)",
+    "Marketing(COP)",
+    "Procurement",
+    "Plant (Production&Planning)",
+    "Plant (Warehouse & Distribution)",
+    "Plant (Engineering)",
+    "Plant (Quality control)",
+  ];
 
   const jobGrades = [
     "JG 1.1 Staff",
@@ -245,6 +277,32 @@ const JobRequisitions = () => {
   };
 
 
+  const handleSaveDraft = () => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, currentPositions }));
+    toast({ title: "บันทึกแบบร่างแล้ว", description: "สามารถกลับมากรอกต่อได้ภายหลัง" });
+  };
+
+  const handlePreviewPDF = async () => {
+    setPreviewingPDF(true);
+    try {
+      await generateRequisitionFormPDF(
+        formData,
+        currentPositions,
+        'ตัวอย่าง',
+        profileName || undefined,
+      );
+    } catch (error) {
+      console.error('Error generating preview PDF:', error);
+      toast({
+        title: "ไม่สามารถสร้างตัวอย่าง PDF ได้",
+        description: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        variant: "destructive",
+      });
+    } finally {
+      setPreviewingPDF(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form submitted with data:", formData);
@@ -302,7 +360,7 @@ const JobRequisitions = () => {
       }
 
       // Create requisition
-      await createRequisition.mutateAsync({
+      const newReq = await createRequisition.mutateAsync({
         ...formData,
         quantity: parseInt(formData.quantity),
         jd_file_url: jdFileUrl,
@@ -343,10 +401,28 @@ const JobRequisitions = () => {
 
       if (jobError) {
         console.error('Error creating job position:', jobError);
-        // Don't throw error, just log it - requisition was already created successfully
       }
 
-      // Reset form
+      // Generate PDF form FM-HRM-01-01
+      try {
+        toast({ title: "กำลังสร้างเอกสาร PDF...", description: "กรุณารอสักครู่" });
+        await generateRequisitionFormPDF(
+          formData,
+          currentPositions,
+          newReq?.requisition_number || 'DRAFT',
+          profileName || undefined,
+        );
+      } catch (pdfError) {
+        console.error('Error generating PDF:', pdfError);
+        toast({
+          title: "ไม่สามารถสร้าง PDF ได้",
+          description: "คำขอถูกบันทึกเรียบร้อยแล้ว แต่ไม่สามารถสร้างเอกสาร PDF ได้",
+          variant: "destructive",
+        });
+      }
+
+      // Clear draft & reset form
+      localStorage.removeItem(DRAFT_KEY);
       setFormData({
         department: "",
         position: "",
@@ -972,10 +1048,40 @@ const JobRequisitions = () => {
           {/* Submit Button */}
           <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-4">
             <div className="flex justify-end gap-3">
-              <Button 
-                type="submit" 
+              <Button
+                type="button"
                 size="lg"
-                disabled={uploading}
+                variant="secondary"
+                onClick={handleSaveDraft}
+                className="min-w-48 transition-all hover:scale-105"
+              >
+                <Save className="h-5 w-5 mr-2" />
+                บันทึกแบบร่าง
+              </Button>
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                disabled={previewingPDF || uploading}
+                onClick={handlePreviewPDF}
+                className="min-w-48 transition-all hover:scale-105"
+              >
+                {previewingPDF ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    กำลังสร้าง PDF...
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-5 w-5 mr-2" />
+                    ดูตัวอย่าง PDF
+                  </>
+                )}
+              </Button>
+              <Button
+                type="submit"
+                size="lg"
+                disabled={uploading || previewingPDF}
                 onClick={(e) => addSparkleEffect(e)}
                 className="min-w-48 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all hover:scale-105 shadow-lg"
               >

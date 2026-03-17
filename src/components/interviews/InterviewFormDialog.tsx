@@ -12,6 +12,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useOutlookCalendar } from "@/hooks/useOutlookCalendar";
+import { useEmailAutomation } from "@/hooks/useEmailAutomation";
 
 const interviewSchema = z.object({
   candidateName: z.string().min(1, "กรุณาระบุชื่อผู้สมัคร"),
@@ -26,6 +28,7 @@ type InterviewFormValues = z.infer<typeof interviewSchema>;
 
 export interface Interview {
   id: string;
+  applicationId?: string;
   name: string;
   position: string;
   date: Date;
@@ -49,6 +52,9 @@ interface InterviewFormDialogProps {
 }
 
 export function InterviewFormDialog({ interview, open, onOpenChange, onSave }: InterviewFormDialogProps) {
+  const { createInterviewCalendarEvent } = useOutlookCalendar();
+  const { sendInterviewInvite } = useEmailAutomation();
+
   const form = useForm<InterviewFormValues>({
     resolver: zodResolver(interviewSchema),
     defaultValues: {
@@ -81,7 +87,7 @@ export function InterviewFormDialog({ interview, open, onOpenChange, onSave }: I
     }
   }, [interview, form, open]);
 
-  const handleSubmit = (values: InterviewFormValues) => {
+  const handleSubmit = async (values: InterviewFormValues) => {
     const interviewData = {
       name: values.candidateName,
       position: values.position,
@@ -96,8 +102,39 @@ export function InterviewFormDialog({ interview, open, onOpenChange, onSave }: I
       managerEmail: interview?.managerEmail,
       proposedSlots: interview?.proposedSlots,
     };
-    
+
     onSave(interviewData);
+
+    // Send Outlook Calendar invite (non-blocking)
+    const dateStr = format(values.date, "yyyy-MM-dd");
+    const timeStr = values.time.split(" - ")[0]?.trim() || values.time;
+    const attendees: Array<{ email: string; name?: string }> = [];
+    if (interview?.candidateEmail) {
+      attendees.push({ email: interview.candidateEmail, name: values.candidateName });
+    }
+    if (attendees.length > 0) {
+      createInterviewCalendarEvent({
+        candidateName: values.candidateName,
+        position: values.position,
+        interviewDate: dateStr,
+        interviewTime: timeStr,
+        attendeeEmails: attendees,
+        location: values.type === "ออนไซต์" ? "บริษัท" : "ออนไลน์",
+        interviewType: interview?.interviewRound === "final" ? "Final Interview" : "Main Interview",
+      });
+
+      // Send interview invite email
+      sendInterviewInvite({
+        candidateEmail: interview.candidateEmail!,
+        candidateName: values.candidateName,
+        position: values.position,
+        interviewDate: dateStr,
+        interviewTime: values.time,
+        location: values.type === "ออนไซต์" ? "บริษัท" : undefined,
+        interviewType: interview?.interviewRound === "final" ? "Final Interview" : "Main Interview",
+      });
+    }
+
     onOpenChange(false);
   };
 

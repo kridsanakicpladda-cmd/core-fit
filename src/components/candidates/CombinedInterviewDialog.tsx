@@ -7,6 +7,7 @@ import { CalendarIcon, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -45,9 +46,9 @@ type EvaluationFormValues = z.infer<typeof evaluationSchema>;
 interface CombinedInterviewDialogProps {
   candidateName?: string;
   position?: string;
-  managerInterview?: { 
-    date: string; 
-    passed: boolean; 
+  managerInterview?: {
+    date: string;
+    passed: boolean;
     feedback: string;
     scores?: {
       skill_knowledge?: number;
@@ -59,9 +60,9 @@ interface CombinedInterviewDialogProps {
       culture_fit?: number;
     };
   };
-  isInterview?: { 
-    date: string; 
-    passed: boolean; 
+  isInterview?: {
+    date: string;
+    passed: boolean;
     feedback: string;
     scores?: {
       skill_knowledge?: number;
@@ -73,6 +74,8 @@ interface CombinedInterviewDialogProps {
       culture_fit?: number;
     };
   };
+  /** Blind evaluation: hide the other party's scores until both have submitted */
+  blindMode?: 'manager' | 'is' | 'both_submitted' | 'admin';
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (interviews: { 
@@ -109,15 +112,22 @@ interface CombinedInterviewDialogProps {
   }) => void;
 }
 
-export function CombinedInterviewDialog({ 
-  candidateName, 
+export function CombinedInterviewDialog({
+  candidateName,
   position,
-  managerInterview, 
+  managerInterview,
   isInterview,
-  open, 
-  onOpenChange, 
-  onSave 
+  blindMode = 'admin',
+  open,
+  onOpenChange,
+  onSave
 }: CombinedInterviewDialogProps) {
+  // Blind evaluation: determine what each user can see
+  const canSeeManager = blindMode === 'admin' || blindMode === 'manager' || blindMode === 'both_submitted';
+  const canSeeIS = blindMode === 'admin' || blindMode === 'is' || blindMode === 'both_submitted';
+  const canEditManager = blindMode === 'admin' || blindMode === 'manager';
+  const canEditIS = blindMode === 'admin' || blindMode === 'is';
+  const { toast } = useToast();
   const [managerTotalScore, setManagerTotalScore] = useState(0);
   const [isTotalScore, setIsTotalScore] = useState(0);
 
@@ -243,9 +253,37 @@ export function CombinedInterviewDialog({
       culture_fit: values.is_culture_fit,
     };
 
-    const managerTotal = Object.values(managerScores).reduce((sum, val) => sum + val, 0);
-    const isTotal = Object.values(isScores).reduce((sum, val) => sum + val, 0);
-    
+    // Validate: require all scores and feedback before saving
+    const managerHasAnyScore = Object.values(managerScores).some(v => v !== undefined && v !== null);
+    const isHasAnyScore = Object.values(isScores).some(v => v !== undefined && v !== null);
+
+    if (managerHasAnyScore) {
+      const managerMissing = Object.entries(managerScores).filter(([, v]) => v === undefined || v === null);
+      if (managerMissing.length > 0) {
+        toast({ title: "กรุณากรอกคะแนน Manager ให้ครบทุกหัวข้อ", variant: "destructive" });
+        return;
+      }
+      if (!values.manager_feedback?.trim()) {
+        toast({ title: "กรุณากรอก Comment ของ Manager", variant: "destructive" });
+        return;
+      }
+    }
+
+    if (isHasAnyScore) {
+      const isMissing = Object.entries(isScores).filter(([, v]) => v === undefined || v === null);
+      if (isMissing.length > 0) {
+        toast({ title: "กรุณากรอกคะแนน IS ให้ครบทุกหัวข้อ", variant: "destructive" });
+        return;
+      }
+      if (!values.is_feedback?.trim()) {
+        toast({ title: "กรุณากรอก Comment ของ IS", variant: "destructive" });
+        return;
+      }
+    }
+
+    const managerTotal = Object.values(managerScores).reduce((sum, val) => sum + (val || 0), 0);
+    const isTotal = Object.values(isScores).reduce((sum, val) => sum + (val || 0), 0);
+
     const interviews = {
       manager: {
         date: values.manager_date ? format(values.manager_date, "dd/MM/yyyy") : "",
@@ -277,57 +315,71 @@ export function CombinedInterviewDialog({
     }
   };
 
-  const ScoreInput = ({ 
-    managerName, 
-    isName, 
-    label 
-  }: { 
-    managerName: keyof EvaluationFormValues; 
-    isName: keyof EvaluationFormValues; 
+  const ScoreInput = ({
+    managerName,
+    isName,
+    label
+  }: {
+    managerName: keyof EvaluationFormValues;
+    isName: keyof EvaluationFormValues;
     label: string;
   }) => (
     <div className="grid grid-cols-[1fr_80px_80px] gap-2 items-center py-2 border-b">
       <div className="text-xs">{label}</div>
-      <FormField
-        control={form.control}
-        name={managerName}
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <Input
-                type="number"
-                min={0}
-                max={10}
-                value={typeof field.value === 'number' ? field.value : ""}
-                onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                className="text-center h-9"
-                placeholder="0-10"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name={isName}
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <Input
-                type="number"
-                min={0}
-                max={10}
-                value={typeof field.value === 'number' ? field.value : ""}
-                onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                className="text-center h-9"
-                placeholder="0-10"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {canSeeManager ? (
+        <FormField
+          control={form.control}
+          name={managerName}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={0}
+                  max={10}
+                  value={typeof field.value === 'number' ? field.value : ""}
+                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                  className="text-center h-9"
+                  placeholder="0-10"
+                  disabled={!canEditManager}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <div className="flex items-center justify-center h-9 bg-muted/50 rounded text-xs text-muted-foreground">
+          รอส่งคะแนน
+        </div>
+      )}
+      {canSeeIS ? (
+        <FormField
+          control={form.control}
+          name={isName}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={0}
+                  max={10}
+                  value={typeof field.value === 'number' ? field.value : ""}
+                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                  className="text-center h-9"
+                  placeholder="0-10"
+                  disabled={!canEditIS}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <div className="flex items-center justify-center h-9 bg-muted/50 rounded text-xs text-muted-foreground">
+          รอส่งคะแนน
+        </div>
+      )}
     </div>
   );
 

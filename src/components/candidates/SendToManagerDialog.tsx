@@ -25,13 +25,15 @@ import { useAuth } from "@/contexts/AuthContext";
 interface SendToManagerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  candidates: Array<{ 
-    id: string; 
-    name: string; 
-    position: string; 
+  candidates: Array<{
+    id: string;
+    name: string;
+    position: string;
     resumeFile?: string;
     score?: number | null;
     preScreenComment?: string | null;
+    age?: string | null;
+    expectedSalary?: string | null;
   }>;
   onSent: () => void;
 }
@@ -99,6 +101,8 @@ export function SendToManagerDialog({
               resume_url: c.resumeFile,
               ai_score: c.score || 0,
               pre_screen_comment: c.preScreenComment || '-',
+              age: c.age || '-',
+              expected_salary: c.expectedSalary || '-',
             })),
             positions,
           },
@@ -186,10 +190,11 @@ export function SendToManagerDialog({
                   <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr className="bg-primary/10">
-                        <th className="border border-border/50 px-2 py-1.5 text-center w-12">ลำดับ</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-center w-10">ลำดับ</th>
                         <th className="border border-border/50 px-2 py-1.5 text-left">ชื่อผู้สมัคร</th>
-                        <th className="border border-border/50 px-2 py-1.5 text-left">ตำแหน่งที่สมัคร</th>
-                        <th className="border border-border/50 px-2 py-1.5 text-center w-20">AI Score</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-center w-12">อายุ</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-center w-20">เงินเดือน</th>
+                        <th className="border border-border/50 px-2 py-1.5 text-center w-16">AI Score</th>
                         <th className="border border-border/50 px-2 py-1.5 text-left">Comment Pre-Screen</th>
                       </tr>
                     </thead>
@@ -198,7 +203,10 @@ export function SendToManagerDialog({
                         <tr key={candidate.id} className={index % 2 === 0 ? "bg-background" : "bg-muted/30"}>
                           <td className="border border-border/50 px-2 py-1.5 text-center font-medium">{index + 1}</td>
                           <td className="border border-border/50 px-2 py-1.5">{candidate.name}</td>
-                          <td className="border border-border/50 px-2 py-1.5">{candidate.position || 'ไม่ระบุ'}</td>
+                          <td className="border border-border/50 px-2 py-1.5 text-center">{candidate.age || '-'}</td>
+                          <td className="border border-border/50 px-2 py-1.5 text-center">
+                            {candidate.expectedSalary ? Number(candidate.expectedSalary).toLocaleString() : '-'}
+                          </td>
                           <td className="border border-border/50 px-2 py-1.5 text-center">
                             <span className="inline-block px-2 py-0.5 bg-primary/20 text-primary rounded-full font-medium">
                               {candidate.score ?? 0}%

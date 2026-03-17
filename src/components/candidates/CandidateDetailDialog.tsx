@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, Download, User, Sparkles, Loader2 } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Star, FileText, Edit, Trash2, CheckCircle2, Circle, Heart, X, Download, User, Sparkles, Loader2, DoorOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { SingleInterviewDialog } from "./SingleInterviewDialog";
 import { CombinedInterviewDialog } from "./CombinedInterviewDialog";
 import { TestScoreDialog } from "./TestScoreDialog";
@@ -136,6 +137,7 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
   const { addNotification } = useNotifications();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const calculateFitScore = useCalculateFitScore();
   const [isCalculatingScore, setIsCalculatingScore] = useState(false);
   const [currentScore, setCurrentScore] = useState<number | null>(null);
@@ -1017,7 +1019,23 @@ export function CandidateDetailDialog({ candidate, open, onOpenChange, onEdit, o
 
           {/* Interview Details */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">ข้อมูลการสัมภาษณ์</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">ข้อมูลการสัมภาษณ์</h3>
+              {candidate.application_id && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 hover:bg-primary/10 hover:text-primary"
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate(`/interview-room/${candidate.application_id}`);
+                  }}
+                >
+                  <DoorOpen className="h-4 w-4" />
+                  เข้าห้องสัมภาษณ์
+                </Button>
+              )}
+            </div>
             <div className="space-y-4">
               {/* HR Interview */}
               <div className="p-4 border rounded-lg">

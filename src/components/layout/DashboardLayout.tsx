@@ -7,7 +7,7 @@ import { LogOut } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { signOut, user } = useAuth();
+  const { signOut, user, profileName } = useAuth();
 
   return (
     <SidebarProvider>
@@ -23,7 +23,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <NotificationBell />
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground hidden md:inline">
-                  {user?.email}
+                  {profileName || user?.email}
                 </span>
                 <Button
                   variant="ghost"
